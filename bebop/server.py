@@ -2,7 +2,7 @@
 import argparse
 import os
 import sys
-from twisted.internet import reactor, threads
+from twisted.internet import reactor
 from twisted.python import log
 from autobahn.websocket import WebSocketServerFactory, WebSocketServerProtocol, listenWS
 from watchdog.observers import Observer
@@ -37,8 +37,7 @@ class ReloadHandler(FileSystemEventHandler):
         '''
         for c in self.factory.clients:
             log.msg('Reloading %s' % c.peerstr)
-            c.sendMessage('Reload')
-            threads.blockingCallFromThread(self.sendMessage, 'Reload')
+            reactor.callFromThread(c.sendMessage, 'Reload')
 
 
 class BebopServerProtocol(WebSocketServerProtocol):

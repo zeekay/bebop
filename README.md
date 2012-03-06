@@ -16,7 +16,7 @@ If you want to use the client-side reloading you need a WebSocket enabled browse
       if (!WebSocket)
         return console.log('WebSocket not Supported');
 
-      var url = 'ws://%s:%s';
+      var url = 'ws://127.0.0.1:9000';
       var ws = new WebSocket(url);
 
       ws.onopen = function() {
