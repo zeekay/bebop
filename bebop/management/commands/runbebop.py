@@ -3,7 +3,7 @@ from django.core.servers.basehttp import get_internal_wsgi_application
 from django.contrib.staticfiles.finders import find
 from django.conf import settings
 from bebop import autoreload
-from bebop.server import run_watcher, run_websocket
+from bebop.server import run_eval, run_watcher, run_websocket
 from twisted.application import internet, service, app
 from twisted.web import server, resource, wsgi, static
 from twisted.python import threadpool, log
@@ -57,7 +57,10 @@ class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
         make_option('--noreload', action='store_false', dest='use_reloader',
             default=True, help='Do NOT use the auto-reloader.'),
+        make_option('--no-repl', action='store_false', dest='use_repl',
+            default=True, help='Do NOT enable REPL.'),
     )
+
     help = "Starts a Twisted Web server for development."
     args = '[optional port number, or ipaddr:port]'
 
@@ -82,15 +85,22 @@ class Command(BaseCommand):
 
         self.run(*args, **options)
 
-    def _start_bebop(self):
+    def _start_bebop(self, use_repl=True):
         host = getattr(settings, 'BEBOP_WEBSOCKET_HOST', '127.0.0.1')
         port = getattr(settings, 'BEBOP_WEBSOCKET_PORT', '9000')
         paths = getattr(settings, 'BEBOP_WEBSOCKET_PATHS', settings.TEMPLATE_DIRS + settings.STATICFILES_DIRS)
+        # start websocket server
         factory = run_websocket(host, port)
+        if use_repl:
+            # start eval tcp client server
+            eval_server = run_eval(factory)
+            factory.attach_eval(eval_server)
+        # start file watcher
         reactor.callInThread(run_watcher, factory, paths)
 
     def run(self, *args, **options):
         use_reloader = options.get('use_reloader', True)
+        use_repl = options.get('use_repl', True)
 
         def _inner_run():
             # Initialize logging
@@ -110,7 +120,7 @@ class Command(BaseCommand):
 
             reactor.addSystemEventTrigger('before', 'shutdown',
                     service.IService(application).stopService)
-            self._start_bebop()
+            self._start_bebop(use_repl)
 
             reactor.run()
 
