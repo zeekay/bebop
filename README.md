@@ -1,6 +1,6 @@
 Bebop
 =====
-A tool for local development that comprised of a static file server, websocket server for client-side reloading and file watcher.
+A tool for rapid web development which serves as static file server, websocket server for client-side reloading/bi-directional communcation and file watcher.
 
 Usage
 -----
@@ -8,7 +8,7 @@ Check `bebop --help` for usage.
 
 Installation
 ------------
-If you want to use the client-side reloading you need a WebSocket enabled browser and you need to add a bit of javascript so that your browser will connect to Bebop. You can use the provided Django middleware:
+To take advantage of the client-side reloading you need a WebSocket enabled browser and a bit of javascript. You can use the provided Django middleware:
 
     INSTALLED_APPS = (
         ...,
