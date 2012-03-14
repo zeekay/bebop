@@ -8,27 +8,39 @@ Check `bebop --help` for usage.
 
 Installation
 ------------
-If you want to use the client-side reloading you need a WebSocket enabled browser and you need to add a bit of javascript so that your browser will connect to Bebop. You can use the provided Django middleware, or simply inject a bit of javascript at the top of your project:
+If you want to use the client-side reloading you need a WebSocket enabled browser and you need to add a bit of javascript so that your browser will connect to Bebop. You can use the provided Django middleware:
+
+    INSTALLED_APPS = (
+        ...,
+        'bebop',
+    )
+    MIDDLEWARE_CLASSES = (
+        ...,
+        'bebop.middleware.ReloaderMiddleware',
+    )
+
+...or simply add a bit of javascript to your project:
 
     <script type="text/javascript">
-    !function(){
-      WebSocket = window.WebSocket || window.MozWebSocket;
-      if (!WebSocket)
-        return console.log('WebSocket not Supported');
+      (function(){
 
-      var url = 'ws://127.0.0.1:9000';
-      var ws = new WebSocket(url);
+        WebSocket = window.WebSocket || window.MozWebSocket;
+        if (!WebSocket)
+          return console.log('WebSocket not Supported');
 
-      ws.onopen = function() {
-        console.log('Connected to Reloader');
-      };
+        var ws = new WebSocket('ws://127.0.0.1:9000');
 
-      ws.onmessage = function(evt) {
-        window.location.reload();
-      }
+        ws.onopen = function() {
+          console.log('Connected to Reloader');
+        };
 
-      ws.onclose = function() {
-        console.log('Connection to Reloader closed');
-      }
-    }()
+        ws.onmessage = function(evt) {
+          window.location.reload();
+        }
+
+        ws.onclose = function() {
+          console.log('Connection to Reloader closed');
+        }
+
+      }())
     </script>

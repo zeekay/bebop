@@ -2,9 +2,8 @@ from django.core.management.base import BaseCommand, CommandError
 from django.core.servers.basehttp import get_internal_wsgi_application
 from django.contrib.staticfiles.finders import find
 from django.conf import settings
-from bebop import server as websocket_server
 from bebop import autoreload
-
+from bebop.server import run_watcher, run_websocket
 from twisted.application import internet, service, app
 from twisted.web import server, resource, wsgi, static
 from twisted.python import threadpool, log
@@ -83,11 +82,12 @@ class Command(BaseCommand):
 
         self.run(*args, **options)
 
-    def _start_websocket_server(self):
+    def _start_bebop(self):
         host = getattr(settings, 'BEBOP_WEBSOCKET_HOST', '127.0.0.1')
         port = getattr(settings, 'BEBOP_WEBSOCKET_PORT', '9000')
         paths = getattr(settings, 'BEBOP_WEBSOCKET_PATHS', settings.TEMPLATE_DIRS + settings.STATICFILES_DIRS)
-        websocket_server.start(host, port, paths)
+        factory = run_websocket(host, port)
+        reactor.callInThread(run_watcher, factory, paths)
 
     def run(self, *args, **options):
         use_reloader = options.get('use_reloader', True)
@@ -110,7 +110,7 @@ class Command(BaseCommand):
 
             reactor.addSystemEventTrigger('before', 'shutdown',
                     service.IService(application).stopService)
-            self._start_websocket_server()
+            self._start_bebop()
 
             reactor.run()
 

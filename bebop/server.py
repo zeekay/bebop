@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-import argparse
 import os
-import sys
 from twisted.internet import reactor
 from twisted.python import log
 from autobahn.websocket import WebSocketServerFactory, WebSocketServerProtocol, listenWS
@@ -114,19 +111,3 @@ def run(args):
     if args.run_static_server:
         run_static(args.static_host, args.static_port, args.static_paths)
     reactor.run()
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Bebop Development Server')
-    parser.add_argument('-w', '--watch-paths', default='.', nargs='+', help="Directories to watch")
-    parser.add_argument('-n', '--not-recursive', default=True, action='store_false', help="Don't watch recursively")
-    parser.add_argument('-s', '--static-paths', default='.', nargs='+', help="Directories to serve from")
-    parser.add_argument('--static-host', default='0.0.0.0')
-    parser.add_argument('--static-port', default=8000, type=int)
-    parser.add_argument('-b', '--websocket-host', default='0.0.0.0')
-    parser.add_argument('-p', '--websocket-port', '-p', default=9000, type=int)
-    parser.add_argument('-r', '--run-static-server', action='store_true', help="Serve local static files")
-
-    args = parser.parse_args()
-    log.startLogging(sys.stdout)
-    run(args)
