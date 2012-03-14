@@ -17,7 +17,9 @@ class Client(object):
                 res += data
                 break
             res += data
-        return json.loads(res)['result']
+        res = json.loads(res)
+        if res.get('result'):
+            return res['result']
 
     def close(self):
         self.socket.close()
