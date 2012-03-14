@@ -1,33 +1,12 @@
+import os
 from django.conf import settings
 
 HOST = getattr(settings, 'BEBOP_WEBSOCKET_HOST', '127.0.0.1')
 PORT = getattr(settings, 'BEBOP_WEBSOCKET_PORT', '9000')
-RELOADER_SCRIPT = """
-<!-- Added by Bebop -->
-<script type="text/javascript">
-!function(){
-  WebSocket = window.WebSocket || window.MozWebSocket;
-  if (!WebSocket)
-    return console.log('WebSocket not Supported');
-
-  var url = 'ws://%s:%s';
-  var ws = new WebSocket(url);
-
-  ws.onopen = function() {
-    console.log('Connected to Reloader');
-  };
-
-  ws.onmessage = function(evt) {
-    window.location.reload();
-  }
-
-  ws.onclose = function() {
-    console.log('Connection to Reloader closed');
-  }
-}()
-</script>
-""" % (HOST, PORT)
-
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'bebop.js')) as f:
+    RELOADER_SCRIPT = f.read()
+RELOADER_SCRIPT.replace('127.0.0.1', HOST)
+RELOADER_SCRIPT.replace('9000', PORT)
 
 class ReloaderMiddleware(object):
     def process_response(self, request, response):

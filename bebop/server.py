@@ -1,7 +1,14 @@
+import json
 import os
-from twisted.internet import reactor
+
 from twisted.python import log
+from twisted.protocols import basic
+from twisted.internet import reactor
+from twisted.internet.protocol import Factory
+from twisted.internet.endpoints import TCP4ServerEndpoint
+
 from autobahn.websocket import WebSocketServerFactory, WebSocketServerProtocol, listenWS
+
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from watchdog.utils.platform import is_darwin
@@ -34,7 +41,7 @@ class ReloadHandler(FileSystemEventHandler):
         '''
         for c in self.factory.clients:
             log.msg('Reloading %s' % c.peerstr)
-            reactor.callFromThread(c.sendMessage, 'Reload')
+            reactor.callFromThread(c.sendMessage, json.dumps({'evt': 'fileModified', 'msg': '%s modified' % path}))
 
 
 class BebopServerProtocol(WebSocketServerProtocol):
@@ -43,6 +50,11 @@ class BebopServerProtocol(WebSocketServerProtocol):
     '''
     def onOpen(self):
         self.factory.register(self)
+
+    def onMessage(self, msg, binary):
+        data = json.loads(msg)
+        if data['evt'] == 'eval':
+            self.factory.eval_server.server.sendLine(msg)
 
     def connectionLost(self, reason):
         WebSocketServerProtocol.connectionLost(self, reason)
@@ -58,6 +70,7 @@ class BebopServerFactory(WebSocketServerFactory):
     def __init__(self, url):
         WebSocketServerFactory.__init__(self, url)
         self.clients = []
+        self.eval_conn = None
 
     def register(self, client):
         if not client in self.clients:
@@ -67,8 +80,47 @@ class BebopServerFactory(WebSocketServerFactory):
         if client in self.clients:
             self.clients.remove(client)
 
+    def attach_eval(self, server):
+        self.eval_server = server
 
-def run_static(host='0.0.0.0', port=8000, paths=None):
+
+class EvalServer(basic.LineReceiver):
+    '''
+    Protocol for doing browser-side evaluation of javascript.
+    '''
+    def __init__(self, websocket):
+        self.websocket = websocket
+
+    def connectionMade(self):
+        log.msg('Repl client connected')
+
+    def dataReceived(self, data):
+        for c in self.websocket.clients:
+            c.sendMessage(json.dumps({'evt': 'eval', 'msg': data}))
+
+
+class EvalServerFactory(Factory):
+    protocol = EvalServer
+
+    def __init__(self, websocket):
+        self.websocket = websocket
+
+    def buildProtocol(self, addr):
+        self.server = EvalServer(self.websocket)
+        return self.server
+
+
+def run_eval(websocket, host='127.0.0.1', port=9128):
+    '''
+    Runs eval server for browser-side evaluation.
+    '''
+    endpoint = TCP4ServerEndpoint(reactor, port, interface=host)
+    eval_server = EvalServerFactory(websocket)
+    endpoint.listen(eval_server)
+    return eval_server
+
+
+def run_static(host='127.0.0.1', port=8000, paths=None):
     '''
     Run static file server, useful for local development.
     '''
@@ -82,7 +134,7 @@ def run_static(host='0.0.0.0', port=8000, paths=None):
     reactor.listenTCP(port, server.Site(root), interface=host)
 
 
-def run_websocket(host='0.0.0.0', port=9000):
+def run_websocket(host='127.0.0.1', port=9000):
     '''
     Run websocket server.
     '''
@@ -100,14 +152,3 @@ def run_watcher(factory, paths, recursive=True):
     for path in paths:
         watcher.schedule(event_handler, path=path, recursive=recursive)
     watcher.start()
-
-
-def run(args):
-    '''
-    Launch bebop with arguments passed from command line.
-    '''
-    factory = run_websocket(args.websocket_host, args.websocket_port)
-    reactor.callInThread(run_watcher, factory, args.watch_paths, args.not_recursive)
-    if args.run_static_server:
-        run_static(args.static_host, args.static_port, args.static_paths)
-    reactor.run()
