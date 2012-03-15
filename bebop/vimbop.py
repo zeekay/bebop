@@ -64,7 +64,7 @@ def eval_js(*args):
     client.send(json.dumps({'evt': 'eval', 'msg': code}))
     result = client.recv()
     client.close()
-    return result
+    print result
 
 
 def eval_line():

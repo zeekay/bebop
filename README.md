@@ -21,20 +21,22 @@ To take advantage of the client-side reloading you need a WebSocket enabled brow
 
 ...or simply link to [bebop.js](https://raw.github.com/zeekay/bebop/master/bebop/bebop.js) in your project:
 
-    <script type="text/javascript" src="https://raw.github.com/zeekay/bebop/master/bebop/bebop.js">
+    <script src="https://raw.github.com/zeekay/bebop/master/bebop/bebop.js" type="text/javascript"></script>
 
 Vim
 ---
 If you use a version of Vim with Python compiled in you can add a few handy mappings to your vimrc:
 
     py import bebop.vimbop
-    command! -nargs=1 BebopComplete   py print bebop.vimbop.complete(<f-args>)
-    command! -nargs=* BebopEval     py print bebop.vimbop.eval_js(<f-args>)
-    command! -nargs=0 BebopEvalLine   py print bebop.vimbop.eval_line()
-    command! -nargs=0 BebopEvalBuffer py print bebop.vimbop.eval_buffer()
-    nnoremap <leader>ee :BebopEval<space>
-    nnoremap <leader>el :BebopEvalLine<cr>
-    vnoremap <leader>er :py print bebop.vimbop.eval_range()<cr>
-    nnoremap <leader>eb :BebopEvalBuffer<cr>
-    nnoremap <leader>ef :BebopEvalBuffer<cr>
+    command! -nargs=* BebopEval         py bebop.vimbop.eval_js(<f-args>)
+    command! -nargs=0 BebopEvalLine     py bebop.vimbop.eval_line()
+    command! -nargs=0 BebopEvalBuffer   py bebop.vimbop.eval_buffer()
 
+    " Eval javascript in Bebop connected browser
+    nnoremap <leader>ee :BebopEval<space>
+    " Eval line
+    nnoremap <leader>el :BebopEvalLine<cr>
+    " Eval range
+    vnoremap <leader>er :py bebop.vimbop.eval_range()<cr>
+    " Eval entire range
+    nnoremap <leader>eb :BebopEvalBuffer<cr>
