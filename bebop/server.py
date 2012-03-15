@@ -96,7 +96,7 @@ class EvalServer(basic.LineReceiver):
 
     def dataReceived(self, data):
         for c in self.websocket.clients:
-            c.sendMessage(json.dumps({'evt': 'eval', 'msg': data}))
+            c.sendMessage(data)
 
 
 class EvalServerFactory(Factory):

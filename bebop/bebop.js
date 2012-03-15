@@ -11,20 +11,19 @@
     };
 
     ws.onmessage = function(evt) {
-        var prop,
-            data = JSON.parse(evt.data);
+        var data = JSON.parse(evt.data);
 
         switch(data.evt) {
             case 'complete':
-                properties = [];
-                var obj = eval.call(window, data.msg);
+                var obj = eval.call(window, data.msg),
+                    prop,
+                    properties = [];
                 for (prop in obj) {
-                    if (obj.hasOwnProperty(prop)) {
-                        properties.push(prop);
-                    }
+                    properties.push(prop);
                 }
-                ws.send(JSON.stringify({'evt': 'completion', 'completions': properties}));
+                ws.send(JSON.stringify({'evt': 'complete', 'result': properties}));
                 break;
+
             case 'eval':
                 try {
                     var res = eval.call(window, data.msg);
@@ -34,6 +33,7 @@
                     ws.send(JSON.stringify({'evt': 'eval', 'result': err.message}));
                 }
                 break;
+
             case 'fileModified':
                 if (!window.bebopReloadHook) {
                     window.location.reload();

@@ -20,7 +20,7 @@ class Repl(basic.LineReceiver):
         if not line:
             self.prompt()
             return
-        self.client_factory.client.sendLine(line)
+        self.client_factory.client.sendLine(json.dumps({'evt': 'eval', 'msg': line}))
 
 
 class EvalClient(basic.LineReceiver):
