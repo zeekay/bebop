@@ -38,5 +38,5 @@ If you use a version of Vim with Python compiled in you can add a few handy mapp
     nnoremap <leader>el :BebopEvalLine<cr>
     " Eval range
     vnoremap <leader>er :py bebop.vimbop.eval_range()<cr>
-    " Eval entire range
+    " Eval buffer
     nnoremap <leader>eb :BebopEvalBuffer<cr>
