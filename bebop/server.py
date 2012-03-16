@@ -53,7 +53,7 @@ class BebopServerProtocol(WebSocketServerProtocol):
 
     def onMessage(self, msg, binary):
         data = json.loads(msg)
-        if data['evt'] == 'eval':
+        if data['evt'] in ('complete', 'eval'):
             self.factory.eval_server.server.sendLine(msg)
 
     def connectionLost(self, reason):

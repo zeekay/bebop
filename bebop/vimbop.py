@@ -52,7 +52,7 @@ def complete(obj):
     client.send(json.dumps({'evt': 'complete', 'msg': obj}))
     result = client.recv()
     client.close()
-    return result
+    print result
 
 
 def eval_js(*args):
