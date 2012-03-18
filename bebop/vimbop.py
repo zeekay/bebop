@@ -1,4 +1,5 @@
 import json
+import re
 import socket
 
 try:
@@ -6,6 +7,8 @@ try:
 except ImportError:
     pass
 
+
+IDENTIFIER_REGEX = re.compile('[$a-zA-Z_][0-9a-zA-Z_$.]*')
 
 class Client(object):
     def __init__(self, host='127.0.0.1', port=9128):
@@ -48,18 +51,23 @@ def complete(base):
     '''
     Returns completions for Vim.
     '''
-    parts = base.rsplit('.', 1)
-    obj = parts[0]
-    if len(parts) > 1:
-        prop = parts[1]
-    else:
-        prop = ''
+    base = base or ''
+    col = int(vim.eval("col('.')"))
+    line = vim.eval("getline('.')")
+
+    try:
+        obj = IDENTIFIER_REGEX.findall(line[:col])[-1][:-(len(base)+1)]
+    except IndexError:
+        return '[]'
 
     client = Client()
     client.send(json.dumps({'evt': 'complete', 'msg': obj}))
     result = client.recv()
     client.close()
-    return repr(sorted(('%s.%s' % (obj, str(x)) for x in result if prop.lower() in x.lower()), key=lambda x: x.startswith(prop)))
+    if result:
+        return repr(sorted((str(x) for x in result if base.lower() in x.lower()), key=lambda x: x.startswith(base)))
+    else:
+        return '[]'
 
 
 def eval_js(*args):

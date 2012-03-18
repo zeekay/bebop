@@ -31,7 +31,6 @@
             case 'eval':
                 try {
                     var res = eval.call(window, data.msg);
-                    console.log(res);
                     ws.send(JSON.stringify({'evt': 'eval', 'result': res}));
                 } catch (err) {
                     ws.send(JSON.stringify({'evt': 'eval', 'result': err.message}));

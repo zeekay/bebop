@@ -28,16 +28,19 @@ Vim
 If you use a version of Vim with Python compiled in you can use Bebop for both completion and javascript evaluation. Try adding the following to your vimrc:
 
     if executable('bebop') && has('python')
-        " Use Bebop for javascript completion and eval
+        " Use Bebop javascript completion and eval
         py import bebop.vimbop, vim
 
         function! BebopComplete(findstart, base)
             if a:findstart
-                return a:findstart-1
+                let line = getline('.')
+                let start = col('.') - 1
+                while start >= 0 && line[start - 1] =~ '\k'
+                    let start -= 1
+                endwhile
+                return start
             else
-                py completions = bebop.vimbop.complete(vim.eval('a:base'))
-                py vim.command('let res = ' + completions)
-                return res
+                py vim.command('return ' + bebop.vimbop.complete(vim.eval('a:base')))
             endif
         endfunction
 
