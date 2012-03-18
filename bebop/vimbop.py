@@ -44,15 +44,22 @@ def underscore_to_camelcase(value):
     return "".join(c.next()(x) if x else '_' for x in value.split("_"))
 
 
-def complete(obj):
+def complete(base):
     '''
-    Returns completions for a given object.
+    Returns completions for Vim.
     '''
+    parts = base.rsplit('.', 1)
+    obj = parts[0]
+    if len(parts) > 1:
+        prop = parts[1]
+    else:
+        prop = ''
+
     client = Client()
     client.send(json.dumps({'evt': 'complete', 'msg': obj}))
     result = client.recv()
     client.close()
-    print result
+    return repr(sorted(('%s.%s' % (obj, str(x)) for x in result if prop.lower() in x.lower()), key=lambda x: x.startswith(prop)))
 
 
 def eval_js(*args):

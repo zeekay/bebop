@@ -15,13 +15,17 @@
 
         switch(data.evt) {
             case 'complete':
-                var obj = eval.call(window, data.msg),
-                    prop,
-                    properties = [];
-                for (prop in obj) {
-                    properties.push(prop);
+                try {
+                    var obj = eval.call(window, data.msg),
+                        prop,
+                        properties = [];
+                    for (prop in obj) {
+                        properties.push(prop);
+                    }
+                    ws.send(JSON.stringify({'evt': 'complete', 'result': properties}));
+                } catch (err) {
+                    ws.send(JSON.stringify({'evt': 'complete', 'result': []}));
                 }
-                ws.send(JSON.stringify({'evt': 'complete', 'result': properties}));
                 break;
 
             case 'eval':
