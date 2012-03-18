@@ -25,18 +25,29 @@ To take advantage of the client-side reloading you need a WebSocket enabled brow
 
 Vim
 ---
-If you use a version of Vim with Python compiled in you can add a few handy mappings to your vimrc:
+If you use a version of Vim with Python compiled in you can use Bebop for both completion and javascript evaluation. Try adding the following to your vimrc:
 
-    py import bebop.vimbop
-    command! -nargs=* BebopEval         py bebop.vimbop.eval_js(<f-args>)
-    command! -nargs=0 BebopEvalLine     py bebop.vimbop.eval_line()
-    command! -nargs=0 BebopEvalBuffer   py bebop.vimbop.eval_buffer()
+    if executable('bebop') && has('python')
+        " Use Bebop javascript completion and eval
+        py import bebop.vimbop, vim
 
-    " Eval javascript in Bebop connected browser
-    nnoremap <leader>ee :BebopEval<space>
-    " Eval line
-    nnoremap <leader>el :BebopEvalLine<cr>
-    " Eval range
-    vnoremap <leader>er :py bebop.vimbop.eval_range()<cr>
-    " Eval buffer
-    nnoremap <leader>eb :BebopEvalBuffer<cr>
+        function! BebopComplete(findstart, base)
+            if a:findstart
+                return a:findstart-1
+            else
+                py completions = bebop.vimbop.complete(vim.eval('a:base'))
+                py vim.command('let res = ' + completions)
+                return res
+            endif
+        endfunction
+
+        au FileType javascript setlocal omnifunc=BebopComplete
+        au FileType javascript command! -nargs=* BebopEval     py bebop.vimbop.eval_js(<f-args>)
+        au FileType javascript command! -nargs=0 BebopEvalLine   py bebop.vimbop.eval_line()
+        au FileType javascript command! -nargs=0 BebopEvalBuffer py bebop.vimbop.eval_buffer()
+        au FileType javascript nnoremap <leader>ee :BebopEval<space>
+        au FileType javascript nnoremap <leader>el :BebopEvalLine<cr>
+        au FileType javascript vnoremap <leader>er :py bebop.vimbop.eval_range()<cr>
+        au FileType javascript nnoremap <leader>eb :BebopEvalBuffer<cr>
+        au FileType javascript nnoremap <leader>ef :BebopEvalBuffer<cr>
+    endif
