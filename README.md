@@ -25,31 +25,4 @@ To take advantage of the client-side reloading you need a WebSocket enabled brow
 
 Vim
 ---
-If you use a version of Vim with Python compiled in you can use Bebop for both completion and javascript evaluation. Try adding the following to your vimrc:
-
-    if executable('bebop') && has('python')
-        " Use Bebop javascript completion and eval
-        py import bebop.vimbop, vim
-
-        function! BebopComplete(findstart, base)
-            if a:findstart
-                let line = getline('.')
-                let start = col('.') - 1
-                while start >= 0 && line[start - 1] =~ '\k'
-                    let start -= 1
-                endwhile
-                return start
-            else
-                py vim.command('return ' + bebop.vimbop.complete(vim.eval('a:base')))
-            endif
-        endfunction
-
-        au FileType javascript setlocal omnifunc=BebopComplete
-        au FileType javascript command! -nargs=* BebopEval     py bebop.vimbop.eval_js(<f-args>)
-        au FileType javascript command! -nargs=0 BebopEvalLine   py bebop.vimbop.eval_line()
-        au FileType javascript command! -nargs=0 BebopEvalBuffer py bebop.vimbop.eval_buffer()
-        au FileType javascript nnoremap <leader>ee :BebopEval<space>
-        au FileType javascript nnoremap <leader>el :BebopEvalLine<cr>
-        au FileType javascript vnoremap <leader>er :py bebop.vimbop.eval_range()<cr>
-        au FileType javascript nnoremap <leader>eb :BebopEvalBuffer<cr>
-    endif
+Integration with vim is provided by [vim-bebop](http://github.com/zeekay/vim-bebop). You can do all sorts of fancy stuff like evaluate JavaScript, CoffeeScript, get completions, etc.
