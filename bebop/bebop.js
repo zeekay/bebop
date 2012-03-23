@@ -1,11 +1,11 @@
-window.onload = function() {
+(function() {
    var bebop = {
 
         tags: {
             js: {
                 link: 'src',
                 name: 'script',
-                type: 'text/script'
+                type: 'text/javascript'
             },
             css: {
                 link: 'href',
@@ -66,8 +66,13 @@ window.onload = function() {
         },
 
         reload: function(node) {
+            if (node._resource.ext === 'js') {
+                node.parentNode.removeChild(node);
+                return this.load(node._resource);
+            }
             var link = node._resource.tag.link;
             node[link] = this.randomizeUrl(node[link]);
+            console.log('Reloaded ' + node[link]);
         },
 
         load: function(resource) {
@@ -75,6 +80,7 @@ window.onload = function() {
             node[resource.tag.link] = resource.url;
             node.type = resource.tag.type;
             document.getElementsByTagName('head')[0].appendChild(node);
+            console.log('Loaded ' + node[resource.tag.link]);
         },
 
         oncomplete: function(msg) {
@@ -160,4 +166,4 @@ window.onload = function() {
     if (typeof root.bebop === 'undefined')
         root.bebop = bebop;
 
-};
+}());
