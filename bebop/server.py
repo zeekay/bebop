@@ -25,10 +25,9 @@ class ReloadHandler(FileSystemEventHandler):
     def on_modified(self, event):
         if is_darwin():
             # on_modified event is fired off for both the directory modified and actual file
-            if event.is_directory:
-                self.msg_clients(event.src_path)
-            else:
-                log.msg('Modified %s' % event.src_path)
+            # if not event.is_directory:
+            log.msg('Modified %s' % event.src_path)
+            self.msg_clients(event.src_path)
         else:
             if os.path.exists(event.src_path):
                 log.msg('Modified %s' % event.src_path)
@@ -41,7 +40,7 @@ class ReloadHandler(FileSystemEventHandler):
         '''
         for c in self.factory.clients:
             log.msg('Reloading %s' % c.peerstr)
-            reactor.callFromThread(c.sendMessage, json.dumps({'evt': 'fileModified', 'msg': '%s modified' % path}))
+            reactor.callFromThread(c.sendMessage, json.dumps({'evt': 'modified', 'msg': '%s modified' % path}))
 
 
 class BebopServerProtocol(WebSocketServerProtocol):

@@ -1,1 +1,1 @@
-__all__ = ['vim']
+__all__ = ['coffee', 'js']
