@@ -1,6 +1,5 @@
 window.onload = function() {
-
-    var bebop = {
+   var bebop = {
 
         tags: {
             js: {
@@ -16,7 +15,9 @@ window.onload = function() {
         },
 
         randomizeUrl: function(url){
-            return url + '?bebop=' + (((1+Math.random())*0x100000)|0).toString(16);
+            url = url.replace(/[?&]bebop=\w+/, '');
+            url += (url.indexOf('?') === -1) ? '?' : '&';
+            return url + 'bebop=' + (((1+Math.random())*0x100000)|0).toString(16);
         },
 
         urlParse: function(url) {
@@ -43,25 +44,30 @@ window.onload = function() {
         },
 
         findNode: function(url) {
-            var node,
-                nodes,
+            if (url === '')
+                return false;
+
+            var node, nodes, resource;
+            try {
                 resource = this.urlParse(url);
+                nodes = document.getElementsByTagName(resource.tag.name);
 
-            nodes = document.getElementsByTagName(resource.tag.name);
-
-            for (var i=0; i<nodes.length; i++) {
-                node = nodes[i];
-                if (node[resource.tag.link].indexOf(resource.filename) !== -1){
-                    node._resource = resource;
-                    return node;
+                for (var i=0; i<nodes.length; i++) {
+                    node = nodes[i];
+                    if (node[resource.tag.link].indexOf(resource.filename) !== -1){
+                        node._resource = resource;
+                        return node;
+                    }
                 }
+            } catch (err) {
+                return false;
             }
             return false;
         },
 
         reload: function(node) {
             var link = node._resource.tag.link;
-            node.setAttribute(link, this.randomizeUrl(node[link]));
+            node[link] = this.randomizeUrl(node[link]);
         },
 
         load: function(resource) {
@@ -83,7 +89,7 @@ window.onload = function() {
             }
         },
 
-        oneval: function(msg){
+        oneval: function(msg) {
             try {
                 var res = eval.call(root, msg);
                 this.ws.send(JSON.stringify({'evt': 'eval', 'result': res}));
@@ -94,15 +100,16 @@ window.onload = function() {
 
         onmodified: function(msg) {
             var node = this.findNode(msg);
-
-            if (node)
+            if (msg !== '' && node)
                 this.reload(node);
             else
-                window.location.reload();
+                location.reload();
         },
 
         connectBrowser: function() {
-            var WebSocket = window.WebSocket || window.MozWebSocket;
+            var that = this,
+                WebSocket = window.WebSocket || window.MozWebSocket;
+
             if (!WebSocket) {
                 return console.log('WebSockets not supported');
             }
@@ -115,18 +122,15 @@ window.onload = function() {
 
             ws.onmessage = function(evt) {
                 var data = JSON.parse(evt.data);
-
                 switch(data.evt) {
                     case 'complete':
-                        this.oncomplete(data.msg);
+                        that.oncomplete(data.msg);
                         break;
-
                     case 'eval':
-                        this.oneval(data.msg);
+                        that.oneval(data.msg);
                         break;
-
                     case 'modified':
-                        this.onreload(data.msg);
+                        that.onmodified(data.msg);
                         break;
                 }
             };

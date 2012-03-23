@@ -38,9 +38,10 @@ class ReloadHandler(FileSystemEventHandler):
         '''
         Notifies clients connected that a file has changed.
         '''
+        path = path.replace(os.getcwd(), '')
         for c in self.factory.clients:
             log.msg('Reloading %s' % c.peerstr)
-            reactor.callFromThread(c.sendMessage, json.dumps({'evt': 'modified', 'msg': '%s modified' % path}))
+            reactor.callFromThread(c.sendMessage, json.dumps({'evt': 'modified', 'msg': path}))
 
 
 class BebopServerProtocol(WebSocketServerProtocol):
