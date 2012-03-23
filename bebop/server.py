@@ -25,9 +25,14 @@ class ReloadHandler(FileSystemEventHandler):
     def on_modified(self, event):
         if is_darwin():
             # on_modified event is fired off for both the directory modified and actual file
-            # if not event.is_directory:
-            log.msg('Modified %s' % event.src_path)
-            self.msg_clients(event.src_path)
+            if event.is_directory:
+                modified_files = [os.path.join(event.src_path, f) for f in next(os.walk(event.src_path))[2]]
+                mod_file = max(modified_files, key=os.path.getmtime)
+                log.msg('Modified %s' % mod_file)
+                self.msg_clients(mod_file)
+            else:
+                log.msg('Modified %s' % event.src_path)
+                self.msg_clients(event.src_path)
         else:
             if os.path.exists(event.src_path):
                 log.msg('Modified %s' % event.src_path)
