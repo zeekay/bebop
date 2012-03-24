@@ -12,7 +12,7 @@ class Client(object):
         self.socket.settimeout(5)
 
     def send(self, data):
-        self.socket.sendall(data)
+        self.socket.sendall(json.dumps(data))
 
     def recv(self):
         res = ''
@@ -35,7 +35,7 @@ def eval(code):
     Sends code to Bebop, which will be run in browser.
     '''
     c = Client()
-    c.send(json.dumps({'evt': 'eval', 'msg': code}))
+    c.send({'evt': 'eval', 'msg': code})
     result = c.recv()
     c.close()
     return result
@@ -46,7 +46,45 @@ def complete(obj):
     Asks bebop to return a list of properties on a given object.
     '''
     c = Client()
-    c.send(json.dumps({'evt': 'complete', 'msg': obj}))
+    c.send({'evt': 'complete', 'msg': obj})
     result = c.recv()
     c.close()
     return result
+
+
+def modified(path=''):
+    '''
+    Sends modified event to bebop.
+    '''
+    c = Client()
+    c.send({'evt': 'modified', 'msg': path})
+    c.close()
+
+
+def listeners():
+    '''
+    List listeners connected to Bebop.
+    '''
+    c = Client()
+    c.send({'evt': 'listeners'})
+    result = c.recv()
+    c.close()
+    return result
+
+
+def active(listeners):
+    '''
+    Makes bebop forward message to given listeners.
+    '''
+    c = Client()
+    c.send({'evt': 'active', 'msg': listeners})
+    c.close()
+
+
+def sync():
+    '''
+    Toggles Bebop's sync feature.
+    '''
+    c = Client()
+    c.send({'evt': 'sync'})
+    c.close()

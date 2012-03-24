@@ -51,7 +51,7 @@ class ReloadHandler(FileSystemEventHandler):
 
 class BebopServerProtocol(WebSocketServerProtocol):
     '''
-    WebSocket web server protocol.
+    WebSocket server protocol.
     '''
     def onOpen(self):
         self.factory.register(self)
@@ -68,7 +68,7 @@ class BebopServerProtocol(WebSocketServerProtocol):
 
 class BebopServerFactory(WebSocketServerFactory):
     '''
-    WebSocket web server.
+    WebSocket server.
     '''
     protocol = BebopServerProtocol
 
@@ -100,8 +100,15 @@ class EvalServer(basic.LineReceiver):
         log.msg('Repl client connected')
 
     def dataReceived(self, data):
-        for c in self.websocket.clients:
-            c.sendMessage(data)
+        msg = json.loads(data)
+        if msg['evt'] in dir(self):
+            getattr(self, msg['evt'])(msg)
+        else:
+            for c in self.websocket.clients:
+                c.sendMessage(data)
+
+    def listeners(self, msg):
+        self.sendLine(json.dumps({'evt': 'listeners', 'result': [str(x) for x in self.websocket.clients]}))
 
 
 class EvalServerFactory(Factory):
