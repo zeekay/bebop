@@ -112,9 +112,9 @@
                 location.reload();
         },
 
-        connectBrowser: function() {
+        connect: function() {
             var that = this,
-                WebSocket = window.WebSocket || window.MozWebSocket;
+                WebSocket = root.WebSocket || root.MozWebSocket;
 
             if (!WebSocket) {
                 return console.log('WebSockets not supported');
@@ -157,10 +157,14 @@
     var root;
 
     if (typeof window === 'undefined') {
+        // Node.js
         root = global;
+        root.WebSocket = require('ws');
+        module.exports = bebop;
     } else {
+        // Browser
         root = window;
-        bebop.connectBrowser();
+        bebop.connect();
     }
 
     if (typeof root.bebop === 'undefined')
