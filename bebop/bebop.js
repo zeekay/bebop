@@ -21,7 +21,7 @@
         oneval: function(msg) {
             try {
                 var res = eval.call(root, msg);
-                this.send({'evt': 'eval', 'result': res});
+                this.send({'evt': 'eval', 'result': this.dump(res)});
             } catch (e) {
                 var error = {
                     'error': e.message,
@@ -135,10 +135,14 @@
                                 if (that.dir(value[name]).length < 1) {
                                     nu[name] = funcname;
                                 } else {
-                                    nu[name] = derez(value[name], path + '[' + JSON.stringify(name) + ']');
+                                    try {
+                                        nu[name] = derez(value[name], path + '[' + JSON.stringify(name) + ']');
+                                    } catch (e) {}
                                 }
                             } else {
-                                nu[name] = derez(value[name], path + '[' + JSON.stringify(name) + ']');
+                                try {
+                                    nu[name] = derez(value[name], path + '[' + JSON.stringify(name) + ']');
+                                    } catch (e) {}
                             }
                         }
                     }
@@ -172,11 +176,9 @@
                                 nu[name] = derez(value[name], path + '[' + JSON.stringify(name) + ']');
                             }
                         }
-
                         return nu;
                     } catch (e) {
                         return nu;
-                        //
                     }
                 }
             }(object, '$'));
@@ -370,6 +372,7 @@
     };
 
     var bebop = new Bebop(false);
+
     if (isBrowser) {
         bebop.connect();
     } else {
