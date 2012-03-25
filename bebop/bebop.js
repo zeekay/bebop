@@ -1,7 +1,7 @@
 (function() {
    var bebop = {
 
-       sync: false,
+        sync: false,
 
         reload: function(node) {
             if (node._resource.ext === 'js') {
@@ -24,11 +24,8 @@
         // Event handlers
         oncomplete: function(msg) {
             try {
-                var prop, properties = [];
                 var obj = eval.call(root, msg);
-                for (prop in obj)
-                    properties.push(prop);
-                this.send({'evt': 'complete', 'result': properties});
+                this.send({'evt': 'complete', 'result': this.dir(obj)});
             } catch (err) {
                 this.send({'evt': 'complete', 'result': []});
             }
@@ -39,7 +36,7 @@
                 var res = eval.call(root, msg);
                 this.send({'evt': 'eval', 'result': res});
             } catch (err) {
-                this.send({'evt': 'eval', 'result': res});
+                this.send({'evt': 'eval', 'result': err});
             }
         },
 
@@ -53,6 +50,124 @@
 
         onsync: function(msg) {
             // Not implemented
+        },
+
+        dir: function(object) {
+            var property, properties = [];
+
+            function valid(name) {
+                var invalid = ['arguments', 'caller', 'name', 'length', 'prototype'];
+                for (var i in invalid) {
+                    if (invalid[i] === name)
+                        return false;
+                }
+                return true;
+            }
+
+            if (Object.getOwnPropertyNames !== 'undefined') {
+                properties = Object.getOwnPropertyNames(object);
+                properties = properties.filter(function(name) { return valid(name); });
+                for (property in object) {
+                    if (typeof property === 'string' && !(property in properties))
+                        properties.push(property);
+                }
+            } else {
+                for (property in object)
+                    properties.push(property);
+            }
+
+            return properties;
+
+        },
+
+        dump: function(object) {
+            var funcname,
+                objects = [],
+                paths = [],
+                that = this;
+
+            return (function derez(value, path) {
+                var i,
+                    name,
+                    nu,
+                    properties;
+
+                switch (typeof value) {
+                case 'object':
+                    if (!value)
+                        return null;
+
+                    for (i = 0; i < objects.length; i += 1) {
+                        if (objects[i] === value)
+                            return {$ref: paths[i]};
+                    }
+
+                    objects.push(value);
+                    paths.push(path);
+
+                    if (Object.prototype.toString.apply(value) === '[object Array]') {
+                        nu = [];
+                        for (i = 0; i < value.length; i += 1)
+                            nu[i] = derez(value[i], path + '[' + i + ']');
+                    } else {
+                        nu = {};
+                        properties = that.dir(value);
+                        for (i in properties) {
+                            name = properties[i];
+
+                            if (typeof value[name] === 'function') {
+                                // Crop source
+                                funcname = (value[name].toString().split(')')[0] + ')').replace(' ' + name, '');
+
+                                // Don't recurse farther if function doesn't have valid properties
+                                if (that.dir(value[name]).length < 1) {
+                                    nu[name] = funcname;
+                                } else {
+                                    nu[name] = derez(value[name], path + '[' + JSON.stringify(name) + ']');
+                                }
+                            } else {
+                                nu[name] = derez(value[name], path + '[' + JSON.stringify(name) + ']');
+                            }
+                        }
+                    }
+                    return nu;
+                case 'number':
+                case 'string':
+                case 'boolean':
+                    return value;
+                case 'function':
+                    try {
+                        properties = that.dir(value);
+                        objects.push(value);
+                        paths.push(path);
+
+                        nu = {};
+
+                        for (i in properties) {
+                            name = properties[i];
+
+                            if (typeof value[name] === 'function') {
+                                // Prettify name for JSON
+                                funcname = (value[name].toString().split(')')[0] + ')').replace(' ' + name, '');
+
+                                // Don't recurse farther if function doesn't have valid properties
+                                if (that.dir(value[name]).length < 1) {
+                                    nu[name] = funcname;
+                                } else {
+                                    nu[name] = derez(value[name], path + '[' + JSON.stringify(name) + ']');
+                                }
+                            } else {
+                                nu[name] = derez(value[name], path + '[' + JSON.stringify(name) + ']');
+                            }
+                        }
+
+                        return nu;
+                    } catch (err) {
+                        return nu;
+                        //
+                    }
+                }
+            }(object, '$'));
         },
 
         // Websockets
@@ -187,4 +302,11 @@
     if (typeof root.bebop === 'undefined')
         root.bebop = bebop;
 
+    // Useful globals
+    root.dir = bebop.dir;
+    root.dump = bebop.dump;
+
 }());
+
+console.log(dump(Array));
+

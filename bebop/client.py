@@ -23,6 +23,7 @@ class Client(object):
                 break
             res += data
         res = json.loads(res)
+
         if res.get('result'):
             return res['result']
 
@@ -38,7 +39,7 @@ def eval(code):
     c.send({'evt': 'eval', 'msg': code})
     result = c.recv()
     c.close()
-    return result
+    return json.dumps(result, sort_keys=True, indent=2)
 
 
 def complete(obj):
