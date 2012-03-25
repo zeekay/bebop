@@ -1,27 +1,12 @@
 (function() {
     var isBrowser = typeof window === 'undefined' ? false : true;
-    var root = isBrowser ? window : global;
-    var bebop = {
+        root = isBrowser ? window : global;
 
-        sync: false,
+    function Bebop(sync){
+        this.sync = sync;
+    }
 
-        reload: function(node) {
-            if (node._resource.ext === 'js') {
-                node.parentNode.removeChild(node);
-                return this.load(node._resource);
-            }
-            var link = node._resource.tag.link;
-            node[link] = this.urlRandomize(node[link]);
-            console.log('Reloaded ' + node[link]);
-        },
-
-        load: function(resource) {
-            var node = document.createElement(resource.tag.name);
-            node[resource.tag.link] = resource.url;
-            node.type = resource.tag.type;
-            document.getElementsByTagName('head')[0].appendChild(node);
-            console.log('Loaded ' + node[resource.tag.link]);
-        },
+    Bebop.prototype = {
 
         // Event handlers
         oncomplete: function(msg) {
@@ -58,6 +43,26 @@
             // Not implemented
         },
 
+        // reloading
+        reload: function(node) {
+            if (node._resource.ext === 'js') {
+                node.parentNode.removeChild(node);
+                return this.load(node._resource);
+            }
+            var link = node._resource.tag.link;
+            node[link] = this.urlRandomize(node[link]);
+            console.log('Reloaded ' + node[link]);
+        },
+
+        load: function(resource) {
+            var node = document.createElement(resource.tag.name);
+            node[resource.tag.link] = resource.url;
+            node.type = resource.tag.type;
+            document.getElementsByTagName('head')[0].appendChild(node);
+            console.log('Loaded ' + node[resource.tag.link]);
+        },
+
+        // introspection
         dir: function(object) {
             var property, properties = [];
 
@@ -177,7 +182,7 @@
             }(object, '$'));
         },
 
-        // Websockets
+        // WebSockets
         connect: function() {
             var that = this,
                 WebSocket = root.WebSocket || root.MozWebSocket;
@@ -299,7 +304,7 @@
 
         // Stacktrace, borrowed from https://github.com/eriwen/javascript-stacktrace
         stacktrace: function(e) {
-            var methods = {
+            var method = {
                 chrome: function(e) {
                     var stack = (e.stack + '\n').replace(/^\S[^\(]+?[\n$]/gm, '').
                       replace(/^\s+(at eval )?at\s+/gm, '').
@@ -356,14 +361,15 @@
             };
 
             if (e['arguments'] && e.stack) {
-                return methods.chrome(e);
+                return method.chrome(e);
             } else if (e.stack) {
-                return methods.firefox(e);
+                return method.firefox(e);
             }
-            return methods.other(e);
+            return method.other(e);
         }
     };
 
+    var bebop = new Bebop(false);
     if (isBrowser) {
         bebop.connect();
     } else {
@@ -371,15 +377,22 @@
         module.exports = bebop;
     }
 
+    // Few useful globals
     var globals = {
         'bebop': bebop,
-        'dir': bebop.dir,
-        'dump': bebop.dump
+        'dir': function(obj){ return bebop.dir(obj); },
+        'dump': function(obj){ return bebop.dump(obj); }
     };
 
     for (var key in globals) {
-        if (typeof globals[key] === 'undefined')
+        if (typeof root[key] !== 'undefined') {
+            // preserve existing global
+            var original = root[key];
             root[key] = globals[key];
+            root[key]._original = original;
+        } else {
+            root[key] = globals[key];
+        }
     }
 
 }());
