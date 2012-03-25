@@ -1,5 +1,7 @@
 (function() {
-   var bebop = {
+    var isBrowser = typeof window === 'undefined' ? false : true;
+    var root = isBrowser ? window : global;
+    var bebop = {
 
         sync: false,
 
@@ -26,7 +28,7 @@
             try {
                 var obj = eval.call(root, msg);
                 this.send({'evt': 'complete', 'result': this.dir(obj)});
-            } catch (err) {
+            } catch (e) {
                 this.send({'evt': 'complete', 'result': []});
             }
         },
@@ -35,8 +37,12 @@
             try {
                 var res = eval.call(root, msg);
                 this.send({'evt': 'eval', 'result': res});
-            } catch (err) {
-                this.send({'evt': 'eval', 'result': err});
+            } catch (e) {
+                var error = {
+                    'error': e.message,
+                    'stack': this.stacktrace(e)
+                };
+                this.send({'evt': 'eval', 'result': error});
             }
         },
 
@@ -80,6 +86,7 @@
 
         },
 
+        // inspired by https://github.com/douglascrockford/JSON-js/blob/master/cycle.js
         dump: function(object) {
             var funcname,
                 objects = [],
@@ -162,7 +169,7 @@
                         }
 
                         return nu;
-                    } catch (err) {
+                    } catch (e) {
                         return nu;
                         //
                     }
@@ -176,7 +183,7 @@
                 WebSocket = root.WebSocket || root.MozWebSocket;
 
             if (!WebSocket) {
-                return console.log('WebSockets not supported');
+                this.webSocketFallback();
             }
 
             var ws = new WebSocket('ws://127.0.0.1:9000');
@@ -215,7 +222,13 @@
         },
 
         webSocketFallback: function() {
-            // Not implemented
+            root.WEB_SOCKET_SWF_LOCATION = 'https://github.com/gimite/web-socket-js/blob/master/WebSocketMain.swf?raw=true';
+            var urls = [
+                'https://github.com/gimite/web-socket-js/blob/master/swfobject.js?raw=true',
+                'https://github.com/gimite/web-socket-js/blob/master/web_socket.js?raw=true'
+            ];
+            this.load(this.urlParse(urls[0]));
+            this.load(this.urlParse(urls[1]));
         },
 
         // DOM Manipulation
@@ -248,7 +261,7 @@
                         return node;
                     }
                 }
-            } catch (err) {
+            } catch (e) {
                 return false;
             }
             return false;
@@ -282,31 +295,91 @@
             };
 
             return resource;
-        }
+        },
 
+        // Stacktrace, borrowed from https://github.com/eriwen/javascript-stacktrace
+        stacktrace: function(e) {
+            var methods = {
+                chrome: function(e) {
+                    var stack = (e.stack + '\n').replace(/^\S[^\(]+?[\n$]/gm, '').
+                      replace(/^\s+(at eval )?at\s+/gm, '').
+                      replace(/^([^\(]+?)([\n$])/gm, '{anonymous}()@$1$2').
+                      replace(/^Object.<anonymous>\s*\(([^\)]+)\)/gm, '{anonymous}()@$1').split('\n');
+                    stack.pop();
+                    return stack;
+                },
+
+                firefox: function(e) {
+                    return e.stack.replace(/(?:\n@:0)?\s+$/m, '').replace(/^\(/gm, '{anonymous}(').split('\n');
+                },
+
+                other: function(curr) {
+                    var ANON = '{anonymous}', fnRE = /function\s*([\w\-$]+)?\s*\(/i, stack = [], fn, args, maxStackSize = 10;
+                    while (curr && curr['arguments'] && stack.length < maxStackSize) {
+                        fn = fnRE.test(curr.toString()) ? RegExp.$1 || ANON : ANON;
+                        args = Array.prototype.slice.call(curr['arguments'] || []);
+                        stack[stack.length] = fn + '(' + this.stringifyArguments(args) + ')';
+                        curr = curr.caller;
+                    }
+                    return stack;
+                },
+
+               stringifyArguments: function(args) {
+                    var result = [];
+                    var slice = Array.prototype.slice;
+                    for (var i = 0; i < args.length; ++i) {
+                        var arg = args[i];
+                        if (arg === undefined) {
+                            result[i] = 'undefined';
+                        } else if (arg === null) {
+                            result[i] = 'null';
+                        } else if (arg.constructor) {
+                            if (arg.constructor === Array) {
+                                if (arg.length < 3) {
+                                    result[i] = '[' + this.stringifyArguments(arg) + ']';
+                                } else {
+                                    result[i] = '[' + this.stringifyArguments(slice.call(arg, 0, 1)) + '...' + this.stringifyArguments(slice.call(arg, -1)) + ']';
+                                }
+                            } else if (arg.constructor === Object) {
+                                result[i] = '#object';
+                            } else if (arg.constructor === Function) {
+                                result[i] = '#function';
+                            } else if (arg.constructor === String) {
+                                result[i] = '"' + arg + '"';
+                            } else if (arg.constructor === Number) {
+                                result[i] = arg;
+                            }
+                        }
+                    }
+                    return result.join(',');
+                }
+            };
+
+            if (e['arguments'] && e.stack) {
+                return methods.chrome(e);
+            } else if (e.stack) {
+                return methods.firefox(e);
+            }
+            return methods.other(e);
+        }
     };
 
-    var root;
-
-    if (typeof window === 'undefined') {
-        // Node.js
-        root = global;
+    if (isBrowser) {
+        bebop.connect();
+    } else {
         root.WebSocket = require('ws');
         module.exports = bebop;
-    } else {
-        // Browser
-        root = window;
-        bebop.connect();
     }
 
-    if (typeof root.bebop === 'undefined')
-        root.bebop = bebop;
+    var globals = {
+        'bebop': bebop,
+        'dir': bebop.dir,
+        'dump': bebop.dump
+    };
 
-    // Useful globals
-    root.dir = bebop.dir;
-    root.dump = bebop.dump;
+    for (var key in globals) {
+        if (typeof globals[key] === 'undefined')
+            root[key] = globals[key];
+    }
 
 }());
-
-console.log(dump(Array));
-
