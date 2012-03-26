@@ -6,12 +6,27 @@ from twisted.protocols import basic
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory
 from twisted.internet.endpoints import TCP4ServerEndpoint
+from twisted.web import resource
+from twisted.web.server import Site
+from twisted.web.static import File
 
 from autobahn.websocket import WebSocketServerFactory, WebSocketServerProtocol, listenWS
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from watchdog.utils.platform import is_darwin
+
+ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
+
+class BebopIndex(resource.Resource):
+    def __init__(self, filename, registry=None):
+        self.filename = filename
+
+    def render(self, request):
+        with open(self.filename) as f:
+            content = f.read()
+        index = content.index('</body>')
+        return ''.join((content[:index], '<script src="/_bebop/bebop.js" type="text/javascript"></script>', content[index:]))
 
 
 class ReloadHandler(FileSystemEventHandler):
@@ -132,18 +147,21 @@ def run_eval(websocket, host='127.0.0.1', port=9128):
     return eval_server
 
 
-def run_static(host='127.0.0.1', port=8000, paths=None):
+def run_static(host='127.0.0.1', port=8000, path='.', inject=True):
     '''
-    Run static file server, useful for local development.
+    Run static file server, useful for local development, can also automatically
+    inject bebop.js into index pages.
     '''
-    from twisted.web import static, server
-
-    if not paths:
-        paths = ['.']
-
-    for path in paths:
-        root = static.File(os.path.abspath(path))
-    reactor.listenTCP(port, server.Site(root), interface=host)
+    root = File(os.path.abspath(path))
+    if inject:
+        root.putChild('_bebop', File(os.path.join(ROOT_DIR, '../lib')))
+        root.indexNames=['index.html','index.htm']
+        root.processors = {
+            '.html': BebopIndex,
+            '.htm': BebopIndex,
+        }
+    factory = Site(root)
+    reactor.listenTCP(port, factory, interface=host)
 
 
 def run_websocket(host='127.0.0.1', port=9000):

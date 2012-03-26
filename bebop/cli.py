@@ -15,7 +15,7 @@ def run():
     parser = argparse.ArgumentParser(description='Bebop Development Server')
     parser.add_argument('-w', '--watch-paths', default='.', nargs='+', help="Directories to watch")
     parser.add_argument('-n', '--not-recursive', default=True, action='store_false', help="Don't watch recursively")
-    parser.add_argument('-s', '--static-paths', default='.', nargs='+', help="Directories to serve from")
+    parser.add_argument('-s', '--static-path', default='.', help="Directory to serve from")
 
     parser.add_argument('-b', '--websocket-host', default='0.0.0.0')
     parser.add_argument('-p', '--websocket-port', '-p', default=1983, type=int)
@@ -25,6 +25,7 @@ def run():
 
     parser.add_argument('-r', '--repl', action='store_true', help='Open REPL')
 
+    parser.add_argument('--no-inject', default=True, action='store_false', help="Do not inject bebop.js into index pages")
     parser.add_argument('--no-watcher', action='store_true', help="Don't watch for changes")
     parser.add_argument('--no-static', action='store_true', help="Don't serve static files")
     parser.add_argument('--no-open-browser', action='store_true', help="Don't open webbrowser automatically")
@@ -49,7 +50,7 @@ def run():
 
     # start static file server
     if not args.no_static:
-        run_static(args.static_host, args.static_port, args.static_paths)
+        run_static(args.static_host, args.static_port, args.static_path, args.no_inject)
 
         # open browser automatically
         if not args.no_open_browser:
