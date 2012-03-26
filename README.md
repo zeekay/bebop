@@ -18,7 +18,7 @@ To install the node.js client use `npm`.
 
 If you use bebop's static file server feature it will automatically inject the Javascript required for it to connect back to bebop.
 
-To take advantage of the client-side reloading you need a WebSocket enabled browser and a bit of javascript. You can use the provided Django middleware:
+To take advantage of the client-side reloading and Javascript interaction you need a WebSocket enabled browser and a bit of javascript. You can use the provided Django middleware:
 
     INSTALLED_APPS = (
         ...,
@@ -29,9 +29,9 @@ To take advantage of the client-side reloading you need a WebSocket enabled brow
         'bebop.middleware.ReloaderMiddleware',
     )
 
-...or simply link to [bebop.js](https://raw.github.com/zeekay/bebop/master/bebop/bebop.js) in your project:
+...or simply link to [bebop.js](https://raw.github.com/zeekay/bebop/master/bebop/lib/bebop.js) in your project:
 
-    <script src="https://raw.github.com/zeekay/bebop/master/bebop/bebop.js" type="text/javascript"></script>
+    <script src="bebop.js" type="text/javascript"></script>
 
 Vim
 ---
