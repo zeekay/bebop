@@ -11,8 +11,7 @@ repl.writer = function(obj, showHidden, depth) {
 
 bebop = new Bebop();
 bebop.onconnect = function() {
-    this.log('Connected to bebop');
-    repl.start();
+    repl.start('bebop> ', null, null, true);
 }
-bebop.connect();
 bebop.exportGlobals();
+bebop.connect();
