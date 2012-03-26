@@ -2,7 +2,10 @@ import argparse
 import sys
 import webbrowser
 from bebop.repl import run_repl
-from bebop.server import run_eval, run_static, run_websocket, run_watcher
+from bebop.server import run_server
+from bebop.websocket import run_websocket
+from bebop.static import run_static
+from bebop.watcher import run_watcher
 from twisted.internet import reactor
 from twisted.python import log
 
@@ -28,6 +31,7 @@ def run():
     parser.add_argument('--no-inject', default=True, action='store_false', help="Do not inject bebop.js into index pages")
     parser.add_argument('--no-watcher', action='store_true', help="Don't watch for changes")
     parser.add_argument('--no-static', action='store_true', help="Don't serve static files")
+    parser.add_argument('--no-server', action='store_true', help="Don't run TCP client server")
     parser.add_argument('--no-open-browser', action='store_true', help="Don't open webbrowser automatically")
 
     args = parser.parse_args()
@@ -44,9 +48,10 @@ def run():
     if not args.no_watcher:
         reactor.callInThread(run_watcher, factory, args.watch_paths, args.not_recursive)
 
-    # start eval tcp client server
-    eval_server = run_eval(factory)
-    factory.attach_eval(eval_server)
+    # start TCP client server
+    if not args.no_server:
+        server = run_server(factory)
+        factory.attach_server(server)
 
     # start static file server
     if not args.no_static:

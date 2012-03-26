@@ -1,112 +1,15 @@
 import json
-import os
 
 from twisted.python import log
 from twisted.protocols import basic
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory
 from twisted.internet.endpoints import TCP4ServerEndpoint
-from twisted.web import resource
-from twisted.web.server import Site
-from twisted.web.static import File
-
-from autobahn.websocket import WebSocketServerFactory, WebSocketServerProtocol, listenWS
-
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-from watchdog.utils.platform import is_darwin
-
-ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
-
-class BebopIndex(resource.Resource):
-    def __init__(self, filename, registry=None):
-        self.filename = filename
-
-    def render(self, request):
-        with open(self.filename) as f:
-            content = f.read()
-        index = content.index('</body>')
-        return ''.join((content[:index], '<script src="/_bebop/bebop.js" type="text/javascript"></script>', content[index:]))
 
 
-class ReloadHandler(FileSystemEventHandler):
+class BebopServer(basic.LineReceiver):
     '''
-    Event handler which detects when files have changed and reloads server.
-    '''
-    def __init__(self, factory):
-        super(ReloadHandler, self).__init__()
-        self.factory = factory
-
-    def on_modified(self, event):
-        if is_darwin():
-            # on_modified event is fired off for both the directory modified and actual file
-            if event.is_directory:
-                modified_files = [os.path.join(event.src_path, f) for f in next(os.walk(event.src_path))[2]]
-                mod_file = max(modified_files, key=os.path.getmtime)
-                log.msg('Modified %s' % mod_file)
-                self.msg_clients(mod_file)
-            else:
-                log.msg('Modified %s' % event.src_path)
-                self.msg_clients(event.src_path)
-        else:
-            if os.path.exists(event.src_path):
-                log.msg('Modified %s' % event.src_path)
-                self.msg_clients(event.src_path)
-
-
-    def msg_clients(self, path):
-        '''
-        Notifies clients connected that a file has changed.
-        '''
-        path = path.replace(os.getcwd(), '')
-        for c in self.factory.clients:
-            log.msg('Reloading %s' % c.peerstr)
-            reactor.callFromThread(c.sendMessage, json.dumps({'evt': 'modified', 'msg': path}))
-
-
-class BebopServerProtocol(WebSocketServerProtocol):
-    '''
-    WebSocket server protocol.
-    '''
-    def onOpen(self):
-        self.factory.register(self)
-
-    def onMessage(self, msg, binary):
-        data = json.loads(msg)
-        if data['evt'] in ('complete', 'eval'):
-            self.factory.eval_server.server.sendLine(msg)
-
-    def connectionLost(self, reason):
-        WebSocketServerProtocol.connectionLost(self, reason)
-        self.factory.unregister(self)
-
-
-class BebopServerFactory(WebSocketServerFactory):
-    '''
-    WebSocket server.
-    '''
-    protocol = BebopServerProtocol
-
-    def __init__(self, url):
-        WebSocketServerFactory.__init__(self, url)
-        self.clients = []
-        self.eval_conn = None
-
-    def register(self, client):
-        if not client in self.clients:
-            self.clients.append(client)
-
-    def unregister(self, client):
-        if client in self.clients:
-            self.clients.remove(client)
-
-    def attach_eval(self, server):
-        self.eval_server = server
-
-
-class EvalServer(basic.LineReceiver):
-    '''
-    Protocol for doing browser-side evaluation of javascript.
+    TCP server which clients connect to, allowing them to evaluate and introspect Javascript using connected browsers/servers.
     '''
     def __init__(self, websocket):
         self.websocket = websocket
@@ -126,59 +29,22 @@ class EvalServer(basic.LineReceiver):
         self.sendLine(json.dumps({'evt': 'listeners', 'result': [str(x) for x in self.websocket.clients]}))
 
 
-class EvalServerFactory(Factory):
-    protocol = EvalServer
+class BebopServerFactory(Factory):
+    protocol = BebopServer
 
     def __init__(self, websocket):
         self.websocket = websocket
 
     def buildProtocol(self, addr):
-        self.server = EvalServer(self.websocket)
+        self.server = BebopServer(self.websocket)
         return self.server
 
 
-def run_eval(websocket, host='127.0.0.1', port=9128):
+def run_server(websocket, host='127.0.0.1', port=9128):
     '''
-    Runs eval server for browser-side evaluation.
+    Runs TCP server, which allows clients to connect to Bebop.
     '''
     endpoint = TCP4ServerEndpoint(reactor, port, interface=host)
-    eval_server = EvalServerFactory(websocket)
-    endpoint.listen(eval_server)
-    return eval_server
-
-
-def run_static(host='127.0.0.1', port=8000, path='.', inject=True):
-    '''
-    Run static file server, useful for local development, can also automatically
-    inject bebop.js into index pages.
-    '''
-    root = File(os.path.abspath(path))
-    if inject:
-        root.putChild('_bebop', File(os.path.join(ROOT_DIR, '../lib')))
-        root.indexNames=['index.html','index.htm']
-        root.processors = {
-            '.html': BebopIndex,
-            '.htm': BebopIndex,
-        }
-    factory = Site(root)
-    reactor.listenTCP(port, factory, interface=host)
-
-
-def run_websocket(host='127.0.0.1', port=9000):
-    '''
-    Run websocket server.
-    '''
-    factory = BebopServerFactory("ws://%s:%s" % (host, port))
-    listenWS(factory)
-    return factory
-
-
-def run_watcher(factory, paths, recursive=True):
-    '''
-    Run file system watcher.
-    '''
-    event_handler = ReloadHandler(factory)
-    watcher = Observer()
-    for path in paths:
-        watcher.schedule(event_handler, path=path, recursive=recursive)
-    watcher.start()
+    bebop_server = BebopServerFactory(websocket)
+    endpoint.listen(bebop_server)
+    return bebop_server
