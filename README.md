@@ -1,6 +1,6 @@
 Bebop
 =====
-A tool for rapid web development which serves as static file server, websocket server for client-side reloading/bi-directional communcation and file watcher.
+A tool for rapid web development which bundles a static file server, file watcher, WebSocket server for automatically reloading assets and interfacing with browser/server Javascript applications.
 
 Usage
 -----
@@ -8,6 +8,16 @@ Check `bebop --help` for usage.
 
 Installation
 ------------
+To install the server components you can use `pip`:
+
+    pip install bebop-server
+
+To install the node.js client you can use `npm`:
+
+    npm install -g bebop
+
+If you use bebop's static file server feature it will automatically inject the Javascript required for it to connect back to bebop.
+
 To take advantage of the client-side reloading you need a WebSocket enabled browser and a bit of javascript. You can use the provided Django middleware:
 
     INSTALLED_APPS = (
@@ -25,4 +35,4 @@ To take advantage of the client-side reloading you need a WebSocket enabled brow
 
 Vim
 ---
-Integration with vim is provided by [vim-bebop](http://github.com/zeekay/vim-bebop). You can do all sorts of fancy stuff like evaluate JavaScript, CoffeeScript, get completions, etc.
+Integration with vim is provided by [vim-bebop](http://github.com/zeekay/vim-bebop). You can do all sorts of fancy stuff like evaluate Javascript, Coffeescript, get completions, etc.
