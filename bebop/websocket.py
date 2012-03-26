@@ -35,7 +35,7 @@ class BebopWebSocketFactory(WebSocketServerFactory):
         self.bebop_server = server
 
 
-def run_websocket(host='127.0.0.1', port=9000):
+def run_websocket(host='127.0.0.1', port=1983):
     '''
     Run websocket server.
     '''

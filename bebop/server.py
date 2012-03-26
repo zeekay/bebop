@@ -40,7 +40,7 @@ class BebopServerFactory(Factory):
         return self.server
 
 
-def run_server(websocket, host='127.0.0.1', port=9128):
+def run_server(websocket, host='127.0.0.1', port=1985):
     '''
     Runs TCP server, which allows clients to connect to Bebop.
     '''

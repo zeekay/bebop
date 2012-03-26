@@ -14,7 +14,7 @@ class Repl(basic.LineReceiver):
 
     def connectionMade(self):
         self.client_factory = EvalClientFactory(self)
-        reactor.connectTCP('127.0.0.1', 9128, self.client_factory)
+        reactor.connectTCP('127.0.0.1', 1985, self.client_factory)
 
     def lineReceived(self, line):
         if not line:
