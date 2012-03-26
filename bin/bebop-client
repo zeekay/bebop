@@ -1,0 +1,18 @@
+#!/usr/bin/env node
+
+var util  = require('util'),
+    repl  = require('repl'),
+    Bebop = require('bebop');
+
+// colorful output
+repl.writer = function(obj, showHidden, depth) {
+    return util.inspect(obj, showHidden, depth, true);
+};
+
+bebop = new Bebop();
+bebop.onconnect = function() {
+    this.log('Connected to bebop');
+    repl.start();
+}
+bebop.connect();
+bebop.exportGlobals();

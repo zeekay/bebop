@@ -7,9 +7,14 @@ class Client(object):
     Client object for communicating with Bebop's TCP interface.
     '''
     def __init__(self, host='127.0.0.1', port=9128):
+        self.host = host
+        self.port = port
+        self.socket = None
+
+    def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((host, port))
-        self.socket.settimeout(5)
+        self.socket.connect((self.host, self.port))
+        self.socket.settimeout(1)
 
     def send(self, data):
         self.socket.sendall(json.dumps(data))
@@ -28,64 +33,50 @@ class Client(object):
             return res['result']
 
     def close(self):
-        self.socket.close()
+        '''
+        Close connection to Bebop.
+        '''
+        if self.socket:
+            self.socket.close()
 
+    def eval(self, code):
+        '''
+        Sends code to Bebop, which will be run in browser.
+        '''
+        self.send({'evt': 'eval', 'msg': code})
+        result = self.recv()
+        return result
 
-def eval(code):
-    '''
-    Sends code to Bebop, which will be run in browser.
-    '''
-    c = Client()
-    c.send({'evt': 'eval', 'msg': code})
-    result = c.recv()
-    c.close()
-    return json.dumps(result, sort_keys=True, indent=2)
+    def complete(self, obj):
+        '''
+        Asks bebop to return a list of properties on a given object.
+        '''
+        self.send({'evt': 'complete', 'msg': obj})
+        result = self.recv()
+        return result
 
+    def modified(self, path=''):
+        '''
+        Sends modified event to bebop.
+        '''
+        self.send({'evt': 'modified', 'msg': path})
 
-def complete(obj):
-    '''
-    Asks bebop to return a list of properties on a given object.
-    '''
-    c = Client()
-    c.send({'evt': 'complete', 'msg': obj})
-    result = c.recv()
-    c.close()
-    return result
+    def listeners(self):
+        '''
+        List listeners connected to Bebop.
+        '''
+        self.send({'evt': 'listeners'})
+        result = self.recv()
+        return result
 
+    def active(self, listeners):
+        '''
+        Makes bebop forward message to given listeners.
+        '''
+        self.send({'evt': 'active', 'msg': listeners})
 
-def modified(path=''):
-    '''
-    Sends modified event to bebop.
-    '''
-    c = Client()
-    c.send({'evt': 'modified', 'msg': path})
-    c.close()
-
-
-def listeners():
-    '''
-    List listeners connected to Bebop.
-    '''
-    c = Client()
-    c.send({'evt': 'listeners'})
-    result = c.recv()
-    c.close()
-    return result
-
-
-def active(listeners):
-    '''
-    Makes bebop forward message to given listeners.
-    '''
-    c = Client()
-    c.send({'evt': 'active', 'msg': listeners})
-    c.close()
-
-
-def sync():
-    '''
-    Toggles Bebop's sync feature.
-    '''
-    c = Client()
-    c.send({'evt': 'sync'})
-    c.close()
+    def sync(self):
+        '''
+        Toggles Bebop's sync feature.
+        '''
+        self.send({'evt': 'sync'})

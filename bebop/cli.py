@@ -16,11 +16,16 @@ def run():
     parser.add_argument('-w', '--watch-paths', default='.', nargs='+', help="Directories to watch")
     parser.add_argument('-n', '--not-recursive', default=True, action='store_false', help="Don't watch recursively")
     parser.add_argument('-s', '--static-paths', default='.', nargs='+', help="Directories to serve from")
+
+    parser.add_argument('-b', '--websocket-host', default='0.0.0.0')
+    parser.add_argument('-p', '--websocket-port', '-p', default=1983, type=int)
+
     parser.add_argument('--static-host', default='0.0.0.0')
     parser.add_argument('--static-port', default=8000, type=int)
-    parser.add_argument('-b', '--websocket-host', default='0.0.0.0')
-    parser.add_argument('-p', '--websocket-port', '-p', default=9000, type=int)
+
     parser.add_argument('-r', '--repl', action='store_true', help='Open REPL')
+
+    parser.add_argument('--no-watcher', action='store_true', help="Don't watch for changes")
     parser.add_argument('--no-static', action='store_true', help="Don't serve static files")
     parser.add_argument('--no-open-browser', action='store_true', help="Don't open webbrowser automatically")
 
@@ -35,7 +40,8 @@ def run():
     factory = run_websocket(args.websocket_host, args.websocket_port)
 
     # start file watcher
-    reactor.callInThread(run_watcher, factory, args.watch_paths, args.not_recursive)
+    if not args.no_watcher:
+        reactor.callInThread(run_watcher, factory, args.watch_paths, args.not_recursive)
 
     # start eval tcp client server
     eval_server = run_eval(factory)
