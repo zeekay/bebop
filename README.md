@@ -8,11 +8,11 @@ Check `bebop --help` for usage.
 
 Installation
 ------------
-To install the server components you can use `pip`:
+To install the server components use `pip`.
 
     pip install bebop-server
 
-To install the node.js client you can use `npm`:
+To install the node.js client use `npm`.
 
     npm install -g bebop
 
