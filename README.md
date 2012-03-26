@@ -2,10 +2,6 @@ Bebop
 =====
 A tool for rapid web development which bundles a static file server, file watcher, WebSocket server for automatically reloading assets and interfacing with browser/server Javascript applications.
 
-Usage
------
-Check `bebop --help` for usage.
-
 Installation
 ------------
 To install the server components use `pip`.
@@ -32,6 +28,15 @@ To take advantage of the client-side reloading and Javascript interaction you ne
 ...or simply link to [bebop.js](https://raw.github.com/zeekay/bebop/master/bebop/lib/bebop.js) in your project:
 
     <script src="bebop.js" type="text/javascript"></script>
+
+Usage
+-----
+Change to the directory in which your application resides and run `bebop`.
+
+    $ cd ~/ve/myapp
+    $ bebop
+
+Check `bebop --help` for various options/configuration.
 
 Vim
 ---
