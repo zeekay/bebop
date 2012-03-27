@@ -67,11 +67,11 @@ class Client(object):
         result = self.recv()
         return result
 
-    def active(self, listeners):
+    def active(self, listener):
         '''
         Makes bebop forward message to given listeners.
         '''
-        self.send({'evt': 'active', 'msg': listeners})
+        self.send({'evt': 'active', 'msg': listener})
 
     def sync(self):
         '''

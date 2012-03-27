@@ -1,6 +1,8 @@
 import json
-
+import uuid
 from autobahn.websocket import WebSocketServerFactory, WebSocketServerProtocol, listenWS
+from datetime import datetime
+
 
 class BebopWebSocketServer(WebSocketServerProtocol):
     def onOpen(self):
@@ -10,6 +12,8 @@ class BebopWebSocketServer(WebSocketServerProtocol):
         data = json.loads(msg)
         if data['evt'] in ('complete', 'eval'):
             self.factory.bebop_server.server.sendLine(msg)
+        elif data['evt'] == 'connected':
+            [c for c in self.factory.clients if c['client'] == self][0]['identifier'] = data['identifier']
 
     def connectionLost(self, reason):
         WebSocketServerProtocol.connectionLost(self, reason)
@@ -24,12 +28,21 @@ class BebopWebSocketFactory(WebSocketServerFactory):
         self.clients = []
 
     def register(self, client):
-        if not client in self.clients:
-            self.clients.append(client)
+        if not client in [c['client'] for c in self.clients]:
+            for c in self.clients:
+                c['active'] = ' '
+
+            self.clients.append({
+                'client': client,
+                'id': str(uuid.uuid4()),
+                'started': datetime.now(),
+                'identifier': '',
+                'active': '*'
+             })
 
     def unregister(self, client):
-        if client in self.clients:
-            self.clients.remove(client)
+        if client in [c['client'] for c in self.clients]:
+            self.clients = [c for c in self.clients if not c['client'] == client]
 
     def attach_server(self, server):
         self.bebop_server = server

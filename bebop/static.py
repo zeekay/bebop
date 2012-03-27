@@ -16,7 +16,10 @@ class BebopIndex(resource.Resource):
     def render(self, request):
         with open(self.filename) as f:
             content = f.read()
-        index = content.index('</body>')
+        try:
+            index = content.index('</body>')
+        except ValueError:
+            return content
         return ''.join((content[:index], '<script src="/_bebop/bebop.js" type="text/javascript"></script>', content[index:]))
 
 
