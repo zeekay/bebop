@@ -8,12 +8,12 @@ from twisted.internet.protocol import Factory
 from twisted.internet.endpoints import TCP4ServerEndpoint
 
 
-class BebopServer(basic.LineReceiver):
+class BebopClient(basic.LineReceiver):
     '''
-    TCP server which clients connect to, allowing them to evaluate and introspect Javascript using connected browsers/servers.
+    A Bebop client which connects TCP. Bebop clients communicate with WebSocketClients allowing them to evaluate and introspect Javascript using connected browsers/servers.
     '''
-    def __init__(self, websocket):
-        self.websocket = websocket
+    def __init__(self, websocket_server):
+        self.websocket_server = websocket_server
         self.active_client = None
         self.broadcast = False
 
@@ -28,7 +28,7 @@ class BebopServer(basic.LineReceiver):
         if msg['evt'] in dir(self):
             getattr(self, msg['evt'])(msg)
         else:
-            if self.websocket.clients:
+            if self.websocket_server.clients:
                 if self.broadcast:
                     for c in self.websocket.clients:
                         c['client'].sendMessage(data)
@@ -36,7 +36,7 @@ class BebopServer(basic.LineReceiver):
                     if self.active_client and self.active_client.get('client', None):
                         self.active_client['client'].sendMessage(data)
                     else:
-                        self.websocket.clients[-1]['client'].sendMessage(data)
+                        self.websocket_server.clients[-1]['client'].sendMessage(data)
 
     def onMessage(self, client, msg):
         '''
@@ -47,7 +47,7 @@ class BebopServer(basic.LineReceiver):
             if client == self.active_client['client']:
                 self.sendLine(msg)
         elif data['evt'] == 'connected':
-            [c for c in self.websocket.clients if c['client'] == self][0]['identifier'] = data['identifier']
+            [c for c in self.websocket_server.clients if c['client'] == client][0]['identifier'] = data['identifier']
 
     def broadcast(self, msg):
         '''
@@ -59,15 +59,15 @@ class BebopServer(basic.LineReceiver):
         query = msg['msg'].lower()
         try:
             idx = int(query)
-            self.active_client = self.websocket.clients[idx-1]
+            self.active_client = self.websocket_server.clients[idx-1]
         except IndexError:
             return
         except ValueError:
-            for c in self.websocket.clients:
+            for c in self.websocket_server.clients:
                 if query in c['identifier'].lower():
                     self.active_client = c
 
-        for c in self.websocket.clients:
+        for c in self.websocket_server.clients:
             if c['client'] == self.active_client['client']:
                 c['active'] = '*'
             else:
@@ -75,7 +75,7 @@ class BebopServer(basic.LineReceiver):
 
     def listeners(self, msg):
         clients = []
-        for idx, c in enumerate(self.websocket.clients, start=1):
+        for idx, c in enumerate(self.websocket_server.clients, start=1):
             clients.append((str(idx), c['active'], str(datetime.now() - c['started']).rsplit('.')[0], c['identifier']))
 
         self.sendLine(json.dumps({
@@ -84,22 +84,27 @@ class BebopServer(basic.LineReceiver):
         }))
 
 
-class BebopServerFactory(Factory):
-    protocol = BebopServer
+class BebopServer(Factory):
+    '''
+    Factory for BebopClients, at the moment only one client can be active at a time.
+    '''
 
-    def __init__(self, websocket):
-        self.websocket = websocket
+    protocol = BebopClient
+
+    def __init__(self, websocket_server):
+        self.websocket_server = websocket_server
+        self.client = BebopClient(self.websocket_server)
 
     def buildProtocol(self, addr):
-        self.server = BebopServer(self.websocket)
-        return self.server
+        self.client = BebopClient(self.websocket_server)
+        return self.client
 
 
-def run_server(websocket, host='127.0.0.1', port=1985):
+def run_server(websocket_server, host='127.0.0.1', port=1985):
     '''
     Runs TCP server, which allows clients to connect to Bebop.
     '''
     endpoint = TCP4ServerEndpoint(reactor, port, interface=host)
-    bebop_server = BebopServerFactory(websocket)
+    bebop_server = BebopServer(websocket_server)
     endpoint.listen(bebop_server)
     return bebop_server

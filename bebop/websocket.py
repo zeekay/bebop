@@ -11,7 +11,7 @@ class BebopWebSocketClient(WebSocketServerProtocol):
         self.factory.register(self)
 
     def onMessage(self, msg, binary):
-        self.factory.bebop_server.server.onMessage(self, msg)
+        self.factory.bebop_server.client.onMessage(self, msg)
 
     def connectionLost(self, reason):
         WebSocketServerProtocol.connectionLost(self, reason)
@@ -42,14 +42,14 @@ class BebopWebSocketServer(WebSocketServerFactory):
         if client in [c['client'] for c in self.clients]:
             self.clients = [c for c in self.clients if not c['client'] == client]
 
-    def attach_server(self, server):
-        self.bebop_server = server
+    def attach_server(self, bebop_server):
+        self.bebop_server = bebop_server
 
 
 def run_websocket(host='127.0.0.1', port=1983):
     '''
     Run websocket server.
     '''
-    server = BebopWebSocketServer("ws://%s:%s" % (host, port))
-    listenWS(server)
-    return server
+    websocket_server = BebopWebSocketServer("ws://%s:%s" % (host, port))
+    listenWS(websocket_server)
+    return websocket_server
