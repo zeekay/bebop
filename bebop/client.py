@@ -15,9 +15,15 @@ class Client(object):
         self.socket.settimeout(1)
 
     def send(self, data):
+        '''
+        Send JSON message to Bebop
+        '''
         self.socket.sendall(json.dumps(data))
 
     def recv(self):
+        '''
+        Recieve response from Bebop.
+        '''
         res = ''
         while True:
             data = self.socket.recv(1024)
@@ -39,7 +45,7 @@ class Client(object):
 
     def eval(self, code):
         '''
-        Sends code to Bebop, which will be run in browser.
+        Send code to Bebop, which will be eval'd by WebSocket client(s).
         '''
         self.send({'evt': 'eval', 'msg': code})
         result = self.recv()
@@ -47,34 +53,34 @@ class Client(object):
 
     def complete(self, obj):
         '''
-        Asks bebop to return a list of properties on a given object.
+        Ask active WebSocket client to return a list of properties for a givent object.
         '''
         self.send({'evt': 'complete', 'msg': obj})
         result = self.recv()
         return result
 
-    def modified(self, path=''):
+    def modified(self, file=''):
         '''
-        Sends modified event to bebop.
+        Notify WebSocket clients that a file has been modified.
         '''
-        self.send({'evt': 'modified', 'msg': path})
+        self.send({'evt': 'modified', 'msg': file})
 
-    def listeners(self):
+    def list_websocket_clients(self):
         '''
-        List listeners connected to Bebop.
+        List WebSocket clients.
         '''
-        self.send({'evt': 'listeners'})
+        self.send({'evt': 'list_websocket_clients'})
         result = self.recv()
         return result
 
-    def active(self, listener):
+    def set_active_client(self, listener):
         '''
-        Makes bebop forward message to given listeners.
+        Set active WebSocket client.
         '''
-        self.send({'evt': 'active', 'msg': listener})
+        self.send({'evt': 'set_active_client', 'msg': listener})
 
-    def sync(self):
+    def toggle_broadcast(self):
         '''
-        Toggles Bebop's sync feature.
+        Toggle broadcast on/off.
         '''
-        self.send({'evt': 'sync'})
+        self.send({'evt': 'toggle_broadcast'})

@@ -44,18 +44,22 @@ class BebopClient(basic.LineReceiver):
         '''
         data = json.loads(msg)
         if data['evt'] in ('complete', 'eval'):
-            if client == self.active_client['client']:
-                self.sendLine(msg)
+            if self.active_client:
+                if client == self.active_client['client']:
+                    self.sendLine(msg)
         elif data['evt'] == 'connected':
             [c for c in self.websocket_server.clients if c['client'] == client][0]['identifier'] = data['identifier']
 
-    def broadcast(self, msg):
+    def toggle_broadcast(self, msg):
         '''
         Toggles sending messages to all WebSocket endpoints.
         '''
         self.broadcast = not self.broadcast
 
-    def active(self, msg):
+    def set_active_client(self, msg):
+        '''
+        Set websocket client as active.
+        '''
         query = msg['msg'].lower()
         try:
             idx = int(query)
@@ -73,7 +77,10 @@ class BebopClient(basic.LineReceiver):
             else:
                 c['active'] = ' '
 
-    def listeners(self, msg):
+    def list_websocket_clients(self, msg):
+        '''
+        List WebSocket clients
+        '''
         clients = []
         for idx, c in enumerate(self.websocket_server.clients, start=1):
             clients.append((str(idx), c['active'], str(datetime.now() - c['started']).rsplit('.')[0], c['identifier']))
