@@ -15,20 +15,45 @@ class BebopServer(basic.LineReceiver):
     def __init__(self, websocket):
         self.websocket = websocket
         self.active_client = None
+        self.broadcast = False
 
     def connectionMade(self):
         log.msg('Repl client connected')
 
     def dataReceived(self, data):
+        '''
+        Handle data recieved from a Bebop client.
+        '''
         msg = json.loads(data)
         if msg['evt'] in dir(self):
             getattr(self, msg['evt'])(msg)
         else:
             if self.websocket.clients:
-                if self.active_client and self.active_client.get('client', None):
-                    self.active_client['client'].sendMessage(data)
+                if self.broadcast:
+                    for c in self.websocket.clients:
+                        c['client'].sendMessage(data)
                 else:
-                    self.websocket.clients[-1]['client'].sendMessage(data)
+                    if self.active_client and self.active_client.get('client', None):
+                        self.active_client['client'].sendMessage(data)
+                    else:
+                        self.websocket.clients[-1]['client'].sendMessage(data)
+
+    def onMessage(self, client, msg):
+        '''
+        Data recieved from a WebSocket endpoint.
+        '''
+        data = json.loads(msg)
+        if data['evt'] in ('complete', 'eval'):
+            if client == self.active_client['client']:
+                self.sendLine(msg)
+        elif data['evt'] == 'connected':
+            [c for c in self.websocket.clients if c['client'] == self][0]['identifier'] = data['identifier']
+
+    def broadcast(self, msg):
+        '''
+        Toggles sending messages to all WebSocket endpoints.
+        '''
+        self.broadcast = not self.broadcast
 
     def active(self, msg):
         query = msg['msg'].lower()

@@ -1,27 +1,25 @@
-import json
 import uuid
 from autobahn.websocket import WebSocketServerFactory, WebSocketServerProtocol, listenWS
 from datetime import datetime
 
 
-class BebopWebSocketServer(WebSocketServerProtocol):
+class BebopWebSocketClient(WebSocketServerProtocol):
+    '''
+    An individual WebSocket client
+    '''
     def onOpen(self):
         self.factory.register(self)
 
     def onMessage(self, msg, binary):
-        data = json.loads(msg)
-        if data['evt'] in ('complete', 'eval'):
-            self.factory.bebop_server.server.sendLine(msg)
-        elif data['evt'] == 'connected':
-            [c for c in self.factory.clients if c['client'] == self][0]['identifier'] = data['identifier']
+        self.factory.bebop_server.server.onMessage(self, msg)
 
     def connectionLost(self, reason):
         WebSocketServerProtocol.connectionLost(self, reason)
         self.factory.unregister(self)
 
 
-class BebopWebSocketFactory(WebSocketServerFactory):
-    protocol = BebopWebSocketServer
+class BebopWebSocketServer(WebSocketServerFactory):
+    protocol = BebopWebSocketClient
 
     def __init__(self, url):
         WebSocketServerFactory.__init__(self, url)
@@ -52,6 +50,6 @@ def run_websocket(host='127.0.0.1', port=1983):
     '''
     Run websocket server.
     '''
-    factory = BebopWebSocketFactory("ws://%s:%s" % (host, port))
-    listenWS(factory)
-    return factory
+    server = BebopWebSocketServer("ws://%s:%s" % (host, port))
+    listenWS(server)
+    return server
