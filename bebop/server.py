@@ -14,7 +14,6 @@ class BebopClient(basic.LineReceiver):
     '''
     def __init__(self, websocket_server):
         self.websocket_server = websocket_server
-        self.active_client = None
         self.broadcast = False
 
     def connectionMade(self):
@@ -30,7 +29,7 @@ class BebopClient(basic.LineReceiver):
         else:
             if self.websocket_server.clients:
                 if self.broadcast:
-                    for c in self.websocket.clients:
+                    for c in self.websocket_server.clients:
                         c['client'].sendMessage(data)
                 else:
                     if self.active_client and self.active_client.get('client', None):
@@ -49,6 +48,15 @@ class BebopClient(basic.LineReceiver):
                     self.sendLine(msg)
         elif data['evt'] == 'connected':
             [c for c in self.websocket_server.clients if c['client'] == client][0]['identifier'] = data['identifier']
+
+    @property
+    def active_client(self):
+        '''
+        Returns currently active client.
+        '''
+        for c in self.websocket_server.clients:
+            if c['active'] == '*':
+                return c
 
     def toggle_broadcast(self, msg):
         '''
