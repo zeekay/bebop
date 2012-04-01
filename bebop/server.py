@@ -36,6 +36,8 @@ class BebopClient(basic.LineReceiver):
                         self.active_client['client'].sendMessage(data)
                     else:
                         self.websocket_server.clients[-1]['client'].sendMessage(data)
+            else:
+                self.sendLine(json.dumps({'error': 'No WebSocket clients connected'}))
 
     def onMessage(self, client, msg):
         '''

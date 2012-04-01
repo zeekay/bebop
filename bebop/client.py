@@ -1,6 +1,8 @@
 import json
 import socket
 
+class BebopException(Exception):
+    pass
 
 class Client(object):
     '''
@@ -35,6 +37,8 @@ class Client(object):
 
         if res.get('result'):
             return res['result']
+        elif res.get('error'):
+            raise BebopException(res['error'])
 
     def close(self):
         '''
