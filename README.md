@@ -25,7 +25,7 @@ To take advantage of the client-side reloading and Javascript interaction you ne
         'bebop.middleware.ReloaderMiddleware',
     )
 
-...or simply link to [bebop.js](https://raw.github.com/zeekay/bebop/master/bebop/lib/bebop.js) in your project:
+...or simply link to [bebop.js](https://raw.github.com/zeekay/bebop/master/lib/bebop.js) in your project:
 
     <script src="bebop.js" type="text/javascript"></script>
 
