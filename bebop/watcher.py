@@ -40,6 +40,7 @@ class ReloadHandler(FileSystemEventHandler):
         '''
         path = path.replace(os.getcwd(), '')
         for c in self.factory.clients:
+            c = c['client']
             log.msg('Reloading %s' % c.peerstr)
             reactor.callFromThread(c.sendMessage, json.dumps({'evt': 'modified', 'msg': path}))
 
