@@ -50,6 +50,7 @@ class BebopClient(basic.LineReceiver):
                     self.sendLine(msg)
         elif data['evt'] == 'connected':
             [c for c in self.websocket_server.clients if c['client'] == client][0]['identifier'] = data['identifier']
+            print 'WebSocket client connected: %s' % data['identifier']
 
     @property
     def active_client(self):

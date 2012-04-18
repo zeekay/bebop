@@ -17,7 +17,6 @@ class BebopWebSocketClient(WebSocketServerProtocol):
         WebSocketServerProtocol.connectionLost(self, reason)
         self.factory.unregister(self)
 
-
 class BebopWebSocketServer(WebSocketServerFactory):
     protocol = BebopWebSocketClient
 
