@@ -17,7 +17,7 @@ class BebopClient(basic.LineReceiver):
         self.broadcast = False
 
     def connectionMade(self):
-        log.msg('Repl client connected')
+        log.msg('Client connected')
 
     def dataReceived(self, data):
         '''

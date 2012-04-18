@@ -8,6 +8,7 @@ from bebop.static import run_static
 from bebop.watcher import run_watcher
 from twisted.internet import reactor
 from twisted.python import log
+from bebop.node import run_node
 
 
 def run():
@@ -34,8 +35,9 @@ def run():
     parser.add_argument('--no-server', action='store_true', help="Don't run TCP client server")
     parser.add_argument('--no-open-browser', action='store_true', help="Don't open webbrowser automatically")
 
+    parser.add_argument('--node', action='store_true', help="Run node client instead (disables static file server)")
+
     args = parser.parse_args()
-    log.startLogging(sys.stdout)
 
     # launch REPL
     if args.repl:
@@ -44,22 +46,27 @@ def run():
     # start websocket server
     factory = run_websocket(args.websocket_host, args.websocket_port)
 
-    # start file watcher
-    if not args.no_watcher:
-        reactor.callInThread(run_watcher, factory, args.watch_paths, args.not_recursive)
-
     # start TCP client server
     if not args.no_server:
         server = run_server(factory)
         factory.attach_server(server)
 
-    # start static file server
-    if not args.no_static:
-        run_static(args.static_host, args.static_port, args.static_path, args.no_inject)
+    if args.node:
+        reactor.callInThread(run_node)
+    else:
+        log.startLogging(sys.stdout)
 
-        # open browser automatically
-        if not args.no_open_browser:
-            webbrowser.open('http://%s:%s' % (args.static_host, args.static_port))
+        # start file watcher
+        if not args.no_watcher:
+            reactor.callInThread(run_watcher, factory, args.watch_paths, args.not_recursive)
+
+        # start static file server
+        if not args.no_static:
+            run_static(args.static_host, args.static_port, args.static_path, args.no_inject)
+
+            # open browser automatically
+            if not args.no_open_browser:
+                webbrowser.open('http://%s:%s' % (args.static_host, args.static_port))
 
     # run reactor, run!
     reactor.run()
