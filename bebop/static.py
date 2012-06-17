@@ -30,7 +30,6 @@ def run_static(host='127.0.0.1', port=8000, path='.', inject=True):
     '''
     root = File(os.path.abspath(path))
     root_dir = os.path.abspath(os.path.dirname(__file__))
-
     if inject:
         root.putChild('_bebop', File(os.path.join(root_dir, '../lib')))
         root.indexNames=['index.html','index.htm']
