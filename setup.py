@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='bebop-server',
-      version='0.3.4',
+      version='0.3.5',
       url="https://github.com/zeekay/bebop",
       author='Zach Kelling',
       author_email='zeekayy@gmail.com',
