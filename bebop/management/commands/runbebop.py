@@ -3,7 +3,10 @@ from django.core.servers.basehttp import get_internal_wsgi_application
 from django.contrib.staticfiles.finders import find
 from django.conf import settings
 from bebop import autoreload
-from bebop.server import run_eval, run_watcher, run_websocket
+from bebop.server import run_server
+from bebop.websocket import run_websocket
+from bebop.static import run_static
+from bebop.watcher import run_watcher
 from twisted.application import internet, service, app
 from twisted.web import server, resource, wsgi, static
 from twisted.python import threadpool, log
@@ -87,14 +90,13 @@ class Command(BaseCommand):
 
     def _start_bebop(self, use_repl=True):
         host = getattr(settings, 'BEBOP_WEBSOCKET_HOST', '127.0.0.1')
-        port = getattr(settings, 'BEBOP_WEBSOCKET_PORT', '9000')
+        port = getattr(settings, 'BEBOP_WEBSOCKET_PORT', '1983')
         paths = getattr(settings, 'BEBOP_WEBSOCKET_PATHS', settings.TEMPLATE_DIRS + settings.STATICFILES_DIRS)
         # start websocket server
         factory = run_websocket(host, port)
-        if use_repl:
-            # start eval tcp client server
-            eval_server = run_eval(factory)
-            factory.attach_eval(eval_server)
+        # start eval tcp client server
+        server = run_server(factory)
+        factory.attach_server(server)
         # start file watcher
         reactor.callInThread(run_watcher, factory, paths)
 
