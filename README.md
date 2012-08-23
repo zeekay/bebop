@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/zeekay/bebop.png)](http://travis-ci.org/zeekay/bebop)
 Bebop
 =====
 A tool for rapid web development which bundles a static file server, file watcher, WebSocket server for automatically reloading assets and interfacing with browser/server Javascript applications.
