@@ -13,8 +13,8 @@ If you use bebop's static file serving feature it will automatically inject the
 Javascript required, otherwise you can link directly to `lib/client.js` in your
 application code.
 
-```javascript
-// bebop.js -> lib/client.js
+```html
+<!-- bebop.js -> lib/client.js -->
 <script src="bebop.js" type="text/javascript"></script>
 ```
 
