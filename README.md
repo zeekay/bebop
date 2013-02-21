@@ -5,20 +5,26 @@ with browser/server Javascript applications.
 
 ## Installation
 
-    npm install -g bebop
+```sh
+$ npm install -g bebop
+```
 
 If you use bebop's static file serving feature it will automatically inject the
 Javascript required, otherwise you can link directly to `lib/client.js` in your
 application code.
 
-    // bebop.js -> lib/client.js
-    <script src="bebop.js" type="text/javascript"></script>
+```javascript
+// bebop.js -> lib/client.js
+<script src="bebop.js" type="text/javascript"></script>
+```
 
 ## Usage
 Change to the directory in which your application resides and run `bebop`.
 
-    $ cd ~/myapp
-    $ bebop
+```sh
+$ cd ~/myapp
+$ bebop
+```
 
 Check `bebop --help` for various options/configuration.
 
