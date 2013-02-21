@@ -16,18 +16,9 @@
     "email": "zeekayy@gmail.com",
     "url": "http://github.com/zeekay"
   },
-  "files": [
-    "bin/bebop-client",
-    "lib/bebop.js",
-    "README.md"
-  ],
-  "directories": {
-    "lib": "lib",
-    "bin": "bin"
-  },
-  "main": "lib/bebop",
+  "main": "lib/",
   "bin": {
-    "bebop-client": "bin/bebop-client"
+    "bebop": "bin/bebop"
   },
   "bugs": {
     "mail": "zeekayy@gmail.com",
@@ -38,11 +29,14 @@
     "url": "http://github.com/zeekay/bebop.git"
   },
   "dependencies": {
-    "ws": ">= 0.4.11"
+    "ws": ">= 0.4.11",
+    "connect": "~2.7.3"
   },
-  "licenses": [{
-    "type": "MIT",
-    "url": "http://www.opensource.org/licenses/mit-license.php"
-  }],
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://www.opensource.org/licenses/mit-license.php"
+    }
+  ],
   "preferGlobal": true
 }

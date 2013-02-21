@@ -1,2 +1,3 @@
-#!/usr/bin/env python
-from bebop.cli import run; run()
+#!/usr/bin/env node
+
+require('../lib').server.run()
