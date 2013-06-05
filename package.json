@@ -3,6 +3,9 @@
   "version": "0.0.2",
   "description": "gotta get down to get up.",
   "main": "lib/",
+  "bin": {
+    "down": "bin/down"
+  },
   "scripts": {
     "prepublish": "cake build",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -19,6 +22,10 @@
     "executive": "~0.3.0",
     "chai": "~1.6.0",
     "coffee-script": "~1.6.3",
-    "mocha": "~1.10.0"
+    "mocha": "~1.10.0",
+    "request": "~2.21.0"
+  },
+  "dependencies": {
+    "lincoln": "0.0.4"
   }
 }

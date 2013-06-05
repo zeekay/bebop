@@ -1,15 +1,26 @@
-log      = require '../log'
-server   = require '../server'
-settings = require '../settings'
+server = require process.env.SERVER_MODULE
+utils  = require './utils'
 
-PORT               = process.env.PORT ? 3000
 FORCE_KILL_TIMEOUT = process.env.FORCE_KILL_TIMOUT or 30000
+PORT               = process.env.PORT ? 3000
+LOGGER_MODULE      = process.env.LOGGER_MODULE
+SERVER_MODULE      = process.env.SERVER_MODULE
+
+console.log SERVER_MODULE
+console.log LOGGER_MODULE
+
+server = require SERVER_MODULE
+
+if LOGGER_MODULE?
+  logger = require LOGGER_MODULE
+else
+  logger = (require './utils').logger
 
 shutdown = (err) ->
   try
     server.close ->
       process.exit 0 unless err?
-      log.error err, pid: process.pid, -> process.exit 1
+      logger.log 'error', err, pid: process.pid, -> process.exit 1
   catch _
 
   setTimeout (-> process.exit 1), FORCE_KILL_TIMEOUT
@@ -24,8 +35,6 @@ process.on 'message', (message) ->
   shutdown() if message.type == 'disconnect'
 
 server.listen PORT, ->
-  log.info "Worker listening on port #{PORT}, running #{settings.version}", pid: process.pid
-
   # drop privileges if necessary
   if process.getgid() == 0
     process.setgid 'www-data'
