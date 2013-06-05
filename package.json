@@ -7,8 +7,12 @@
     "prepublish": "cake build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": "",
-  "author": "",
+  "repository": "https://github.com/zeekay/down",
+  "author": {
+    "name": "Zach Kelling",
+    "email": "zeekayy@gmail.com",
+    "url": "https://whatit.is"
+  },
   "license": "BSD",
   "readmeFilename": "README.md",
   "devDependencies": {
