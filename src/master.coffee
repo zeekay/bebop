@@ -1,6 +1,4 @@
 cluster  = require 'cluster'
-log      = require '../log'
-settings = require '../settings'
 
 PORT               = process.env.PORT or 3000
 WORKERS            = process.env.WORKERS or require('os').cpus().length
