@@ -1,0 +1,20 @@
+{
+  "name": "down",
+  "version": "0.0.1",
+  "description": "gotta get down to get up.",
+  "main": "lib/",
+  "scripts": {
+    "prepublish": "cake build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "",
+  "author": "",
+  "license": "BSD",
+  "readmeFilename": "README.md",
+  "devDependencies": {
+    "executive": "~0.3.0",
+    "chai": "~1.6.0",
+    "coffee-script": "~1.6.3",
+    "mocha": "~1.10.0"
+  }
+}
