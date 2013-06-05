@@ -1,5 +1,8 @@
-master = require './master'
+Master = require './master'
 
-module.exports =
-  run: (server, options = {}) ->
-    master require.resolve server, options
+wrapper = (serverModule, options) ->
+  new Master serverModule, options
+
+wrapper.Master = Master
+
+module.exports = wrapper

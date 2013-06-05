@@ -1,97 +1,127 @@
-cluster  = require 'cluster'
+cluster = require 'cluster'
+events  = require 'events'
+path    = require 'path'
 
-PORT               = process.env.PORT or 3000
-WORKERS            = process.env.WORKERS or require('os').cpus().length
-RESTART_COOLDOWN   = process.env.RESTART_COOLDOWN or 2000
-FORCE_KILL_TIMEOUT = process.env.FORCE_KILL_TIMOUT or 30000
+class Master extends events.EventEmitter
+  constructor: (serverModule, options = {}) ->
+    @serverModule     = require.resolve path.resolve serverModule
+    @forceKillTimeout = options.forceKillTimeout ? 30000
+    @numWorkers       = options.workers ? require('os').cpus().length
+    @port             = options.port    ? 3000
+    @restartCoolDown  = options.restartCooldown ? 2000
 
-shuttingDown = false
-reloading    = []
-workers      = {}
+    # setup cluster
+    @setupMaster      = options.setupMaster ?
+      exec : __dirname + '/worker.js'
+      silent : false
+    cluster.setupMaster @setupMaster
 
-cluster.setupMaster
-  exec : __dirname + "/worker.js"
-  silent : false
+    # setup logging
+    switch typeof options.logger
+      when 'undefined'
+        @logger       = require 'lincoln'
+        @loggerModule = require.resolve 'lincoln'
+      when 'string'
+        @logger       = require options.logger
+        @loggerModule = require.resolve options.logger
+      else
+        @logger       = (require './utils').logger
 
-# fork worker
-fork = ->
-  worker = cluster.fork
-    PORT: PORT
+    @shuttingDown = false
+    @reloading    = []
+    @workers      = {}
 
-  worker.on 'message', (message) ->
-    if message.type == 'uncaughtException'
-      log.info 'Worker died horribly', pid: worker.process.pid
+  # fork worker
+  fork: ->
+    worker = cluster.fork
+      FORCE_KILL_TIMEOUT: @forceKillTimeout
+      PORT:               @port
+      LOGGER_MODULE:      @loggerModule
+      SERVER_MODULE:      @serverModule
 
-      setTimeout ->
-        fork()
-      , RESTART_COOLDOWN
+    worker.on 'message', (message) =>
+      if message.type == 'uncaughtException'
+        @emit 'worker:exception'
+        @logger.log 'info', 'uncaught exception', pid: worker.process.pid
 
-      worker.timeout = setTimeout ->
-        worker.kill()
-        log.error "Worker did not disconnect in time, killing it.", pid: worker.process.pid
-      , FORCE_KILL_TIMEOUT
+        setTimeout =>
+          @fork()
+        , @restartCooldown
 
-  workers[worker.id] = worker
+        worker.timeout = setTimeout =>
+          worker.kill()
+          @emit 'worker:killed'
+          @logger.log 'error', 'worker killed', pid: worker.process.pid
+        , @forceKillTimeout
 
-# reload worker
-reload = ->
-  return unless (worker = reloading.shift())?
+    @workers[worker.id] = worker
 
-  worker.reloading = true
+  # reload worker
+  reload: ->
+    return unless (worker = @reloading.shift())?
 
-  worker.timeout = setTimeout ->
-    worker.kill()
-    log.error "Worker did not disconnect in time, killing it.", pid: worker.process.pid
-  , FORCE_KILL_TIMEOUT
+    worker.reloading = true
 
-  worker.send type: 'disconnect'
-  fork()
-
-handleExit = (worker, code, signal) ->
-  delete workers[worker.id]
-
-  if worker.timeout?
-    return clearTimeout worker.timeout
-
-  if code != 0
-    setTimeout ->
-      log.info 'Restarting worker', pid: worker.process.pid
-
-      fork() unless shuttingDown
-    , RESTART_COOLDOWN
-
-  if shuttingDown and Object.keys(workers).length == 0
-    process.exit 0
-
-handleListen = (worker, address) ->
-  reload() if reloading.length > 0
-
-handleReload = ->
-  log.info 'Reloading openbid'
-  reloading = (worker for id, worker of workers when !worker.reloading)
-  reload()
-
-handleShutdown = ->
-  log.info 'Shutting down openbid'
-  shuttingDown = true
-
-  for id, worker of workers
-    worker.send type: 'disconnect'
-
-  setTimeout ->
-    for id, worker of workers
+    worker.timeout = setTimeout =>
       worker.kill()
-      log.error "Worker did not disconnect in time, killing it.", pid: worker.process.pid
-    process.exit 1
-  , FORCE_KILL_TIMEOUT
+      logger.error "Worker did not disconnect in time, killing it.", pid: worker.process.pid
+    , FORCE_KILL_TIMEOUT
 
-module.exports =
-  run: (server) ->
-    log.info "Starting openbid #{settings.version}"
-    fork() for n in [1..WORKERS]
+    worker.send type: 'disconnect'
+    @fork()
 
-    cluster.on 'exit',      handleExit
-    cluster.on 'listening', handleListen
-    process.on 'SIGHUP',    handleReload
-    process.on 'SIGTERM',   handleShutdown
-    process.on 'SIGINT',    handleShutdown
+  handleExit: (worker, code, signal) ->
+    delete @workers[worker.id]
+
+    if worker.timeout?
+      return clearTimeout worker.timeout
+
+    if code != 0
+      setTimeout =>
+        @logger.log 'info', 'Restarting worker', pid: worker.process.pid
+        @fork() unless @shuttingDown
+      , @restartCooldown
+
+    if @shuttingDown and Object.keys(@workers).length == 0
+      process.exit 0
+
+  handleListen: (worker, address) ->
+    @emit 'listening', worker: worker, address: address
+    @reload() if @reloading.length > 0
+
+  handleReload: ->
+    @emit 'reload'
+    @logger.log 'info', 'reloading'
+
+    @reloading = (worker for id, worker of @workers when not worker.reloading)
+    @reload()
+
+  handleShutdown: ->
+    @emit 'shutdown'
+    @logger.log 'info', 'shutting down'
+
+    shuttingDown = true
+
+    for id, worker of @workers
+      worker.send type: 'disconnect'
+
+    setTimeout =>
+      for id, worker of @workers
+        worker.kill()
+
+        @emit 'worker:killed', pid: worker.process.pid
+        @logger.log 'error', 'worker killed', pid: worker.process.pid
+
+      process.exit 1
+    , @forceKillTimeout
+
+  run: ->
+    @fork() for n in [1..@numWorkers]
+
+    cluster.on 'exit',      => @handleExit()
+    cluster.on 'listening', => @handleListen()
+    process.on 'SIGHUP',    => @handleReload()
+    process.on 'SIGTERM',   => @handleShutdown()
+    process.on 'SIGINT',    => @handleShutdown()
+
+module.exports = Master
