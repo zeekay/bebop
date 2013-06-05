@@ -88,7 +88,7 @@ handleShutdown = ->
   , FORCE_KILL_TIMEOUT
 
 module.exports =
-  run: (server)
+  run: (server) ->
     log.info "Starting openbid #{settings.version}"
     fork() for n in [1..WORKERS]
 
