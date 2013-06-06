@@ -21,17 +21,11 @@ shutdown = ->
 
 # marshal runtime errors back to master process
 process.on 'uncaughtException', (err) ->
-  message              = err.message
-  name                 = err.toString()
-  stack                = err.stack
-  structuredStackTrace = err.structuredStackTrace
-
   process.send type: 'uncaughtException', error:
-    message:              message
-    name:                 name
-    stack:                stack
-    structuredStackTrace: structuredStackTrace
-
+    message:              err.message
+    name:                 err.name
+    stack:                err.stack
+    structuredStackTrace: err.structuredStackTrace
   shutdown()
 
 # handle shutdown gracefully

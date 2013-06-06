@@ -137,10 +137,9 @@ class Master extends events.EventEmitter
           frame.getTypeName     = -> type
           frame.getMethodName   = -> method
 
-      # recreate worker error so it can be logged
       err = new Error()
-      err.message              = exc.message
       err.name                 = exc.name
+      err.message              = exc.message
       err.stack                = exc.stack
       err.structuredStackTrace = exc.structuredStackTrace
 
