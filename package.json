@@ -1,6 +1,6 @@
 {
   "name": "down",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "gotta get down to get up.",
   "main": "lib/",
   "bin": {
