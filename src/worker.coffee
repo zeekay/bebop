@@ -14,9 +14,6 @@ if LOGGER_MODULE?
 else
   logger = (require './utils').logger
 
-log = (level, message, meta, callback) ->
-  logger.log level, message, meta, callback
-
 if SETTINGS_MODULE?
   settings = require SETTINGS_MODULE
 else
@@ -25,7 +22,7 @@ else
 
 shuttingDown = false
 
-shutdown = (err) ->
+shutdown = ->
   return if shuttingDown
   shuttingDown = true
 
@@ -33,27 +30,23 @@ shutdown = (err) ->
     server.close -> process.exit 0
   catch _
 
-  setTimeout (-> process.exit 1), FORCE_KILL_TIMEOUT
+  setTimeout (-> process.exit 0), FORCE_KILL_TIMEOUT
 
 # log runtime errors
 process.on 'uncaughtException', (err) ->
-  log 'error', err, pid: process.pid, ->
+  logger.log 'error', err, pid: process.pid, ->
     process.send type: 'uncaughtException'
-    shutdown err
+    shutdown()
 
 # handle shutdown gracefully
 process.on 'message', (message) ->
   shutdown() if message.type == 'disconnect'
 
-listening = ->
-  log 'info', "Worker listening on port #{PORT}, running #{settings.version}", pid: process.pid
-
+server.listen PORT, ->
   # drop privileges if necessary
   if process.getgid() == 0
     process.setgid 'www-data'
     process.setuid 'www-data'
-
-server.listen PORT, listening
 
 # set socket timeout
 server.setTimeout 10000
