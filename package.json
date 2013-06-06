@@ -4,7 +4,7 @@
   "description": "however the fuck you say it",
   "main": "lib/",
   "bin": {
-    "down": "bin/xian"
+    "xian": "bin/xian"
   },
   "scripts": {
     "prepublish": "cake build",
