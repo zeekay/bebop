@@ -27,7 +27,7 @@ class Master extends events.EventEmitter
     @forceKillTimeout = options.forceKillTimeout ? 30000
     @numWorkers       = options.workers          ? require('os').cpus().length
     @port             = options.port             ? 3000
-    @restartCoolDown  = options.restartCooldown  ? 2000
+    @restartCooldown  = options.restartCooldown  ? 2000
     @socketTimeout    = options.socketTimeout    ? 10000
 
     @runAs = options.runAs ?
@@ -53,20 +53,6 @@ class Master extends events.EventEmitter
         @logger = require 'lincoln'
       else
         @logger = false
-
-    if @logger
-      @on 'worker:exception', (worker, err) =>
-        @logger.log 'error', err, pid: worker.process.pid
-      @on 'worker:listening', (worker, address) =>
-        @logger.log 'info',  "worker listening on #{address.address}:#{address.port}", pid: worker.process.pid
-      @on 'worker:killed', (worker) =>
-        @logger.log 'error', 'worker killed', pid: worker.process.pid
-      @on 'worker:restarting', (worker) =>
-        @logger.log 'info',  'worker restarting', pid: worker.process.pid
-      @on 'shutdown', =>
-        @logger.log 'info',  'shutting down'
-      @on 'reload', =>
-        @logger.log 'info',  'reloading'
 
   # fork worker
   fork: ->
@@ -167,4 +153,19 @@ class Master extends events.EventEmitter
       @handleShutdown()
     process.on 'SIGINT', =>
       @handleShutdown()
+
+    if @logger
+      @on 'worker:exception', (worker, err) =>
+        @logger.log 'error', err, pid: worker.process.pid
+      @on 'worker:listening', (worker, address) =>
+        @logger.log 'info',  "worker listening on #{address.address}:#{address.port}", pid: worker.process.pid
+      @on 'worker:killed', (worker) =>
+        @logger.log 'error', 'worker killed', pid: worker.process.pid
+      @on 'worker:restarting', (worker) =>
+        @logger.log 'info',  'worker restarting', pid: worker.process.pid
+      @on 'shutdown', =>
+        @logger.log 'info',  'shutting down'
+      @on 'reload', =>
+        @logger.log 'info',  'reloading'
+
 module.exports = Master
