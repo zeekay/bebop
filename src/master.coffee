@@ -67,7 +67,7 @@ class Master extends events.EventEmitter
     worker.timeout = setTimeout =>
       worker.kill()
       @emit 'worker:killed', worker
-    , FORCE_KILL_TIMEOUT
+    , @forceKillTimeout
 
     worker.send type: 'disconnect'
     @fork()
