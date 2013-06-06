@@ -1,24 +1,9 @@
-server = require process.env.SERVER_MODULE
-utils  = require './utils'
+lincoln = require 'lincoln'
+lincoln.stacktrace.install()
 
 FORCE_KILL_TIMEOUT = process.env.FORCE_KILL_TIMOUT or 30000
 PORT               = process.env.PORT ? 3000
-LOGGER_MODULE      = process.env.LOGGER_MODULE
 SERVER_MODULE      = process.env.SERVER_MODULE
-SETTINGS_MODULE    = process.env.SETTINGS_MODULE
-
-server = require SERVER_MODULE
-
-if LOGGER_MODULE?
-  logger = require LOGGER_MODULE
-else
-  logger = (require './utils').logger
-
-if SETTINGS_MODULE?
-  settings = require SETTINGS_MODULE
-else
-  settings =
-    version: ''
 
 shuttingDown = false
 
@@ -30,18 +15,30 @@ shutdown = ->
     server.close -> process.exit 0
   catch _
 
-  setTimeout (-> process.exit 0), FORCE_KILL_TIMEOUT
+  setTimeout ->
+    process.exit 0
+  , FORCE_KILL_TIMEOUT
 
-# log runtime errors
+# marshal runtime errors back to master process
 process.on 'uncaughtException', (err) ->
-  logger.log 'error', err, pid: process.pid, ->
-    process.send type: 'uncaughtException'
-    shutdown()
+  message              = err.message
+  name                 = err.toString()
+  stack                = err.stack
+  structuredStackTrace = err.structuredStackTrace
+
+  process.send type: 'uncaughtException', error:
+    message:              message
+    name:                 name
+    stack:                stack
+    structuredStackTrace: structuredStackTrace
+
+  shutdown()
 
 # handle shutdown gracefully
 process.on 'message', (message) ->
   shutdown() if message.type == 'disconnect'
 
+server = require SERVER_MODULE
 server.listen PORT, ->
   # drop privileges if necessary
   if process.getgid() == 0
