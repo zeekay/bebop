@@ -7,7 +7,6 @@
     "xian": "bin/xian"
   },
   "scripts": {
-    "prepublish": "cake build",
     "test": "cake test"
   },
   "repository": "https://github.com/zeekay/xian",
