@@ -1,9 +1,3 @@
-forceKillTimeout = process.env.FORCE_KILL_TIMOUT
-port             = process.env.PORT
-restartCooldown  = process.env.RESTART_COOLDOWN
-watch            = false
-workers          = process.env.WORKERS
-
 args = process.argv.slice 2
 
 error = (message) ->
@@ -40,9 +34,7 @@ while opt = args.shift()
 unless serverModule?
   usage()
 
-Master = require './master'
-
-master = new Master serverModule,
+require('./').run serverModule,
   forceKillTimeout: forceKillTimeout
   port:             port
   restartCooldown:  restartCooldown

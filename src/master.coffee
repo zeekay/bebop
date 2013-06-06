@@ -16,6 +16,9 @@ class Master extends events.EventEmitter
       silent : false
     cluster.setupMaster @setupMaster
 
+    if options.settings?
+      @settingsModule = require.resolve path.resolve options.settings
+
     # setup logging
     switch typeof options.logger
       when 'undefined'
@@ -38,11 +41,11 @@ class Master extends events.EventEmitter
       PORT:               @port
       LOGGER_MODULE:      @loggerModule
       SERVER_MODULE:      @serverModule
+      SETTINGS_MODULE:    @settingsModule ? ''
 
     worker.on 'message', (message) =>
       if message.type == 'uncaughtException'
-        @emit 'worker:exception'
-        @logger.log 'info', 'uncaught exception', pid: worker.process.pid
+        @emit 'worker:exception', worker, message
 
         setTimeout =>
           @fork()
@@ -50,8 +53,7 @@ class Master extends events.EventEmitter
 
         worker.timeout = setTimeout =>
           worker.kill()
-          @emit 'worker:killed'
-          @logger.log 'error', 'worker killed', pid: worker.process.pid
+          @emit 'worker:killed', worker
         , @forceKillTimeout
 
     @workers[worker.id] = worker
@@ -64,7 +66,7 @@ class Master extends events.EventEmitter
 
     worker.timeout = setTimeout =>
       worker.kill()
-      logger.error "Worker did not disconnect in time, killing it.", pid: worker.process.pid
+      @emit 'worker:killed', worker
     , FORCE_KILL_TIMEOUT
 
     worker.send type: 'disconnect'
@@ -78,7 +80,7 @@ class Master extends events.EventEmitter
 
     if code != 0
       setTimeout =>
-        @logger.log 'info', 'Restarting worker', pid: worker.process.pid
+        @emit 'worker:restarting', worker
         @fork() unless @shuttingDown
       , @restartCooldown
 
@@ -91,16 +93,14 @@ class Master extends events.EventEmitter
 
   handleReload: ->
     @emit 'reload'
-    @logger.log 'info', 'reloading'
-
     @reloading = (worker for id, worker of @workers when not worker.reloading)
     @reload()
 
   handleShutdown: ->
-    @emit 'shutdown'
-    @logger.log 'info', 'shutting down'
+    return if @shuttingDown
+    @shuttingDown = true
 
-    shuttingDown = true
+    @emit 'shutdown'
 
     for id, worker of @workers
       worker.send type: 'disconnect'
@@ -108,20 +108,33 @@ class Master extends events.EventEmitter
     setTimeout =>
       for id, worker of @workers
         worker.kill()
-
-        @emit 'worker:killed', pid: worker.process.pid
-        @logger.log 'error', 'worker killed', pid: worker.process.pid
-
+        @emit 'worker:killed', worker.process.pid
       process.exit 1
     , @forceKillTimeout
 
   run: ->
     @fork() for n in [1..@numWorkers]
 
-    cluster.on 'exit',      => @handleExit()
-    cluster.on 'listening', => @handleListen()
-    process.on 'SIGHUP',    => @handleReload()
-    process.on 'SIGTERM',   => @handleShutdown()
-    process.on 'SIGINT',    => @handleShutdown()
+    cluster.on 'exit', (worker, code, signal) =>
+      @handleExit worker, code, signal
+    cluster.on 'listening', (worker, address) =>
+      @handleListen worker, address
+    process.on 'SIGHUP', =>
+      @handleReload()
+    process.on 'SIGTERM', =>
+      @handleShutdown()
+    process.on 'SIGINT', =>
+      @handleShutdown()
+
+    # @on 'worker:exception', (worker, message) =>
+    #   @logger.log 'info', 'uncaught exception', pid: worker.process.pid
+    @on 'worker:killed', (worker) =>
+      @logger.log 'error', 'worker killed', pid: worker.process.pid
+    @on 'worker:restarting', (worker) =>
+      @logger.log 'info', 'worker restarting', pid: worker.process.pid
+    @on 'shutdown', =>
+      @logger.log 'info', 'shutting down'
+    @on 'reload', =>
+      @logger.log 'info', 'reloading'
 
 module.exports = Master
