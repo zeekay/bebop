@@ -2,50 +2,90 @@ cluster = require 'cluster'
 events  = require 'events'
 path    = require 'path'
 
+deserialize = (exc) ->
+  for frame in exc.structuredStackTrace
+    {path, line, isNative, name, type, method} = frame
+    do (frame, path, line, isNative, name, type, method) ->
+      frame.getFileName     = -> path
+      frame.getLineNumber   = -> line
+      frame.isNative        = -> isNative
+      frame.getFunctionName = -> name
+      frame.getTypeName     = -> type
+      frame.getMethodName   = -> method
+
+  err = new Error()
+  err.name                 = exc.name
+  err.message              = exc.message
+  err.stack                = exc.stack
+  err.structuredStackTrace = exc.structuredStackTrace
+  err
+
 class Master extends events.EventEmitter
   constructor: (serverModule, options = {}) ->
-    @serverModule     = require.resolve path.resolve serverModule
-    @forceKillTimeout = options.forceKillTimeout ? 30000
-    @numWorkers       = options.workers ? require('os').cpus().length
-    @port             = options.port    ? 3000
-    @restartCoolDown  = options.restartCooldown ? 2000
+    @serverModule     = require.resolve serverModule
 
-    # setup cluster
-    @setupMaster      = options.setupMaster ?
+    @forceKillTimeout = options.forceKillTimeout ? 30000
+    @numWorkers       = options.workers          ? require('os').cpus().length
+    @port             = options.port             ? 3000
+    @restartCoolDown  = options.restartCooldown  ? 2000
+    @socketTimeout    = options.socketTimeout    ? 10000
+
+    @runAs = options.runAs ?
+      dropPrivileges: true
+      gid: 'www-data'
+      uid: 'www-data'
+
+    @setupMaster = options.setupMaster ?
       exec : __dirname + '/worker.js'
       silent : false
     cluster.setupMaster @setupMaster
-
-    if options.settings?
-      @settingsModule = require.resolve path.resolve options.settings
-
-    # setup logging
-    switch typeof options.logger
-      when 'undefined'
-        @logger       = require 'lincoln'
-        @loggerModule = require.resolve 'lincoln'
-      when 'string'
-        @logger       = require options.logger
-        @loggerModule = require.resolve options.logger
-      else
-        @logger       = (require './utils').logger
 
     @shuttingDown = false
     @reloading    = []
     @workers      = {}
 
+    switch typeof options.logger
+      when 'function'
+        @logger = log: options.logger
+      when 'object'
+        @logger = options.logger
+      when 'undefined'
+        @logger = require 'lincoln'
+      else
+        @logger = false
+
+    if @logger
+      @on 'worker:exception', (worker, err) =>
+        @logger.log 'error', err, pid: worker.process.pid
+      @on 'worker:listening', (worker, address) =>
+        @logger.log 'info',  "worker listening on #{address.address}:#{address.port}", pid: worker.process.pid
+      @on 'worker:killed', (worker) =>
+        @logger.log 'error', 'worker killed', pid: worker.process.pid
+      @on 'worker:restarting', (worker) =>
+        @logger.log 'info',  'worker restarting', pid: worker.process.pid
+      @on 'shutdown', =>
+        @logger.log 'info',  'shutting down'
+      @on 'reload', =>
+        @logger.log 'info',  'reloading'
+
   # fork worker
   fork: ->
-    worker = cluster.fork
+    options =
       FORCE_KILL_TIMEOUT: @forceKillTimeout
       PORT:               @port
-      LOGGER_MODULE:      @loggerModule
       SERVER_MODULE:      @serverModule
-      SETTINGS_MODULE:    @settingsModule ? ''
+      SOCKET_TIMEOUT:     @socketTimeout
+
+    if @runAs
+      options.DROP_PRIVILEGES = @runAs.dropPrivileges
+      options.SET_GID = @runAs.gid
+      options.SET_UID = @runAs.uid
+
+    worker = cluster.fork options
 
     worker.on 'message', (message) =>
       if message.type == 'uncaughtException'
-        @emit 'worker:exception', worker, message.error
+        @emit 'worker:exception', worker, deserialize message.error
 
         setTimeout =>
           @fork()
@@ -57,6 +97,8 @@ class Master extends events.EventEmitter
         , @forceKillTimeout
 
     @workers[worker.id] = worker
+
+    @emit 'worker:forked', worker
 
   # reload worker
   reload: ->
@@ -125,35 +167,4 @@ class Master extends events.EventEmitter
       @handleShutdown()
     process.on 'SIGINT', =>
       @handleShutdown()
-
-    @on 'worker:exception', (worker, exc) =>
-      for frame in exc.structuredStackTrace
-        {path, line, isNative, name, type, method} = frame
-        do (frame, path, line, isNative, name, type, method) ->
-          frame.getFileName     = -> path
-          frame.getLineNumber   = -> line
-          frame.isNative        = -> isNative
-          frame.getFunctionName = -> name
-          frame.getTypeName     = -> type
-          frame.getMethodName   = -> method
-
-      err = new Error()
-      err.name                 = exc.name
-      err.message              = exc.message
-      err.stack                = exc.stack
-      err.structuredStackTrace = exc.structuredStackTrace
-
-      @logger.log 'error', err, pid: worker.process.pid
-
-    @on 'worker:listening', (worker, address) =>
-      @logger.log 'info', "worker listening on #{address.address}:#{address.port}", pid: worker.process.pid
-    @on 'worker:killed', (worker) =>
-      @logger.log 'error', 'worker killed', pid: worker.process.pid
-    @on 'worker:restarting', (worker) =>
-      @logger.log 'info', 'worker restarting', pid: worker.process.pid
-    @on 'shutdown', =>
-      @logger.log 'info', 'shutting down'
-    @on 'reload', =>
-      @logger.log 'info', 'reloading'
-
 module.exports = Master
