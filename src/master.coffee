@@ -45,7 +45,7 @@ class Master extends events.EventEmitter
 
     worker.on 'message', (message) =>
       if message.type == 'uncaughtException'
-        @emit 'worker:exception', worker, message
+        @emit 'worker:exception', worker, message.error
 
         setTimeout =>
           @fork()
@@ -126,8 +126,26 @@ class Master extends events.EventEmitter
     process.on 'SIGINT', =>
       @handleShutdown()
 
-    # @on 'worker:exception', (worker, message) =>
-    #   @logger.log 'info', 'uncaught exception', pid: worker.process.pid
+    @on 'worker:exception', (worker, exc) =>
+      for frame in exc.structuredStackTrace
+        {path, line, isNative, name, type, method} = frame
+        do (frame, path, line, isNative, name, type, method) ->
+          frame.getFileName     = -> path
+          frame.getLineNumber   = -> line
+          frame.isNative        = -> isNative
+          frame.getFunctionName = -> name
+          frame.getTypeName     = -> type
+          frame.getMethodName   = -> method
+
+      # recreate worker error so it can be logged
+      err = new Error()
+      err.message              = exc.message
+      err.name                 = exc.name
+      err.stack                = exc.stack
+      err.structuredStackTrace = exc.structuredStackTrace
+
+      @logger.log 'error', err, pid: worker.process.pid
+
     @on 'worker:listening', (worker, address) =>
       @logger.log 'info', "worker listening on #{address.address}:#{address.port}", pid: worker.process.pid
     @on 'worker:killed', (worker) =>
