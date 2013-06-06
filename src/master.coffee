@@ -87,8 +87,8 @@ class Master extends events.EventEmitter
     if @shuttingDown and Object.keys(@workers).length == 0
       process.exit 0
 
-  handleListen: (worker, address) ->
-    @emit 'listening', worker: worker, address: address
+  handleListening: (worker, address) ->
+    @emit 'worker:listening', worker, address
     @reload() if @reloading.length > 0
 
   handleReload: ->
@@ -118,7 +118,7 @@ class Master extends events.EventEmitter
     cluster.on 'exit', (worker, code, signal) =>
       @handleExit worker, code, signal
     cluster.on 'listening', (worker, address) =>
-      @handleListen worker, address
+      @handleListening worker, address
     process.on 'SIGHUP', =>
       @handleReload()
     process.on 'SIGTERM', =>
@@ -128,6 +128,8 @@ class Master extends events.EventEmitter
 
     # @on 'worker:exception', (worker, message) =>
     #   @logger.log 'info', 'uncaught exception', pid: worker.process.pid
+    @on 'worker:listening', (worker, address) =>
+      @logger.log 'info', "worker listening on #{address.address}:#{address.port}", pid: worker.process.pid
     @on 'worker:killed', (worker) =>
       @logger.log 'error', 'worker killed', pid: worker.process.pid
     @on 'worker:restarting', (worker) =>
