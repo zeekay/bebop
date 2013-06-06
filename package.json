@@ -1,16 +1,16 @@
 {
-  "name": "down",
+  "name": "xian",
   "version": "0.1.6",
-  "description": "gotta get down to get up.",
+  "description": "however the fuck you say it",
   "main": "lib/",
   "bin": {
-    "down": "bin/down"
+    "down": "bin/xian"
   },
   "scripts": {
     "prepublish": "cake build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "cake test"
   },
-  "repository": "https://github.com/zeekay/down",
+  "repository": "https://github.com/zeekay/xian",
   "author": {
     "name": "Zach Kelling",
     "email": "zeekayy@gmail.com",

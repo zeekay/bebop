@@ -6,7 +6,7 @@ error = (message) ->
 
 usage = ->
   console.log '''
-  down server.js [options]
+  xian server.js [options]
 
   Options:
     --port       Specify port to listen on.
