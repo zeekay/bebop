@@ -140,7 +140,10 @@ class Master extends events.EventEmitter
       process.exit 1
     , @forceKillTimeout
 
-  run: ->
+  run: (callback) ->
+    @once 'worker:listening', (worker, address) ->
+      callback null
+
     @fork() for n in [1..@numWorkers]
 
     cluster.on 'exit', (worker, code, signal) =>
