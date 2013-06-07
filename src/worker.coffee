@@ -13,7 +13,7 @@ require('postmortem').install()
   SET_UID
   WATCH } = process.env
 
-require './watch' if WATCH
+setTimeout (-> require './watch'), 100 if WATCH
 
 shuttingDown = false
 
