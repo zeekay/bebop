@@ -20,7 +20,7 @@ exports.logger =
     if message instanceof Error
       [err, message] = [message, message.name]
 
-    console.error "#{timestamp()} [#{level}] #{message}", metadata
+    console.error "#{@timestamp()} [#{level}] #{message}", metadata
 
     if err?
       require('postmortem').prettyPrint err.stack

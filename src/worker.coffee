@@ -11,9 +11,9 @@ require('postmortem').install()
   DROP_PRIVILEGES
   SET_GID
   SET_UID
-  WATCH } = process.env
+  WATCH_FOR_CHANGES } = process.env
 
-setTimeout (-> require './watch'), 100 if WATCH
+require './watch' if WATCH_FOR_CHANGES
 
 shuttingDown = false
 
@@ -37,12 +37,12 @@ shutdown = ->
 
 # marshal runtime errors back to master process
 process.on 'uncaughtException', (err) ->
-  process.send type: 'uncaughtException', error: serialize err
+  process.send type: 'error', error: serialize err
   shutdown()
 
 # handle shutdown gracefully
 process.on 'message', (message) ->
-  shutdown() if message.type == 'disconnect'
+  shutdown() if message?.type == 'stop'
 
 server = require SERVER_MODULE
 
