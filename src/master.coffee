@@ -159,7 +159,8 @@ class Master extends events.EventEmitter
     @reloadNext()
 
   shutdown: ->
-    return if @shuttingDown
+    process.exit 1 if @shuttingDown
+
     @shuttingDown = true
 
     @emit 'shutdown'
