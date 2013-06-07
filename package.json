@@ -1,6 +1,6 @@
 {
   "name": "xian",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "however the fuck you say it",
   "main": "lib/",
   "bin": {
