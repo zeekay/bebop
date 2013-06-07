@@ -1,7 +1,19 @@
-lincoln = require 'lincoln'
-lincoln.stacktrace.install()
+try
+  require 'coffee-script'
+catch err
 
-{FORCE_KILL_TIMEOUT, PORT, SERVER_MODULE, SOCKET_TIMEOUT, DROP_PRIVILEGES, SET_GID, SET_UID} = process.env
+require('postmortem').install()
+
+{ FORCE_KILL_TIMEOUT
+  PORT
+  SERVER_MODULE
+  SOCKET_TIMEOUT
+  DROP_PRIVILEGES
+  SET_GID
+  SET_UID
+  WATCH } = process.env
+
+require './watch' if WATCH
 
 shuttingDown = false
 

@@ -1,6 +1,15 @@
 cluster = require 'cluster'
 events  = require 'events'
+fs      = require 'fs'
 path    = require 'path'
+
+# Start up debugger
+debug = ->
+  for id, worker of cluster.workers
+    # Only kill first worker
+    pid = worker.process.pid
+    require('child_process').exec "kill -s 30 #{pid}"
+    return
 
 deserialize = (exc) ->
   for frame in exc.structuredStackTrace
@@ -22,13 +31,17 @@ deserialize = (exc) ->
 
 class Master extends events.EventEmitter
   constructor: (serverModule, options = {}) ->
-    @serverModule     = require.resolve serverModule
+    @serverModule     = require.resolve path.resolve serverModule
 
     @forceKillTimeout = options.forceKillTimeout ? 30000
     @numWorkers       = options.workers          ? require('os').cpus().length
     @port             = options.port             ? 3000
     @restartCooldown  = options.restartCooldown  ? 2000
     @socketTimeout    = options.socketTimeout    ? 10000
+    @watchForChanges  = options.watch            ? false
+
+    if @watchForChanges and not fs.watch
+      throw new Error 'watching for changes requires fs.watch'
 
     @runAs = options.runAs ?
       dropPrivileges: true
@@ -43,6 +56,7 @@ class Master extends events.EventEmitter
     @shuttingDown = false
     @reloading    = []
     @workers      = {}
+    @watched      = {}
 
     switch typeof options.logger
       when 'function'
@@ -50,7 +64,7 @@ class Master extends events.EventEmitter
       when 'object'
         @logger = options.logger
       when 'undefined'
-        @logger = require 'lincoln'
+        @logger = require('./utils').logger
       else
         @logger = false
 
@@ -61,6 +75,7 @@ class Master extends events.EventEmitter
       PORT:               @port
       SERVER_MODULE:      @serverModule
       SOCKET_TIMEOUT:     @socketTimeout
+      WATCH:              @watchForChanges
 
     if @runAs
       options.DROP_PRIVILEGES = @runAs.dropPrivileges
@@ -69,8 +84,15 @@ class Master extends events.EventEmitter
 
     worker = cluster.fork options
 
-    worker.on 'message', (message) =>
-      if message.type == 'uncaughtException'
+    worker.on 'message', (message) => @onMessage message
+
+    @workers[worker.id] = worker
+
+    @emit 'worker:forked', worker
+
+  onMessage: (message) ->
+    switch message.type
+      when 'error'
         @emit 'worker:exception', worker, deserialize message.error
 
         setTimeout =>
@@ -82,25 +104,10 @@ class Master extends events.EventEmitter
           @emit 'worker:killed', worker
         , @forceKillTimeout
 
-    @workers[worker.id] = worker
+      when 'watch'
+        @watch message.filename
 
-    @emit 'worker:forked', worker
-
-  # reload worker
-  reload: ->
-    return unless (worker = @reloading.shift())?
-
-    worker.reloading = true
-
-    worker.timeout = setTimeout =>
-      worker.kill()
-      @emit 'worker:killed', worker
-    , @forceKillTimeout
-
-    worker.send type: 'disconnect'
-    @fork()
-
-  handleExit: (worker, code, signal) ->
+  onExit: (worker, code, signal) ->
     delete @workers[worker.id]
 
     if worker.timeout?
@@ -115,16 +122,43 @@ class Master extends events.EventEmitter
     if @shuttingDown and Object.keys(@workers).length == 0
       process.exit 0
 
-  handleListening: (worker, address) ->
+  onListening: (worker, address) ->
     @emit 'worker:listening', worker, address
-    @reload() if @reloading.length > 0
+    @reloadNext() if @reloading.length > 0
 
-  handleReload: ->
+  # Watch files for changes
+  watch: (filename) ->
+    if @watched[filename]
+      @watched[filename].close()
+    try
+      @watched[filename] = fs.watch filename, => @reload()
+    catch err
+      if err.code == 'EMFILE'
+        @logger.log 'Too many open files, try to increase the number of open files'
+        process.exit 1
+      else
+        throw err
+
+  # reload worker
+  reloadNext: ->
+    return unless (worker = @reloading.shift())?
+
+    worker.reloading = true
+
+    worker.timeout = setTimeout =>
+      worker.kill()
+      @emit 'worker:killed', worker
+    , @forceKillTimeout
+
+    worker.send type: 'disconnect'
+    @fork()
+
+  reload: ->
     @emit 'reload'
     @reloading = (worker for id, worker of @workers when not worker.reloading)
-    @reload()
+    @reloadNext()
 
-  handleShutdown: ->
+  shutdown: ->
     return if @shuttingDown
     @shuttingDown = true
 
@@ -146,29 +180,25 @@ class Master extends events.EventEmitter
 
     @fork() for n in [1..@numWorkers]
 
-    cluster.on 'exit', (worker, code, signal) =>
-      @handleExit worker, code, signal
-    cluster.on 'listening', (worker, address) =>
-      @handleListening worker, address
-    process.on 'SIGHUP', =>
-      @handleReload()
-    process.on 'SIGTERM', =>
-      @handleShutdown()
-    process.on 'SIGINT', =>
-      @handleShutdown()
+    cluster.on 'exit', (worker, code, signal) => @onExit worker, code, signal
+    cluster.on 'listening', (worker, address) => @onListening worker, address
+
+    process.on 'SIGHUP',  => @reload()
+    process.on 'SIGTERM', => @shutdown()
+    process.on 'SIGINT',  => @shutdown()
 
     if @logger
       @on 'worker:exception', (worker, err) =>
         @logger.log 'error', err, pid: worker.process.pid
       @on 'worker:listening', (worker, address) =>
-        @logger.log 'info',  "worker listening on #{address.address}:#{address.port}", pid: worker.process.pid
+        @logger.log 'info', "worker listening on #{address.address}:#{address.port}", pid: worker.process.pid
       @on 'worker:killed', (worker) =>
         @logger.log 'error', 'worker killed', pid: worker.process.pid
       @on 'worker:restarting', (worker) =>
-        @logger.log 'info',  'worker restarting', pid: worker.process.pid
+        @logger.log 'info', 'worker restarting', pid: worker.process.pid
       @on 'shutdown', =>
-        @logger.log 'info',  'shutting down'
+        @logger.log 'info', 'shutting down'
       @on 'reload', =>
-        @logger.log 'info',  'reloading'
+        @logger.log 'info', 'reloading'
 
 module.exports = Master
