@@ -75,7 +75,9 @@ class Master extends events.EventEmitter
       PORT:               @port
       SERVER_MODULE:      @serverModule
       SOCKET_TIMEOUT:     @socketTimeout
-      WATCH:              @watchForChanges
+
+    if @watchForChanges
+      options.WATCH_FOR_CHANGES = true
 
     if @runAs
       options.DROP_PRIVILEGES = @runAs.dropPrivileges
@@ -128,6 +130,8 @@ class Master extends events.EventEmitter
 
   # Watch files for changes
   watch: (filename) ->
+    @logger.log 'debug', "watching #{filename}"
+
     if @watched[filename]
       @watched[filename].close()
     try
@@ -150,10 +154,11 @@ class Master extends events.EventEmitter
       @emit 'worker:killed', worker
     , @forceKillTimeout
 
-    worker.send type: 'disconnect'
+    worker.send type: 'stop'
     @fork()
 
   reload: ->
+    return unless @running
     @emit 'reload'
     @reloading = (worker for id, worker of @workers when not worker.reloading)
     @reloadNext()
@@ -166,17 +171,18 @@ class Master extends events.EventEmitter
     @emit 'shutdown'
 
     for id, worker of @workers
-      worker.send type: 'disconnect'
+      worker.send type: 'stop'
 
     setTimeout =>
       for id, worker of @workers
         worker.kill()
-        @emit 'worker:killed', worker.process.pid
+        @emit 'worker:killed', worker
       process.exit 1
     , @forceKillTimeout
 
   run: (callback) ->
-    @once 'worker:listening', (worker, address) ->
+    @once 'worker:listening', (worker, address) =>
+      @running = true
       callback null
 
     @fork() for n in [1..@numWorkers]

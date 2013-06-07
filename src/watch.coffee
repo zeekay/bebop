@@ -1,30 +1,5 @@
-fs   = require 'fs'
 path = require 'path'
 vm   = require 'vm'
-
-patcher = (obj) ->
-  patched = []
-  patcher =
-    patch: (name, func) ->
-      original = obj[name]
-      if typeof original is 'function'
-        wrapper = ->
-          original.apply obj, arguments
-        replacement = func wrapper
-      else
-        replacement = func original
-      obj[name] = replacement
-      patched.push [name, original]
-      return
-
-    unpatch: ->
-      while patched.length
-        [name, original] = patched.pop()
-        if original
-          obj[name] = original
-        else
-          delete obj[name]
-      return
 
 hooks = {}
 
@@ -33,22 +8,22 @@ updateHooks = ->
     do (ext, handler) ->
       if hooks[ext] != require.extensions[ext]
         hooks[ext] = require.extensions[ext] = (module, filename) ->
-          # Watch module if it hasn't been loaded before
-          process.send
-            type: 'watch'
-            filename: module.filename unless module.loaded
+          unless module.loaded
+            # Watch module if it hasn't been loaded before
+            process.send
+              type: 'watch'
+              filename: module.filename
 
-          # Invoke original handler
-          handler module, filename
+            # Invoke original handler
+            handler module, filename
 
-          # Make sure the module did not hijack the handler
-          updateHooks()
+            # Make sure the module did not hijack the handler
+            updateHooks()
 
 # Hook 'em.
 updateHooks()
 
 # Patch VM module.
-{patch} = patcher vm
 methods =
   createScript: 1
   runInThisContext: 1
@@ -56,7 +31,11 @@ methods =
   runInContext: 2
 
 for method, idx of methods
-  patch method, (original) ->
-    ->
-      fs.watch(file) if file = arguments[idx]
-      original arguments
+  do (method, idx) ->
+    original = vm[method]
+    vm[method] = ->
+      if filename = arguments[idx]
+        process.send
+          type: 'watch'
+          filename: filename
+      original.apply vm, arguments
