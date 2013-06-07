@@ -40,8 +40,12 @@ class Master extends events.EventEmitter
     @socketTimeout    = options.socketTimeout    ? 10000
     @watchForChanges  = options.watch            ? false
 
-    if @watchForChanges and not fs.watch
-      throw new Error 'watching for changes requires fs.watch'
+    if @watchForChanges
+      if not fs.watch
+        throw new Error 'watching for changes requires fs.watch'
+
+      unless options.watchAllModules
+        @nodeModulesRegex = new RegExp '^' + path.join (path.dirname @serverModule), 'node_modules'
 
     @runAs = options.runAs ?
       dropPrivileges: true
@@ -130,6 +134,9 @@ class Master extends events.EventEmitter
 
   # Watch files for changes
   watch: (filename) ->
+    # ignore node_modules unless options.watchAllModules
+    return if @nodeModulesRegex and @nodeModulesRegex.test filename
+
     @logger.log 'debug', "watching #{filename}"
 
     if @watched[filename]
