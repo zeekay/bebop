@@ -15,21 +15,25 @@ usage = ->
   '''
   process.exit 0
 
+serverModule = args.shift()
+
 while opt = args.shift()
   switch opt
     when '--port', '-p'
-      port = parseInt args.shift(), 100
+      port = parseInt args.shift(), 10
     when '--workers', '-n'
       workers = parseInt args.shift(), 10
     when '--watch', '-w'
       watch = true
+    when '--force-kill'
+      forceKillTimeout = parseInt args.shift(), 10
+    when '--restart-cooldown'
+      restartCooldown = parseInt args.shift(), 10
     when '--help', '-h'
       usage()
     else
       if opt.charAt(0) == '-'
         error 'Unrecognized option'
-      else
-        serverModule = opt
 
 unless serverModule?
   usage()
@@ -39,5 +43,4 @@ require('./').run serverModule,
   port:             port
   restartCooldown:  restartCooldown
   workers:          workers
-
-master.run()
+  watch:            watch
