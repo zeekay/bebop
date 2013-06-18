@@ -1,6 +1,6 @@
 {
   "name": "xian",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "however the fuck you say it",
   "main": "lib/",
   "bin": {
@@ -18,17 +18,10 @@
   "license": "BSD",
   "readmeFilename": "README.md",
   "devDependencies": {
-    "executive": "~0.3.0",
-    "chai": "~1.6.0",
-    "coffee-script": "~1.6.3",
-    "mocha": "~1.10.0",
-    "request": "~2.21.0"
+    "bebop": "~0.5.0"
   },
   "dependencies": {
     "postmortem": "~0.1.0"
-  },
-  "devDependencies": {
-    "bebop": "~0.5.0"
   },
   "peerDependencies": {
     "bebop": "~0.5.0"
