@@ -1,11 +1,14 @@
 cluster = require 'cluster'
 events  = require 'events'
 fs      = require 'fs'
+http    = require 'http'
 path    = require 'path'
+{walk}  = require 'bebop/lib/watch'
 
 # Start up debugger
 debug = ->
   for id, worker of cluster.workers
+
     # Only kill first worker
     pid = worker.process.pid
     require('child_process').exec "kill -s 30 #{pid}"
@@ -40,12 +43,10 @@ class Master extends events.EventEmitter
     @socketTimeout    = options.socketTimeout    ? 10000
     @watchForChanges  = options.watch            ? false
 
-    if @watchForChanges
-      if not fs.watch
-        throw new Error 'watching for changes requires fs.watch'
-
-      unless options.watchAllModules
-        @nodeModulesRegex = new RegExp '^' + path.join (path.dirname @serverModule), 'node_modules'
+    @shuttingDown = false
+    @reloading    = []
+    @workers      = {}
+    @watched      = {}
 
     @runAs = options.runAs ?
       dropPrivileges: true
@@ -57,11 +58,6 @@ class Master extends events.EventEmitter
       silent : false
     cluster.setupMaster @setupMaster
 
-    @shuttingDown = false
-    @reloading    = []
-    @workers      = {}
-    @watched      = {}
-
     switch typeof options.logger
       when 'function'
         @logger = log: options.logger
@@ -71,6 +67,30 @@ class Master extends events.EventEmitter
         @logger = require('./utils').logger
       else
         @logger = false
+
+    if @watchForChanges
+      if not fs.watch
+        throw new Error 'Watching for changes requires fs.watch'
+
+      # watch files in current directory
+      walk process.cwd(), (filename) =>
+        @watch filename, =>
+          @livereload filename
+
+      # watch modules being required in
+      require('./watch') (filename) =>
+        @watch filename, =>
+          @livereload filename, true
+          @reload()
+        , true
+
+    try
+      server = require @serverModule
+    catch err
+      throw new Error 'Unable to require server (#{serverModule})'
+
+    unless server instanceof http.Server
+      throw new Error 'Server (#{serverModule}) must be an instance of http.Server'
 
   # fork worker
   fork: ->
@@ -90,28 +110,30 @@ class Master extends events.EventEmitter
 
     worker = cluster.fork options
 
-    worker.on 'message', (message) => @onMessage message
+    worker.on 'message', (message) =>
+      switch message.type
+        when 'error'
+          @emit 'worker:exception', worker, deserialize message.error
+
+          setTimeout =>
+            @fork()
+          , @restartCooldown
+
+          worker.timeout = setTimeout =>
+            worker.kill()
+            @emit 'worker:killed', worker
+          , @forceKillTimeout
+
+        when 'watch'
+          @watch message.filename, =>
+            @reload()
+            setTimeout =>
+              @livereload
+            , 1000
 
     @workers[worker.id] = worker
 
     @emit 'worker:forked', worker
-
-  onMessage: (message) ->
-    switch message.type
-      when 'error'
-        @emit 'worker:exception', worker, deserialize message.error
-
-        setTimeout =>
-          @fork()
-        , @restartCooldown
-
-        worker.timeout = setTimeout =>
-          worker.kill()
-          @emit 'worker:killed', worker
-        , @forceKillTimeout
-
-      when 'watch'
-        @watch message.filename
 
   onExit: (worker, code, signal) ->
     delete @workers[worker.id]
@@ -133,16 +155,23 @@ class Master extends events.EventEmitter
     @reloadNext() if @reloading.length > 0
 
   # Watch files for changes
-  watch: (filename) ->
-    # ignore node_modules unless options.watchAllModules
-    return if @nodeModulesRegex and @nodeModulesRegex.test filename
+  watch: (filename, callback, force = false) ->
+    # Ensure that force watched modules replace existing callbacks, but can't be replaced themselves
+    if (cached = @watched[filename])? and cached.force and not force
+      return
 
-    @logger.log 'debug', "watching #{filename}"
+    # @logger.log 'debug', "watching #{filename}", force: force
 
-    if @watched[filename]
-      @watched[filename].close()
+    @watched[filename].close() if @watched[filename]
+
     try
-      @watched[filename] = fs.watch filename, => @reload()
+      @watched[filename] = fs.watch filename, =>
+        setTimeout =>
+          @watch filename, callback, force
+        , 50
+        callback()
+      @watched[filename].force = force
+
     catch err
       if err.code == 'EMFILE'
         @logger.log 'Too many open files, try to increase the number of open files'
@@ -166,9 +195,28 @@ class Master extends events.EventEmitter
 
   reload: ->
     return unless @running
+
     @emit 'reload'
+    @running = false
+
+    @once 'worker:listening', (worker, address) =>
+      @running = true
+
     @reloading = (worker for id, worker of @workers when not worker.reloading)
     @reloadNext()
+
+  livereload: (filename, delay = false) ->
+    return unless @running
+
+    @logger.log 'debug', 'livereload', filename: filename
+
+    for id, worker of @workers
+      worker.send
+        type: 'livereload'
+        payload:
+          type: 'reload'
+          filename: filename
+          delay: delay
 
   shutdown: ->
     process.exit 1 if @shuttingDown

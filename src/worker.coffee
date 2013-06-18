@@ -13,8 +13,6 @@ require('postmortem').install()
   SET_UID
   WATCH_FOR_CHANGES } = process.env
 
-require './watch' if WATCH_FOR_CHANGES
-
 shuttingDown = false
 
 serialize = (err) ->
@@ -26,6 +24,8 @@ serialize = (err) ->
 shutdown = ->
   return if shuttingDown
   shuttingDown = true
+
+  bebop.close() if WATCH_FOR_CHANGES and bebop?
 
   try
     server.close -> process.exit 0
@@ -42,9 +42,17 @@ process.on 'uncaughtException', (err) ->
 
 # handle shutdown gracefully
 process.on 'message', (message) ->
-  shutdown() if message?.type == 'stop'
+  return if shuttingDown or not message?.type
+
+  switch message.type
+    when 'stop'
+      shutdown()
+
+    when 'livereload'
+      bebop.send message.payload
 
 server = require SERVER_MODULE
+bebop = require('bebop').attach server if WATCH_FOR_CHANGES
 
 server.listen PORT, ->
   if DROP_PRIVILEGES and process.getgid() == 0

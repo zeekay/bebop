@@ -22,5 +22,4 @@ exports.logger =
 
     console.error "#{@timestamp()} [#{level}] #{message}", metadata
 
-    if err?
-      require('postmortem').prettyPrint err.stack
+    require('postmortem').prettyPrint err if err?
