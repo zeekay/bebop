@@ -25,6 +25,7 @@
     "request": "~2.21.0"
   },
   "dependencies": {
-    "postmortem": "~0.1.0"
+    "postmortem": "~0.1.0",
+    "bebop": "~0.4.1"
   }
 }
