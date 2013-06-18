@@ -3,7 +3,6 @@ events  = require 'events'
 fs      = require 'fs'
 http    = require 'http'
 path    = require 'path'
-{walk}  = require 'bebop/lib/watch'
 
 # Start up debugger
 debug = ->
@@ -73,7 +72,7 @@ class Master extends events.EventEmitter
         throw new Error 'Watching for changes requires fs.watch'
 
       # watch files in current directory
-      walk process.cwd(), (filename) =>
+      require('bebop/lib/watch').walk process.cwd(), (filename) =>
         @watch filename, =>
           @livereload filename
 
