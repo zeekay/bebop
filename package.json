@@ -29,15 +29,14 @@
     "url": "http://github.com/zeekay/bebop.git"
   },
   "dependencies": {
-    "ws": "~0.4.25",
     "connect": "~2.7.3",
-    "monocle": "~0.1.48"
+    "readdirp": "~0.2.4",
+    "ws": "~0.4.25"
   },
   "licenses": [
     {
       "type": "MIT",
       "url": "http://www.opensource.org/licenses/mit-license.php"
     }
-  ],
-  "preferGlobal": true
+  ]
 }
