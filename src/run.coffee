@@ -11,7 +11,6 @@ usage = ->
   Options:
     --port       Specify port to listen on.
     --workers    Number of workers to start.
-    --watch      Reload on changes
   '''
   process.exit 0
 
@@ -23,8 +22,6 @@ while opt = args.shift()
       port = parseInt args.shift(), 10
     when '--workers', '-n'
       workers = parseInt args.shift(), 10
-    when '--watch', '-w'
-      watch = true
     when '--force-kill'
       forceKillTimeout = parseInt args.shift(), 10
     when '--restart-cooldown'
@@ -43,4 +40,3 @@ require('./').run serverModule,
   port:             port
   restartCooldown:  restartCooldown
   workers:          workers
-  watch:            watch
