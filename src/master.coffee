@@ -40,12 +40,10 @@ class Master extends events.EventEmitter
     @port             = options.port             ? 3000
     @restartCooldown  = options.restartCooldown  ? 2000
     @socketTimeout    = options.socketTimeout    ? 10000
-    @watchForChanges  = options.watch            ? false
 
     @shuttingDown = false
     @reloading    = []
     @workers      = {}
-    @watched      = {}
 
     @runAs = options.runAs ?
       dropPrivileges: true
@@ -67,22 +65,6 @@ class Master extends events.EventEmitter
       else
         @logger = false
 
-    if @watchForChanges
-      if not fs.watch
-        throw new Error 'Watching for changes requires fs.watch'
-
-      # watch files in current directory
-      require('bebop/lib/watch').walk process.cwd(), (filename) =>
-        @watch filename, =>
-          @livereload filename
-
-      # watch modules being required in
-      require('./watch') (filename) =>
-        @watch filename, =>
-          @livereload filename, true
-          @reload()
-        , true
-
     try
       server = require @serverModule
     catch err
@@ -98,9 +80,6 @@ class Master extends events.EventEmitter
       PORT:               @port
       SERVER_MODULE:      @serverModule
       SOCKET_TIMEOUT:     @socketTimeout
-
-    if @watchForChanges
-      options.WATCH_FOR_CHANGES = true
 
     if @runAs
       options.DROP_PRIVILEGES = @runAs.dropPrivileges
@@ -122,13 +101,6 @@ class Master extends events.EventEmitter
             worker.kill()
             @emit 'worker:killed', worker
           , @forceKillTimeout
-
-        when 'watch'
-          @watch message.filename, =>
-            @reload()
-            setTimeout =>
-              @livereload
-            , 1000
 
     @workers[worker.id] = worker
 
@@ -152,31 +124,6 @@ class Master extends events.EventEmitter
   onListening: (worker, address) ->
     @emit 'worker:listening', worker, address
     @reloadNext() if @reloading.length > 0
-
-  # Watch files for changes
-  watch: (filename, callback, force = false) ->
-    # Ensure that force watched modules replace existing callbacks, but can't be replaced themselves
-    if (cached = @watched[filename])? and cached.force and not force
-      return
-
-    # @logger.log 'debug', "watching #{filename}", force: force
-
-    @watched[filename].close() if @watched[filename]
-
-    try
-      @watched[filename] = fs.watch filename, =>
-        setTimeout =>
-          @watch filename, callback, force
-        , 50
-        callback()
-      @watched[filename].force = force
-
-    catch err
-      if err.code == 'EMFILE'
-        @logger.log 'Too many open files, try to increase the number of open files'
-        process.exit 1
-      else
-        throw err
 
   # reload worker
   reloadNext: ->
@@ -203,19 +150,6 @@ class Master extends events.EventEmitter
 
     @reloading = (worker for id, worker of @workers when not worker.reloading)
     @reloadNext()
-
-  livereload: (filename, delay = false) ->
-    return unless @running
-
-    @logger.log 'debug', 'livereload', filename: filename
-
-    for id, worker of @workers
-      worker.send
-        type: 'livereload'
-        payload:
-          type: 'reload'
-          filename: filename
-          delay: delay
 
   shutdown: ->
     process.exit 1 if @shuttingDown
