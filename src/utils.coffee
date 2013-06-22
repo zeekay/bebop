@@ -1,4 +1,4 @@
-exports.logger =
+exports.logger = logger =
   _pad: (n) ->
     n = n + ''
     if n.length >= 2 then n else new Array(2 - n.length + 1).join('0') + n
@@ -23,3 +23,8 @@ exports.logger =
     console.error "#{@timestamp()} [#{level}] #{message}", metadata
 
     require('postmortem').prettyPrint err if err?
+
+for level in ['info', 'debug', 'warn', 'error']
+  do (level) ->
+    logger[level] = (message, metadata) ->
+      logger.log level, message, metadata
