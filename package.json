@@ -18,6 +18,6 @@
   "license": "BSD",
   "readmeFilename": "README.md",
   "dependencies": {
-    "postmortem": "~0.1.0"
+    "postmortem": "~0.1.1"
   }
 }
