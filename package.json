@@ -30,13 +30,17 @@
   },
   "dependencies": {
     "connect": "~2.7.3",
-    "readdirp": "~0.2.4",
-    "ws": "~0.4.25"
+    "ws": "~0.4.25",
+    "readdirp": "~0.3.0"
   },
   "licenses": [
     {
       "type": "MIT",
       "url": "http://www.opensource.org/licenses/mit-license.php"
     }
-  ]
+  ],
+  "devDependencies": {
+    "executive": "~0.3.0",
+    "coffee-script": "~1.6.3"
+  }
 }
