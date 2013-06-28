@@ -1,3 +1,50 @@
 #!/usr/bin/env node
-var bebop = require('../lib');
-bebop.reload(bebop.server.createServer(), process.cwd()).run()
+var args  = process.argv.slice(2),
+    bebop = require(__dirname + '/../lib'),
+    xian  = require('xian');
+
+function error(message) {
+  console.error(message);
+  process.exit(1);
+}
+
+function usage() {
+  console.log([
+    'bebop [options]',
+    '',
+    '',
+    'Options:',
+    '  --port, -p    Specify port to listen on',
+  ].join('\n'))
+
+  process.exit(0);
+}
+
+while (opt = args.shift()) {
+  switch (opt) {
+    case '--help':
+    case '-v':
+      usage()
+      break
+    case '--port':
+    case '-p':
+      port = parseInt(args.shift(), 10)
+      break
+    default:
+      if (opt.charAt(0) === '-') {
+        error('Unrecognized option')
+      }
+  }
+}
+
+var server = bebop.server.createServer();
+
+// bebop.reload(server, process.cwd()).run()
+server.run()
+
+// Would like to do:
+// patch(server, reload)
+// patch(server, basicAuth)
+// server.run()
+
+// vim:ft=javascript
