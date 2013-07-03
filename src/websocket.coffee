@@ -1,21 +1,22 @@
 module.exports = (server) ->
-  WebSocketServer = require("ws").Server
-  wss = new WebSocketServer(
+  WebSocketServer = require('ws').Server
+
+  wss = new WebSocketServer
     server: server
-    path: "/_bebop"
-  )
+    path: '/_bebop'
+
   clients = {}
   id = 0
-  wss.on "connection", (ws) ->
+
+  wss.on 'connection', (ws) ->
     id += 1
     ws.id = id
     clients[ws.id] = ws
-    ws.on "close", ->
+    ws.on 'close', ->
       delete clients[ws.id]
 
-
   server: wss
-  
+
   # Close connections
   close: ->
     for id of clients
@@ -23,8 +24,11 @@ module.exports = (server) ->
       delete clients[id]
     wss.close()
 
-  
+
   # Send message to connections
   send: (message) ->
     for id of clients
-      clients[id].send JSON.stringify(message)
+      try
+        clients[id].send JSON.stringify message
+      catch err
+        console.error err.stack
