@@ -13,7 +13,6 @@ require('./watch') (filename) =>
     @reload()
   , true
 
-
 # Watch files for changes
 watch: (filename, callback, force = false) ->
   # Ensure that force watched modules replace existing callbacks, but can't be replaced themselves
@@ -38,4 +37,3 @@ watch: (filename, callback, force = false) ->
       process.exit 1
     else
       throw err
-
