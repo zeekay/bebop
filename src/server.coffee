@@ -1,6 +1,9 @@
 {log} = require './utils'
 
-module.exports = createServer: (opts) ->
+module.exports = createServer: (opts = {}) ->
+  opts.host ?= '0.0.0.0'
+  opts.port ?= 3000
+
   connect = require 'connect'
 
   app = connect()
@@ -18,7 +21,7 @@ module.exports = createServer: (opts) ->
   server = require('http').createServer app
 
   server.run = ->
-    server.listen 3000, '0.0.0.0', ->
-      log 'bebop listening on 0.0.0.0:3000'
+    server.listen opts.port, opts.host, ->
+      log "bebop\x1B[0m listening on #{opts.host}:#{opts.port}"
 
   server
