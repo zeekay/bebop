@@ -40,7 +40,6 @@ do ->
           result: error
 
     onmodified: (filename) ->
-      @close()
       if isBrowser
         node = @findNode filename
         if node
@@ -64,8 +63,9 @@ do ->
       if node._resource.ext is 'js'
         node.parentNode.removeChild node
         return @load(node._resource)
+
       link = node._resource.tag.link
-      node[link] = @urlRandomize(node[link])
+      node[link] = @urlRandomize(node._resource.url)
       @log 'Reloaded ' + node[link]
 
     load: (resource) ->
@@ -278,8 +278,10 @@ do ->
 
       for node in document.getElementsByTagName resource.tag.name
         if node[resource.tag.link].indexOf resource.filename isnt -1
+          resource.url = node[resource.tag.link]
           node._resource = resource
           return node
+
       null
 
     # Urls
