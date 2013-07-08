@@ -1,3 +1,10 @@
+fs   = require 'fs'
+path = require 'path'
+exec = require 'executive'
+
+compilers = require './compilers'
+{log}     = require './utils'
+
 module.exports = (dir, server, opts = {}) ->
   # attach websocket server
   wss = require('./websocket') server
@@ -7,7 +14,7 @@ module.exports = (dir, server, opts = {}) ->
 
   watching = {}
 
-  fs = require 'fs'
+  start = timeout = (new Date()).getTime()
 
   walk = (dir, callback) ->
     stream = require('readdirp')
@@ -20,22 +27,37 @@ module.exports = (dir, server, opts = {}) ->
 
   watchFile = (filename, callback) ->
     watching[filename].close() if watching[filename]
-    watching[filename] = fs.watch filename, ->
-      callback filename
-      watchFile filename, callback
+
+    fs.exists filename, (exists) ->
+      return unless exists
+
+      watching[filename] = fs.watch filename, ->
+        callback filename
+        watchFile filename, callback
 
   watch = (dir, callback) ->
     walk dir, (filename) ->
       watchFile filename, callback
 
-  # watch files in current directory
-  timeout = (new Date()).getTime()
   watch dir, (filename) ->
     now = (new Date()).getTime()
+    return unless (now - timeout) > 100
 
-    if (now - timeout) > 100
-      wss.send
-        type: 'modified'
-        filename: filename
+    # get extension of file modified
+    ext = (path.extname filename).substr 1
+
+    # if it's file with a known compiler, compile it, instead of reloading
+    if compiler = compilers[ext]
+      log "  compiling\x1B[0m #{filename}"
+      return exec.quiet compiler filename
+
+    log "  modified\x1B[0m #{filename}"
+
+    # tell browser to reload!
+    wss.send
+      type: 'modified'
+      filename: filename
+
+    log "  reloading clients"
 
     timeout = now
