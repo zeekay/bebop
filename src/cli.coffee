@@ -1,5 +1,8 @@
-bebop = require './'
+exec = require 'executive'
+os   = require 'os'
 xian = require 'xian'
+
+bebop = require './'
 
 error = (message) ->
   console.error message
@@ -10,21 +13,32 @@ usage = ->
   bebop [options]
 
   Options:
-    --port, -p    Specify port to listen on
+    --host, -h    Hostname to bind to
+    --port, -p    Port to listen on
     --secure, -s  Require authentication
+    --no-browser  Don't try to open browser
+    --no-watch    Do not watch files for changes
   """
   process.exit 0
 
-args = process.argv.slice 2
 opts =
-  watch: true
+  browser: true
+  host: '0.0.0.0'
+  port: 3000
+  watch:   true
+
+args = process.argv.slice 2
 
 while opt = args.shift()
   switch opt
     when '--help', '-v'
       usage()
+    when '--no-browser'
+      opts.browser = false
     when '--no-watch'
       opts.watch = false
+    when '--host', '-h'
+      opts.host = args.shift()
     when '--port', '-p'
       opts.port = parseInt args.shift(), 10
     when '--secure', '-s'
@@ -33,5 +47,15 @@ while opt = args.shift()
       error 'Unrecognized option' if opt.charAt(0) is '-'
 
 server = bebop.server.createServer opts
-bebop.watch process.cwd(), server
+
+if opts.watch
+  bebop.watch process.cwd(), server
+
 server.run()
+
+if opts.browser
+  switch os.platform()
+    when 'darwin'
+      exec "open http://#{opts.host}:#{opts.port}"
+    when 'linux'
+      exec "xdg-open http://#{opts.host}:#{opts.port}"
