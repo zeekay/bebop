@@ -40,6 +40,7 @@ do ->
           result: error
 
     onmodified: (filename) ->
+      @close()
       if isBrowser
         node = @findNode filename
         if node
@@ -53,6 +54,10 @@ do ->
     onclose: ->
       @log 'Connection to Bebop closed'
 
+    # close websocket connection
+    close: ->
+      @ws.onclose = ->
+      @ws.close()
 
     # reloading
     reload: (node) ->
@@ -222,7 +227,9 @@ do ->
             @onmodified message.filename
 
           when 'reload'
-            setTimeout ->
+            setTimeout =>
+              @close()
+
               location.reload true
             , 2000
 
