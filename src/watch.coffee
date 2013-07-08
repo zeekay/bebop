@@ -58,6 +58,6 @@ module.exports = (dir, server, opts = {}) ->
       type: 'modified'
       filename: filename
 
-    log "  reloading clients"
+    log "  reloading"
 
     timeout = now
