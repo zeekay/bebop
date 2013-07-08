@@ -49,7 +49,8 @@ module.exports = (dir, server, opts = {}) ->
     # if it's file with a known compiler, compile it, instead of reloading
     if compiler = compilers[ext]
       log "  compiling\x1B[0m #{filename}"
-      return exec.quiet compiler filename
+      return exec.quiet (compiler filename), (err, stdout, stderr) ->
+        console.error stderr.trim()
 
     log "  modified\x1B[0m #{filename}"
 
