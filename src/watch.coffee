@@ -50,7 +50,8 @@ module.exports = (dir, server, opts = {}) ->
     if compiler = compilers[ext]
       log "  compiling\x1B[0m #{filename}"
       return exec.quiet (compiler filename), (err, stdout, stderr) ->
-        console.error stderr.trim()
+        if (stderr = stderr.trim()) != ''
+          console.error stderr
 
     log "  modified\x1B[0m #{filename}"
 
