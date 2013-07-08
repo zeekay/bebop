@@ -4,6 +4,7 @@ module.exports = createServer: (opts) ->
   connect = require 'connect'
 
   app = connect()
+  app.use connect.favicon()
   app.use connect.logger 'dev'
   app.use require('./middleware')
     patch: true
