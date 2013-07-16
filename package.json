@@ -1,7 +1,7 @@
 {
   "name": "bebop",
   "description": "A tool for rapidly building web sites",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "homepage": "http://github.com/zeekay/bebop",
   "keywords": [
     "autocomplete",
