@@ -48,12 +48,12 @@ module.exports = (dir, server, opts = {}) ->
 
     # if it's file with a known compiler, compile it, instead of reloading
     if compiler = compilers[ext]
-      log "  compiling\x1B[0m #{filename}"
+      log "  compiling\x1B[0m #{'.' + filename.substr dir.length}"
       return exec.quiet (compiler filename), (err, stdout, stderr) ->
         if (stderr = stderr.trim()) != ''
           console.error stderr
 
-    log "  modified\x1B[0m #{filename}"
+    log "  modified\x1B[0m #{'.' + filename.substr dir.length}"
 
     # tell browser to reload!
     wss.send
