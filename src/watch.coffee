@@ -1,6 +1,4 @@
-fs   = require 'fs'
-path = require 'path'
-exec = require 'executive'
+fs = require 'fs'
 
 compilers = require './compilers'
 {log}     = require './utils'
@@ -13,8 +11,6 @@ module.exports = (dir, server, opts = {}) ->
   fileFilter = opts.fileFilter ? ['!package.json', '!.*', '!npm-debug.log', '!Cakefile', '!README.md']
 
   watching = {}
-
-  start = timeout = (new Date()).getTime()
 
   walk = (dir, callback) ->
     stream = require('readdirp')
@@ -31,29 +27,34 @@ module.exports = (dir, server, opts = {}) ->
     fs.exists filename, (exists) ->
       return unless exists
 
-      watching[filename] = fs.watch filename, ->
-        callback filename
-        watchFile filename, callback
+      try
+        watching[filename] = fs.watch filename, ->
+          callback filename
+          watchFile filename, callback
+      catch err
+        console.error err
 
   watch = (dir, callback) ->
     walk dir, (filename) ->
+      # compile on start, if src is newer than dst
+      if compilers.compile filename
+        log "  compiling\x1B[0m #{'.' + filename.substr dir.length}"
+        compilers.compile filename
+
       watchFile filename, callback
 
+  timeout = (new Date()).getTime()
   watch dir, (filename) ->
+    # fs.watch fires of events too often
     now = (new Date()).getTime()
     return unless (now - timeout) > 100
-
-    # get extension of file modified
-    ext = (path.extname filename).substr 1
-
-    # if it's file with a known compiler, compile it, instead of reloading
-    if compiler = compilers[ext]
-      log "  compiling\x1B[0m #{'.' + filename.substr dir.length}"
-      return exec.quiet (compiler filename), (err, stdout, stderr) ->
-        if (stderr = stderr.trim()) != ''
-          console.error stderr
+    timeout = now
 
     log "  modified\x1B[0m #{'.' + filename.substr dir.length}"
+
+    if compilers.compile filename
+      log "  compiling\x1B[0m #{'.' + filename.substr dir.length}"
+      return
 
     # tell browser to reload!
     wss.send
@@ -61,5 +62,3 @@ module.exports = (dir, server, opts = {}) ->
       filename: filename
 
     log "  reloading"
-
-    timeout = now
