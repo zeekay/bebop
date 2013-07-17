@@ -42,7 +42,12 @@ while opt = args.shift()
     when '--port', '-p'
       opts.port = parseInt args.shift(), 10
     when '--secure', '-s'
-      [opts.user, opts.pass] = args.shift.split(':')
+      credentials = args.shift()
+      if credentials
+        [opts.user, opts.pass] = credentials.split(':')
+      else
+        opts.user = 'bebop'
+        opts.pass = 'beepboop'
     else
       error 'Unrecognized option' if opt.charAt(0) is '-'
 
