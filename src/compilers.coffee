@@ -32,10 +32,11 @@ module.exports =
     checkModified src, dst, (newer) ->
       return unless newer
 
-      return exec.quiet (compiler src, dst), (err, stdout, stderr) ->
-        if (stderr = stderr.trim()) != ''
-          console.error stderr
-
+      # if we're passed a string, exec command
+      if typeof (cmd = compiler src, dst) is 'string'
+        exec.quiet cmd, (err, stdout, stderr) ->
+          if (stderr = stderr.trim()) != ''
+            console.error stderr
     true
 
   coffee: (src, dst) ->
