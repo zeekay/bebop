@@ -34,7 +34,7 @@ wrapper =
 
 properties = {}
 
-["client", "middleware", "server", "watch", "websocket"].forEach (property) ->
+['client', 'compilers', 'middleware', 'server', 'watch', 'websocket'].forEach (property) ->
   properties[property] =
     enumerable: true
     get: -> require "./" + property

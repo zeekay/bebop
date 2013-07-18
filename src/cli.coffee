@@ -1,4 +1,5 @@
 exec = require 'executive'
+fs   = require 'fs'
 os   = require 'os'
 xian = require 'xian'
 
@@ -26,6 +27,26 @@ opts =
   host: '0.0.0.0'
   port: 3000
   watch:   true
+
+confs = [
+  process.env.HOME + '/.bebop'
+  process.cwd() + '/.bebop'
+]
+
+require.extensions['.coffee'] = ->
+  require 'coffee-script'
+  require.extensions['.coffee'].apply require.extensions, arguments
+
+# allow user to override defaults
+for conf in confs
+  try
+    conf = require.resolve conf
+  catch err
+    continue
+
+  if fs.existsSync conf
+    for k,v of require conf
+      opts[k] = v
 
 args = process.argv.slice 2
 
