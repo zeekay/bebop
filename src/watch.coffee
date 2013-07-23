@@ -3,9 +3,9 @@ fs = require 'fs'
 compilers = require './compilers'
 {log}     = require './utils'
 
-module.exports = (dir, server, opts = {}) ->
+module.exports = (opts, cb) ->
   # attach websocket server
-  wss = require('./websocket') server
+  wss = require('./websocket') opts.server
 
   directoryFilter = opts.directoryFilter ? ['!node_modules', '!.git']
   fileFilter = opts.fileFilter ? ['!package.json', '!.*', '!npm-debug.log', '!Cakefile', '!README.md']
@@ -44,7 +44,8 @@ module.exports = (dir, server, opts = {}) ->
       watchFile filename, callback
 
   timeout = (new Date()).getTime()
-  watch dir, (filename) ->
+
+  watch opts.dir, (filename) ->
     # fs.watch fires of events too often
     now = (new Date()).getTime()
     return unless (now - timeout) > 100
