@@ -14,16 +14,19 @@ usage = ->
   bebop [options]
 
   Options:
-    --host, -h    Hostname to bind to
-    --port, -p    Port to listen on
-    --secure, -s  Require authentication
-    --no-browser  Don't try to open browser
-    --no-watch    Do not watch files for changes
+    --host, -h      Hostname to bind to
+    --port, -p      Port to listen on
+    --secure, -s    Require authentication
+    --no-browser    Do not open browser automatically
+    --no-watch      Do not watch files for changes
+    --no-compile    Do not compile files automatically
+    --force-compile Compile files and exit
   """
   process.exit 0
 
 opts =
   browser: true
+  compile: true
   host: '0.0.0.0'
   port: 3000
   watch:   true
@@ -58,6 +61,10 @@ while opt = args.shift()
       opts.browser = false
     when '--no-watch'
       opts.watch = false
+    when '--no-compile'
+      opts.compile = false
+    when '--force-compile'
+      opts.forceCompile = true
     when '--host', '-h'
       opts.host = args.shift()
     when '--port', '-p'
@@ -75,7 +82,11 @@ while opt = args.shift()
 server = bebop.server.createServer opts
 
 if opts.watch
-  bebop.watch process.cwd(), server
+  bebop.watch
+    dir: process.cwd(),
+    server: server
+    compile: opts.compile
+  , -> process.exit 0 if opts.forceCompile
 
 server.run()
 
