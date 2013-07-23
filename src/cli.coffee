@@ -1,7 +1,7 @@
 exec = require 'executive'
 fs   = require 'fs'
 os   = require 'os'
-xian = require 'xian'
+# xian = require 'xian'
 
 bebop = require './'
 
