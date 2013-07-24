@@ -41,7 +41,7 @@ module.exports =
 
   coffee: (src, dst) ->
     dst = path.dirname dst
-    "coffee -bc -o #{dst} #{src}"
+    "coffee -bmc -o #{dst} #{src}"
 
   jade: (src, dst) ->
     dst = path.dirname dst
