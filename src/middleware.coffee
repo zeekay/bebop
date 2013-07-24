@@ -17,7 +17,7 @@ injectJs = (res) ->
   # Append script if text/html content-type
   res.end = (chunk, encoding) ->
     if appendScript
-      res.write '<script src="_bebop.js"></script>\n', encoding
+      res.write '<script src="/_bebop.js"></script>\n', encoding
     end.call res, chunk, encoding
 
 serveJs = (res) ->
