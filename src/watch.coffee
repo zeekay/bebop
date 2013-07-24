@@ -51,10 +51,10 @@ module.exports = (opts, cb) ->
     return unless (now - timeout) > 100
     timeout = now
 
-    log "  modified\x1B[0m #{'.' + filename.substr dir.length}"
+    log "  modified\x1B[0m #{'.' + filename.substr opts.dir.length}"
 
     if compilers.compile filename
-      log "  compiling\x1B[0m #{'.' + filename.substr dir.length}"
+      log "  compiling\x1B[0m #{'.' + filename.substr opts.dir.length}"
       return
 
     # tell browser to reload!
