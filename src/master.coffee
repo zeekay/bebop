@@ -65,10 +65,7 @@ class Master extends events.EventEmitter
       else
         @logger = false
 
-    try
-      server = require @serverModule
-    catch err
-      throw new Error 'Unable to require server (#{serverModule})'
+    server = require @serverModule
 
     unless server instanceof http.Server
       throw new Error 'Server (#{serverModule}) must be an instance of http.Server'
