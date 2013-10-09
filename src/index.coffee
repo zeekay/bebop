@@ -11,5 +11,6 @@ wrapper =
 
     master = new Master serverModule, options
     master.run callback
+    master
 
 module.exports = wrapper
