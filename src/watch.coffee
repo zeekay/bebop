@@ -3,9 +3,25 @@ fs = require 'fs'
 compilers = require './compilers'
 {log}     = require './utils'
 
-module.exports = (opts, cb) ->
-  # attach websocket server
-  wss = require('./websocket') opts.server
+module.exports = (opts, cb = ->) ->
+  if typeof opts == 'string'
+    opts = {dir: opts}
+
+  if opts.server
+    # attach websocket server
+    wss = require('./websocket') opts.server
+
+    _cb = cb
+    cb = (err, filename) ->
+      throw err if err?
+
+      # call user's callback
+      _cb err, filename
+
+      # tell browser to reload!
+      wss.send
+        type: 'modified'
+        filename: filename
 
   directoryFilter = opts.directoryFilter ? ['!node_modules', '!.git']
   fileFilter = opts.fileFilter ? ['!package.json', '!.*', '!npm-debug.log', '!Cakefile', '!README.md']
@@ -57,9 +73,4 @@ module.exports = (opts, cb) ->
       log "  compiling\x1B[0m #{'.' + filename.substr opts.dir.length}"
       return
 
-    # tell browser to reload!
-    wss.send
-      type: 'modified'
-      filename: filename
-
-    log "  reloading"
+    cb null, filename
