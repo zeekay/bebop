@@ -15,20 +15,27 @@ module.exports = (server) ->
     ws.on 'close', ->
       delete clients[ws.id]
 
-  server: wss
+  websocket =
+    server: wss
 
-  # Close connections
-  close: ->
-    for id of clients
-      clients[id].close()
-      delete clients[id]
-    wss.close()
+    # Close connections
+    close: ->
+      for id of clients
+        clients[id].close()
+        delete clients[id]
+      wss.close()
 
 
-  # Send message to connections
-  send: (message) ->
-    for id of clients
-      try
-        clients[id].send JSON.stringify message
-      catch err
-        console.error err.stack
+    # Send message to connections
+    send: (message) ->
+      for id of clients
+        try
+          clients[id].send JSON.stringify message
+        catch err
+          console.error err.stack
+
+  process.on 'exit', ->
+    websocket.send
+      type: 'reload'
+
+  websocket
