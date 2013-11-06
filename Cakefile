@@ -10,13 +10,16 @@ task 'clean', 'clean project', (options) ->
 task 'build', 'build project', (options) ->
   exec 'node_modules/.bin/coffee -bcm -o lib/ src/'
   exec 'node_modules/.bin/coffee -bcm -o .test/ test/'
+  exec 'node_modules/.bin/coffee -bcm bebop-client/'
 
 task 'build:prepublish', 'build project prepublish step', (options) ->
   exec 'node_modules/.bin/coffee -bcm -o lib/ src/'
+  exec 'node_modules/.bin/coffee -bcm bebop-client/'
 
 task 'watch', 'watch for changes and recompile project', ->
-  exec './node_modules/.bin/coffee -bc -m -w -o lib/ src/'
-  exec './node_modules/.bin/coffee -bc -m -w -o .test test/'
+  exec 'node_modules/.bin/coffee -bcmw -o lib/ src/'
+  exec 'node_modules/.bin/coffee -bcmw -o .test test/'
+  exec 'node_modules/.bin/coffee -bcmw bebop-client/'
 
 task 'test', 'run tests', (options) ->
   test = options.test ? '.test'

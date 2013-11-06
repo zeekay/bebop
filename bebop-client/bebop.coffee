@@ -8,6 +8,7 @@ do ->
       hostname = window.location.hostname
       port = window.location.port
       @address = protocol + hostname + ':' + port + '/_bebop'
+      @tries = 0
 
     # Called when completion requested.
     oncomplete: (msg) ->
@@ -48,6 +49,8 @@ do ->
           location.reload true
 
     onopen: ->
+      @tries = 0
+
       @log 'Connected to Bebop'
 
     onclose: ->
@@ -177,20 +180,33 @@ do ->
 
     # WebSockets
     connect: ->
+      unless @tries < 10
+        @log 'Failed to connect to Bebop, giving up!'
+        return
+
+      @tries++
+
       WebSocket = root.WebSocket or root.MozWebSocket
 
-      unless WebSocket
+      unless WebSocket?
         if isBrowser
           @webSocketFallback()
         else
-          WebSocket = require('ws')
+          WebSocket = require 'ws'
 
       try
-        ws = new WebSocket(@address)
+        @ws = new WebSocket @address
       catch err
-        return root.setTimeout(@connect, 500)
+        root.setTimeout =>
+          @connect
+        , 500
+        return
 
-      ws.onopen = =>
+      if isBrowser
+        root.onbeforeunload = =>
+          @ws.close()
+
+      @ws.onopen = =>
         @onopen()
 
         if isBrowser
@@ -202,17 +218,18 @@ do ->
           type: 'connected'
           identifier: identifier
 
-      ws.onclose = =>
+      @ws.onclose = =>
+        return
         setTimeout =>
           @connect()
         , 500
 
-      ws.onerror = =>
+      @ws.onerror = =>
         setTimeout =>
           @connect()
         , 500
 
-      ws.onmessage = (message) =>
+      @ws.onmessage = (message) =>
         message = JSON.parse message.data
         @log message
 
@@ -232,8 +249,6 @@ do ->
 
               location.reload true
             , 2000
-
-      @ws = ws
 
     send: (msg) ->
       @ws.send JSON.stringify msg

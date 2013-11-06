@@ -1,7 +1,9 @@
 fs = require 'fs'
 
+bebopInclude = '<script src="/bebop-client/bebop.js"></script>\n'
+
+# Monkey patch res.end to inject our script
 injectJs = (res) ->
-  # Monkey patch res.end to inject our script
   appendScript = false
   end = res.end
   setHeader = res.setHeader
@@ -11,19 +13,33 @@ injectJs = (res) ->
     if /text\/html/i.test(value)
       appendScript = true
     else if name is 'Content-Length' and appendScript
-      value = parseInt(value, 10) + 34
+      value = parseInt(value, 10) + bebopInclude.length
     setHeader.call res, name, value
-
   # Append script if text/html content-type
   res.end = (chunk, encoding) ->
     if appendScript
-      res.write '<script src="/_bebop.js"></script>\n', encoding
+      res.write bebopInclude, encoding
     end.call res, chunk, encoding
 
-serveJs = (res) ->
-  res.writeHead 200,
-    'Content-Type': 'application/javascript'
-  fs.createReadStream(__dirname + '/client.js').pipe res
+# serve static js, map, coffee source files
+serveStatic = (req, res) ->
+  switch req.url
+    when '/bebop-client/bebop.js'
+      headers =
+        'Content-Type': 'application/javascript'
+        'SourceMap':    'bebop.map'
+        'X-SourceMap':  'bebop.map'
+
+    when '/bebop-client/bebop.map'
+      headers =
+        'Content-Type': 'application/json'
+
+    when '/bebop-client/bebop.coffee'
+      headers =
+        'Content-Type': 'application/coffeescript'
+
+  res.writeHead 200, headers
+  fs.createReadStream(__dirname + '/..' + req.url).pipe res
 
 module.exports = (options) ->
   if typeof options is 'function'
@@ -31,22 +47,20 @@ module.exports = (options) ->
   else options = {} unless options?
 
   # Serve script from _bebop.js by default
-  options.url = '/_bebop.js'  unless options.url?
   app = options.app
-  patch = options.patch
-  url = options.url
 
   # Generic connect compatible middleware to server client code.
-  (req, res, next) ->
-
-    # Serve client-side javascript
-    return serveJs res  if req.url is url
+  middleware = (req, res, next) ->
+    # Serve static files
+    return (serveStatic req, res) if /^\/bebop-client/.test req.url
 
     # Inject script into html pages
-    injectJs res if patch or app
+    injectJs res
 
     # If we get this far let app handle request
     app req, res if typeof app is 'function'
 
     # If we are being used as a connect-style middleware call next
     next() if typeof next is 'function'
+
+  `function bebop(req, res, next) { return middleware(req, res, next); };`
