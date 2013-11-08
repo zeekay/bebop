@@ -8,9 +8,8 @@ module.exports = createServer: (opts = {}) ->
 
   app = connect()
   app.use connect.favicon()
+  app.use require('./middleware')()
   app.use connect.logger 'dev'
-  app.use require('./middleware')
-    patch: true
 
   if opts.user and opts.pass
     app.use connect.basicAuth opts.user, opts.pass

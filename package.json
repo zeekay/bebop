@@ -16,12 +16,18 @@
     "email": "zeekayy@gmail.com",
     "url": "http://github.com/zeekay"
   },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://www.opensource.org/licenses/mit-license.php"
+    }
+  ],
   "main": "lib/",
   "bin": {
     "bebop": "bin/bebop"
   },
   "bugs": {
-    "mail": "zeekayy@gmail.com",
+    "mail": "zk@monoid.io",
     "url": "http://github.com/zeekay/bebop/issues"
   },
   "repository": {
@@ -31,15 +37,9 @@
   "dependencies": {
     "connect": "~2.7.3",
     "executive": "~0.4.0",
-    "readdirp": "~0.3.0",
-    "ws": "~0.4.25"
+    "ws": "~0.4.25",
+    "vigil": "~0.2.3"
   },
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "http://www.opensource.org/licenses/mit-license.php"
-    }
-  ],
   "devDependencies": {
     "coffee-script": "~1.6.3"
   }
