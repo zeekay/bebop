@@ -1,9 +1,10 @@
 exec = require 'executive'
 fs   = require 'fs'
 os   = require 'os'
-# xian = require 'xian'
 
-bebop = require './'
+compilers = require './compilers'
+server    = require './server'
+utils     = require './utils'
 
 error = (message) ->
   console.error message
@@ -79,20 +80,29 @@ while opt = args.shift()
     else
       error 'Unrecognized option' if opt.charAt(0) is '-'
 
-server = bebop.server.createServer opts
+(require 'vigil').walk process.cwd(), (filename) ->
+  if compilers.compile filename
+      utils.log "  compiling\x1B[0m #{filename}"
 
-if opts.watch
-  bebop.watch
-    dir: process.cwd(),
-    server: server
-    compile: opts.compile
-  , -> process.exit 0 if opts.forceCompile
+unless opts.forceCompile
+  server = server.createServer opts
 
-server.run()
+  if opts.watch
+    websocket = (require './websocket') server
 
-if opts.browser
-  switch os.platform()
-    when 'darwin'
-      exec "open http://#{opts.host}:#{opts.port}"
-    when 'linux'
-      exec "xdg-open http://#{opts.host}:#{opts.port}"
+    (require 'vigil').watch process.cwd(), (filename, stat, isModule) ->
+      utils.log "  modified\x1B[0m #{filename}"
+      if opts.compile and compilers.compile filename
+        utils.log "  compiling\x1B[0m #{filename}"
+      websocket.send
+        type: 'modified'
+        filename: filename
+
+  server.run()
+
+  if opts.browser
+    switch os.platform()
+      when 'darwin'
+        exec "open http://#{opts.host}:#{opts.port}"
+      when 'linux'
+        exec "xdg-open http://#{opts.host}:#{opts.port}"

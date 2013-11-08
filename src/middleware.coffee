@@ -1,6 +1,6 @@
 fs = require 'fs'
 
-bebopInclude = '<script src="/bebop-client/bebop.js"></script>\n'
+bebopJs = '<script src="/bebop-client/bebop.js"></script>\n'
 
 # Monkey patch res.end to inject our script
 injectJs = (res) ->
@@ -13,12 +13,13 @@ injectJs = (res) ->
     if /text\/html/i.test(value)
       appendScript = true
     else if name is 'Content-Length' and appendScript
-      value = parseInt(value, 10) + bebopInclude.length
+      value = parseInt(value, 10) + bebopJs.length
     setHeader.call res, name, value
+
   # Append script if text/html content-type
   res.end = (chunk, encoding) ->
     if appendScript
-      res.write bebopInclude, encoding
+      res.write bebopJs, encoding
     end.call res, chunk, encoding
 
 # serve static js, map, coffee source files
@@ -41,26 +42,50 @@ serveStatic = (req, res) ->
   res.writeHead 200, headers
   fs.createReadStream(__dirname + '/..' + req.url).pipe res
 
-module.exports = (options) ->
-  if typeof options is 'function'
-    options = app: options
-  else options = {} unless options?
-
-  # Serve script from _bebop.js by default
-  app = options.app
-
-  # Generic connect compatible middleware to server client code.
-  middleware = (req, res, next) ->
+# Generic connect compatible middleware to server client code.
+# Wrapped with a named function for easier debugging.
+middleware = do ->
+  _middleware = (req, res, next = ->) ->
     # Serve static files
     return (serveStatic req, res) if /^\/bebop-client/.test req.url
 
     # Inject script into html pages
     injectJs res
 
-    # If we get this far let app handle request
-    app req, res if typeof app is 'function'
+    next()
 
-    # If we are being used as a connect-style middleware call next
-    next() if typeof next is 'function'
+  `function bebop(req, res, next) { return _middleware(req, res, next); };`
 
-  `function bebop(req, res, next) { return middleware(req, res, next); };`
+# inject middleware into connect/express app
+injectConnectApp = (app) ->
+  app.stack.splice 2, 0,
+    route: ''
+    handle: middleware
+  app
+
+# inject middleware into http server
+injectHttpServer = (server) ->
+  # Get reference to current request listener
+  app = server.listeners('request')[0]
+
+  # Remove listener
+  server.removeListener 'request', app if typeof app is 'function'
+
+  # Install our middleware, delegate to existing listener
+  server.on 'request', (req, res) ->
+    middleware req, res, ->
+      app req, res
+
+# inject our middleware
+inject = (app) ->
+  if require('connect')().toString() == app.toString()
+    injectConnectApp app
+  else
+    injectHttpServer app
+
+module.exports = (app) ->
+  # inject middleware
+  return inject app if typeof app is 'function'
+
+  # used directly as middleware
+  middleware
