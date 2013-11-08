@@ -62,7 +62,7 @@
       var node;
       if (isBrowser) {
         node = this.findNode(filename);
-        if (node) {
+        if (node && node._resource.tag.name !== 'script') {
           return this.reload(node);
         } else {
           return location.reload(true);
@@ -72,11 +72,11 @@
 
     Bebop.prototype.onopen = function() {
       this.tries = 0;
-      return this.log('Connected to Bebop');
+      return this.log('connected');
     };
 
     Bebop.prototype.onclose = function() {
-      return this.log('Connection to Bebop closed');
+      return this.log('closed');
     };
 
     Bebop.prototype.close = function() {
@@ -92,7 +92,7 @@
       }
       link = node._resource.tag.link;
       node[link] = this.urlRandomize(node._resource.url);
-      return this.log('Reloaded ' + node[link]);
+      return this.log('resource-reloaded', node[link]);
     };
 
     Bebop.prototype.load = function(resource) {
@@ -101,7 +101,7 @@
       node[resource.tag.link] = resource.url;
       node.type = resource.tag.type;
       document.getElementsByTagName('head')[0].appendChild(node);
-      return this.log('Loaded ' + node[resource.tag.link]);
+      return this.log('resource-loaded', node[resource.tag.link]);
     };
 
     Bebop.prototype.dir = function(object) {
@@ -224,9 +224,14 @@
       })(object, '$');
     };
 
-    Bebop.prototype.log = function() {
-      if (root.console) {
-        return console.log.apply(console, arguments);
+    Bebop.prototype.log = function(event, message) {
+      if (root.console == null) {
+        return;
+      }
+      if (message) {
+        return console.log("bebop:" + event, message);
+      } else {
+        return console.log("bebop:" + event);
       }
     };
 
@@ -234,7 +239,7 @@
       var WebSocket, err,
         _this = this;
       if (!(this.tries < 10)) {
-        this.log('Failed to connect to Bebop, giving up!');
+        this.log('connection-failed', 'giving up!');
         return;
       }
       this.tries++;
@@ -286,7 +291,6 @@
       };
       return this.ws.onmessage = function(message) {
         message = JSON.parse(message.data);
-        _this.log(message);
         switch (message.type) {
           case 'complete':
             return _this.oncomplete(message.name);
@@ -343,17 +347,18 @@
     };
 
     Bebop.prototype.findNode = function(filename) {
-      var node, resource, _i, _len, _ref;
+      var node, re, resource, _i, _len, _ref;
       if (filename === '') {
         return;
       }
       if ((resource = this.parseFilename(filename)).tag == null) {
         return;
       }
+      re = new RegExp(filename + '$');
       _ref = document.getElementsByTagName(resource.tag.name);
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         node = _ref[_i];
-        if (node[resource.tag.link].indexOf(resource.filename !== -1)) {
+        if (re.test((node[resource.tag.link].split('?'))[0])) {
           resource.url = node[resource.tag.link];
           node._resource = resource;
           return node;

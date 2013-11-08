@@ -49,18 +49,17 @@ do ->
     onmodified: (filename) ->
       if isBrowser
         node = @findNode filename
-        if node
+        if node and node._resource.tag.name != 'script'
           @reload node
         else
           location.reload true
 
     onopen: ->
       @tries = 0
-
-      @log 'Connected to Bebop'
+      @log 'connected'
 
     onclose: ->
-      @log 'Connection to Bebop closed'
+      @log 'closed'
 
     # close websocket connection
     close: ->
@@ -75,14 +74,14 @@ do ->
 
       link = node._resource.tag.link
       node[link] = @urlRandomize(node._resource.url)
-      @log 'Reloaded ' + node[link]
+      @log 'resource-reloaded', node[link]
 
     load: (resource) ->
       node = document.createElement(resource.tag.name)
       node[resource.tag.link] = resource.url
       node.type = resource.tag.type
       document.getElementsByTagName('head')[0].appendChild node
-      @log 'Loaded ' + node[resource.tag.link]
+      @log 'resource-loaded', node[resource.tag.link]
 
     # introspection
     dir: (object) ->
@@ -181,13 +180,18 @@ do ->
               return nu
       ) object, '$'
 
-    log: ->
-      console.log.apply console, arguments if root.console
+    log: (event, message) ->
+      return unless root.console?
+
+      if message
+        console.log "bebop:#{event}", message
+      else
+        console.log "bebop:#{event}"
 
     # WebSockets
     connect: ->
       unless @tries < 10
-        @log 'Failed to connect to Bebop, giving up!'
+        @log 'connection-failed', 'giving up!'
         return
 
       @tries++
@@ -237,7 +241,6 @@ do ->
 
       @ws.onmessage = (message) =>
         message = JSON.parse message.data
-        @log message
 
         switch message.type
           when 'complete'
@@ -297,8 +300,10 @@ do ->
       return if filename is ''
       return unless (resource = @parseFilename filename).tag?
 
+      re = new RegExp filename + '$'
+
       for node in document.getElementsByTagName resource.tag.name
-        if node[resource.tag.link].indexOf resource.filename isnt -1
+        if re.test (node[resource.tag.link].split '?')[0]
           resource.url = node[resource.tag.link]
           node._resource = resource
           return node
