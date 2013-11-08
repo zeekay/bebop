@@ -32,12 +32,9 @@ wrapper =
         filename: filename
     server
 
-properties = {}
-
-['client', 'compilers', 'middleware', 'server', 'watch', 'websocket'].forEach (property) ->
-  properties[property] =
+['cli', 'compilers', 'middleware', 'server', 'utils', 'websocket'].forEach (property) ->
+  Object.defineProperty wrapper, property,
     enumerable: true
     get: -> require './' + property
 
-Object.defineProperties wrapper, properties
 module.exports = wrapper
