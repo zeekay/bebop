@@ -5,7 +5,7 @@ wrapper =
     server = (require './middleware') server
 
     # Attach websocket server
-    websocketServer = (require './websocket') server
+    websocketServer = (require './websocket') server: server
 
     server:          server
     websocketServer: websocketServer
