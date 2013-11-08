@@ -32,7 +32,7 @@ wrapper =
         filename: filename
     server
 
-['cli', 'compilers', 'middleware', 'server', 'utils', 'websocket'].forEach (property) ->
+['compilers', 'middleware', 'server', 'utils', 'websocket'].forEach (property) ->
   Object.defineProperty wrapper, property,
     enumerable: true
     get: -> require './' + property
