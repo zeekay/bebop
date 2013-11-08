@@ -1,9 +1,16 @@
-module.exports = (server) ->
-  WebSocketServer = require('ws').Server
+WebSocketServer = require('ws').Server
 
-  wss = new WebSocketServer
-    server: server
-    path: '/_bebop'
+module.exports = (opts = {}) ->
+  if typeof opts is 'function'
+    server = opts
+    opts   = {server: server}
+
+  unless opts.server?
+    opts.port ?= 3456
+
+  opts.path ?= '/_bebop'
+
+  wss = new WebSocketServer opts
 
   clients = {}
   id = 0
@@ -15,27 +22,24 @@ module.exports = (server) ->
     ws.on 'close', ->
       delete clients[ws.id]
 
-  websocket =
-    server: wss
+  server: wss
 
-    # Close connections
-    close: ->
-      for id of clients
-        clients[id].close()
-        delete clients[id]
-      wss.close()
+  # Close connections
+  close: ->
+    for id of clients
+      clients[id].close()
+      delete clients[id]
+    wss.close()
 
+  # Send message to connections
+  send: (message) ->
+    for id of clients
+      try
+        clients[id].send JSON.stringify message
+      catch err
+        console.error err.stack
 
-    # Send message to connections
-    send: (message) ->
-      for id of clients
-        try
-          clients[id].send JSON.stringify message
-        catch err
-          console.error err.stack
-
-  process.on 'exit', ->
-    websocket.send
-      type: 'reload'
-
-  websocket
+  modified: (filename) ->
+    @send
+      type: 'modified'
+      filename: filename

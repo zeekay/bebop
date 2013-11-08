@@ -2,13 +2,19 @@ do ->
   isBrowser = if typeof window is 'undefined' then false else true
   root = if isBrowser then window else global
 
+  unless isBrowser
+    root.location =
+      protocol: 'http:'
+      hostname: 'localhost'
+      port:     '3333'
+
   class Bebop
-    constructor: ->
-      protocol = if window.location.protocol is 'http:' then 'ws://' else 'wss://'
-      hostname = window.location.hostname
-      port = window.location.port
-      @address = protocol + hostname + ':' + port + '/_bebop'
-      @tries = 0
+    constructor: (opts) ->
+      protocol = opts.protocol ? if location.protocol is 'http:' then 'ws://' else 'wss://'
+      hostname = opts.hostname ? location.hostname
+      port     = opts.port     ? location.port
+      @address = opts.address  ? protocol + hostname + ':' + port + '/_bebop'
+      @tries   = 0
 
     # Called when completion requested.
     oncomplete: (msg) ->
@@ -309,6 +315,7 @@ do ->
       # export a few useful globals
       globals =
         bebop: @
+
         dir: (obj) =>
           @dir obj
 
@@ -382,17 +389,17 @@ do ->
       else return method.firefox(e)  if e.stack
       method.other e
 
-  bebop = new Bebop()
-
   if isBrowser
-    bebop.connect()
-    bebop.exportGlobals()
+    root.Bebop = Bebop
   else
-    exports.Bebop = Bebop
-    exports.start = (useRepl) ->
-      if useRepl
-        util = require('util')
-        repl = require('repl')
+    module.exports = Bebop
+
+    exports.start = (opts = {}) ->
+      bebop = new Bebop opts
+
+      if opts.useRepl
+        repl = require 'repl'
+        util = require 'util'
 
         # colorful output
         repl.writer = (obj, showHidden, depth) ->
@@ -401,5 +408,4 @@ do ->
         bebop.onopen = ->
           repl.start 'bebop> ', null, null, true
 
-        bebop.exportGlobals()
       bebop.connect()

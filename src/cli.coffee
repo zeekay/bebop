@@ -85,20 +85,18 @@ while opt = args.shift()
       utils.log "  compiling\x1B[0m #{filename}"
 
 unless opts.forceCompile
-  server = server.createServer opts
+  app = server.createServer opts
 
   if opts.watch
-    websocket = (require './websocket') server
+    websocket = (require './websocket') server: app
 
     (require 'vigil').watch process.cwd(), (filename, stat, isModule) ->
       utils.log "  modified\x1B[0m #{filename}"
       if opts.compile and compilers.compile filename
         utils.log "  compiling\x1B[0m #{filename}"
-      websocket.send
-        type: 'modified'
-        filename: filename
+      websocket.modified filename
 
-  server.run()
+  app.run()
 
   if opts.browser
     switch os.platform()
