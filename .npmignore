@@ -1,3 +1,4 @@
+Cakefile
 src/
-lib/*.map
 test/
+*.map
