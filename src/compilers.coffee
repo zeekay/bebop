@@ -2,16 +2,6 @@ exec = require 'executive'
 fs   = require 'fs'
 path = require 'path'
 
-checkModified = (src, dst, cb) ->
-  fs.stat src, (err, stat) ->
-    return cb err if err
-
-    mtime = stat.mtime
-    fs.stat dst, (err, stat) ->
-      return cb err if err
-
-      cb mtime > stat.mtime
-
 module.exports =
   mappings:
     coffee: 'js'
@@ -33,18 +23,19 @@ module.exports =
       return compiler src, dst, cb
 
     # compiler returns cmd for us to exec
-    unless typeof (cmd = compiler src, dst) is 'string'
+    cmd = compiler src, dst
+
+    # not a file we should compile
+    unless typeof cmd is 'string'
       return cb null, false
 
-    # only compile if src file has been modified since last compilation
-    checkModified src, dst, (newer) ->
-      return unless newer
+    exec.quiet cmd, (err, stdout, stderr) ->
+      return cb err if err?
 
-        exec.quiet cmd, (err, stdout, stderr) ->
-          if stderr? and stderr.trim() != ''
-            cb new Error stderr
-          else
-            cb null, true
+      if stderr? and stderr.trim() != ''
+        return cb new Error stderr
+
+      cb null, true
 
   coffee: (src, dst) ->
     dst = path.dirname dst
