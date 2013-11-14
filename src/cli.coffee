@@ -2,10 +2,6 @@ exec = require 'executive'
 fs   = require 'fs'
 os   = require 'os'
 
-compilers = require './compilers'
-server    = require './server'
-utils     = require './utils'
-
 error = (message) ->
   console.error message
   process.exit 1
@@ -80,9 +76,16 @@ while opt = args.shift()
     else
       error 'Unrecognized option' if opt.charAt(0) is '-'
 
-(require 'vigil').walk process.cwd(), (filename) ->
-  if compilers.compile filename
-      utils.log "  compiling\x1B[0m #{filename}"
+compilers = require './compilers'
+server    = require './server'
+utils     = require './utils'
+
+compile = (filename) ->
+  compilers.compile filename, (err, compiled) ->
+    return console.log err if err?
+    utils.log "  compiling\x1B[0m #{filename}" if compiled
+
+(require 'vigil').walk process.cwd(), compile
 
 unless opts.forceCompile
   app = server.createServer opts
@@ -92,8 +95,7 @@ unless opts.forceCompile
 
     (require 'vigil').watch process.cwd(), (filename, stat, isModule) ->
       utils.log "  modified\x1B[0m #{filename}"
-      if opts.compile and compilers.compile filename
-        utils.log "  compiling\x1B[0m #{filename}"
+      compile filename if opts.compile
       websocket.modified filename
 
   app.run()
