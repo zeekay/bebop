@@ -35,7 +35,7 @@ module.exports =
       # if we're passed a string, exec command
       if typeof (cmd = compiler src, dst) is 'string'
         exec.quiet cmd, (err, stdout, stderr) ->
-          if (stderr = stderr.trim()) != ''
+          if stderr? and stderr.trim() != ''
             console.error stderr
     true
 
