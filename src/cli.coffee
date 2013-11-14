@@ -14,7 +14,7 @@ usage = ->
     --host, -h      Hostname to bind to
     --port, -p      Port to listen on
     --secure, -s    Require authentication
-    --no-browser    Do not open browser automatically
+    --open, -o      Open browser automatically
     --no-watch      Do not watch files for changes
     --no-compile    Do not compile files automatically
     --force-compile Compile files and exit
@@ -54,8 +54,8 @@ while opt = args.shift()
   switch opt
     when '--help', '-v'
       usage()
-    when '--no-browser'
-      opts.browser = false
+    when '--open', '-o'
+      opts.browser = true
     when '--no-watch'
       opts.watch = false
     when '--no-compile'
