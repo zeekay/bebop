@@ -22,7 +22,6 @@ usage = ->
   process.exit 0
 
 opts =
-  browser: true
   compile: true
   host: '0.0.0.0'
   port: 3000
@@ -55,7 +54,7 @@ while opt = args.shift()
     when '--help', '-v'
       usage()
     when '--open', '-o'
-      opts.browser = true
+      opts.openBrowser = true
     when '--no-watch'
       opts.watch = false
     when '--no-compile'
@@ -80,12 +79,19 @@ compilers = require './compilers'
 server    = require './server'
 utils     = require './utils'
 
-compile = (filename) ->
+compile = (filename, cb = ->) ->
   compilers.compile filename, (err, compiled) ->
-    return console.log err if err?
-    utils.log "  compiling\x1B[0m #{filename}" if compiled
+    if err?
+      console.error err.toString()
+      console.error err.stack
+      return
 
-(require 'vigil').walk process.cwd(), compile
+    if compiled
+      utils.log "  compiled\x1B[0m #{filename}"
+      cb null
+
+(require 'vigil').walk process.cwd(), (filename) ->
+  compile filename
 
 unless opts.forceCompile
   app = server.createServer opts
@@ -95,12 +101,16 @@ unless opts.forceCompile
 
     (require 'vigil').watch process.cwd(), (filename, stat, isModule) ->
       utils.log "  modified\x1B[0m #{filename}"
-      compile filename if opts.compile
-      websocket.modified filename
+
+      unless opts.compile
+        return websocket.modified filename
+
+      compile filename, (err, compiled) ->
+        websocket.modified filename unless compiled
 
   app.run()
 
-  if opts.browser
+  if opts.openBrowser
     switch os.platform()
       when 'darwin'
         exec "open http://#{opts.host}:#{opts.port}"
