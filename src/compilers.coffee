@@ -43,7 +43,7 @@ module.exports =
 
   jade: (src, dst) ->
     dst = path.dirname dst
-    "jade #{src} --out #{dst}"
+    "jade --pretty #{src} --out #{dst}"
 
   styl: (src, dst) ->
     dst = path.dirname dst
