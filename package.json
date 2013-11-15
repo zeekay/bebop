@@ -13,13 +13,13 @@
   ],
   "author": {
     "name": "Zach Kelling",
-    "email": "zeekayy@gmail.com",
-    "url": "http://github.com/zeekay"
+    "email": "zk@monoid.io",
+    "url": "http://zeekay.io"
   },
   "licenses": [
     {
       "type": "MIT",
-      "url": "http://www.opensource.org/licenses/mit-license.php"
+      "url": "https://raw.github.com/zeekay/bebop/master/LICENSE"
     }
   ],
   "main": "lib/",
@@ -27,12 +27,11 @@
     "bebop": "bin/bebop"
   },
   "bugs": {
-    "mail": "zk@monoid.io",
     "url": "http://github.com/zeekay/bebop/issues"
   },
   "repository": {
     "type": "git",
-    "url": "http://github.com/zeekay/bebop.git"
+    "url": "http://github.com/zeekay/bebop"
   },
   "dependencies": {
     "connect": "~2.7.3",
