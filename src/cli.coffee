@@ -30,9 +30,11 @@ require.extensions['.coffee'] = ->
   require 'coffee-script'
   require.extensions['.coffee'].apply require.extensions, arguments
 
+cwd = process.cwd()
+
 confs = [
   process.env.HOME + '/.bebop'
-  process.cwd() + '/.bebop'
+  cwd + '/.bebop'
 ]
 
 opts =
@@ -110,11 +112,13 @@ compile = (filename, cb = ->) ->
       console.error err.stack
       return
 
-    utils.log "  compiled\x1B[0m #{filename}" if compiled
+    if filename.indexOf cwd == 0
+    relative = (filename.replace cwd, '').replace /^\//, ''
+    utils.log "  compiled\x1B[0m #{relative}" if compiled
     cb null, compiled
 
 # do initial compile
-(require 'vigil').walk process.cwd(), (filename) ->
+(require 'vigil').walk cwd, (filename) ->
   compile filename
 
 unless opts.forceCompile
@@ -123,7 +127,7 @@ unless opts.forceCompile
   if opts.watch
     websocket = (require './websocket') server: app
 
-    (require 'vigil').watch process.cwd(), (filename, stat, isModule) ->
+    (require 'vigil').watch cwd, (filename, stat, isModule) ->
       utils.log "  modified\x1B[0m #{filename}"
 
       return websocket.modified filename unless opts.compile
