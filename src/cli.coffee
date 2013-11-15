@@ -86,9 +86,8 @@ compile = (filename, cb = ->) ->
       console.error err.stack
       return
 
-    if compiled
-      utils.log "  compiled\x1B[0m #{filename}"
-      cb null
+    utils.log "  compiled\x1B[0m #{filename}" if compiled
+    cb null, compiled
 
 (require 'vigil').walk process.cwd(), (filename) ->
   compile filename
@@ -102,8 +101,7 @@ unless opts.forceCompile
     (require 'vigil').watch process.cwd(), (filename, stat, isModule) ->
       utils.log "  modified\x1B[0m #{filename}"
 
-      unless opts.compile
-        return websocket.modified filename
+      return websocket.modified filename unless opts.compile
 
       compile filename, (err, compiled) ->
         websocket.modified filename unless compiled
