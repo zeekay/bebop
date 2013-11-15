@@ -112,9 +112,11 @@ compile = (filename, cb = ->) ->
       console.error err.stack
       return
 
+    # use relative path if possible
     if filename.indexOf cwd == 0
-    relative = (filename.replace cwd, '').replace /^\//, ''
-    utils.log "  compiled\x1B[0m #{relative}" if compiled
+      filename = (filename.replace cwd, '').replace /^\//, ''
+
+    utils.log "  compiled\x1B[0m #{filename}" if compiled
     cb null, compiled
 
 # do initial compile
