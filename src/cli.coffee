@@ -2,6 +2,10 @@ exec = require 'executive'
 fs   = require 'fs'
 os   = require 'os'
 
+compilers = require './compilers'
+server    = require './server'
+utils     = require './utils'
+
 error = (message) ->
   console.error message
   process.exit 1
@@ -11,30 +15,32 @@ usage = ->
   bebop [options]
 
   Options:
+    --compilers, -c Specify compiler to use for a given extension
+    --force-compile Compile files and exit
     --host, -h      Hostname to bind to
+    --no-compile    Do not compile files automatically
+    --no-watch      Do not watch files for changes
+    --open, -o      Open browser automatically
     --port, -p      Port to listen on
     --secure, -s    Require authentication
-    --open, -o      Open browser automatically
-    --no-watch      Do not watch files for changes
-    --no-compile    Do not compile files automatically
-    --force-compile Compile files and exit
   """
   process.exit 0
 
-opts =
-  compile: true
-  host: '0.0.0.0'
-  port: 3000
-  watch:   true
+require.extensions['.coffee'] = ->
+  require 'coffee-script'
+  require.extensions['.coffee'].apply require.extensions, arguments
 
 confs = [
   process.env.HOME + '/.bebop'
   process.cwd() + '/.bebop'
 ]
 
-require.extensions['.coffee'] = ->
-  require 'coffee-script'
-  require.extensions['.coffee'].apply require.extensions, arguments
+opts =
+  compile:   true
+  host:      'localhost'
+  port:      1984  # turtle power!
+  watch:     true
+  compilers: {}
 
 # allow user to override defaults
 for conf in confs
@@ -54,7 +60,7 @@ while opt = args.shift()
     when '--help', '-v'
       usage()
     when '--open', '-o'
-      opts.openBrowser = true
+      opts.open = true
     when '--no-watch'
       opts.watch = false
     when '--no-compile'
@@ -72,13 +78,31 @@ while opt = args.shift()
       else
         opts.user = 'bebop'
         opts.pass = 'beepboop'
+    when '--compilers', '-c'
+      for compiler in args.shift().split ','
+        [ext, mod] = compiler.split ':'
+        opts.compilers[ext] = mod
     else
       error 'Unrecognized option' if opt.charAt(0) is '-'
 
-compilers = require './compilers'
-server    = require './server'
-utils     = require './utils'
+# setup any custom preprocessors
+for ext, compiler of opts.compilers
+  if typeof compiler is 'string'
+    try
+      bits = compiler.split '.'
+      compiler = require bits.shift()
 
+      while bits.length
+        compiler = compiler[bits.shift()]
+
+      compilers[ext] = compiler
+    catch err
+      console.log err
+  else
+    # expected to be a function
+    compilers[ext] = compiler
+
+# compile files
 compile = (filename, cb = ->) ->
   compilers.compile filename, (err, compiled) ->
     if err?
@@ -89,6 +113,7 @@ compile = (filename, cb = ->) ->
     utils.log "  compiled\x1B[0m #{filename}" if compiled
     cb null, compiled
 
+# do initial compile
 (require 'vigil').walk process.cwd(), (filename) ->
   compile filename
 
@@ -108,7 +133,7 @@ unless opts.forceCompile
 
   app.run()
 
-  if opts.openBrowser
+  if opts.open
     switch os.platform()
       when 'darwin'
         exec "open http://#{opts.host}:#{opts.port}"
