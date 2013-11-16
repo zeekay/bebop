@@ -40,7 +40,7 @@ confs = [
 opts =
   compile:   true
   host:      'localhost'
-  port:      1984  # turtle power!
+  port:      1987
   watch:     true
   compilers: {}
 
