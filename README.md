@@ -10,13 +10,9 @@ $ npm install -g bebop
 ```
 
 If you use bebop's static file serving feature it will automatically inject the
-Javascript required, otherwise you can link directly to `lib/client.js` in your
-application code.
-
-```html
-<!-- bebop.js -> lib/client.js -->
-<script src="bebop.js" type="text/javascript"></script>
-```
+Javascript required. If you want to enable something similar for your own
+connec/express apps you can use `bebop.middleware`, or link directly to
+`bebop-client/bebop.js`.
 
 ## Usage
 Change to the directory in which your application resides and run `bebop`.
@@ -27,6 +23,11 @@ $ bebop
 ```
 
 Check `bebop --help` for various options/configuration.
+
+## Configuration
+You can configure Bebop by creating a `.bebop<.js/coffee>` file in either your
+home directory or the root of your project. Properties exported in this module
+will be used to override the defaults used.
 
 ## Vim
 Integration with vim is provided by
