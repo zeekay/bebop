@@ -25,9 +25,11 @@ $ bebop
 Check `bebop --help` for various options/configuration.
 
 ### Configuration
-You can configure Bebop by creating a `.bebop<.js/coffee>` file in either your
-home directory or the root of your project. Properties exported in this module
+You can configure Bebop by creating a `.bebop` file in either your home
+directory or the root of your project. If you use an extension of `.coffee` it
+will be imported as a coffeescript module. Properties exported in this module
 will be used to override the defaults used.
+
 ### Example `.bebop` configuration file
 
 ```coffeescript
