@@ -28,7 +28,7 @@ Check `bebop --help` for various options/configuration.
 You can configure Bebop by creating a `.bebop<.js/coffee>` file in either your
 home directory or the root of your project. Properties exported in this module
 will be used to override the defaults used.
-### Example `.bebop.coffee` project file
+### Example `.bebop` configuration file
 
 ```coffeescript
 fs        = require 'fs'
