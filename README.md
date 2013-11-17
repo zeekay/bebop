@@ -28,6 +28,30 @@ Check `bebop --help` for various options/configuration.
 You can configure Bebop by creating a `.bebop<.js/coffee>` file in either your
 home directory or the root of your project. Properties exported in this module
 will be used to override the defaults used.
+### Example `.bebop.coffee` project file
+
+```coffeescript
+fs        = require 'fs'
+path      = require 'path'
+requisite = require 'requisite'
+
+module.exports =
+  port: 3001
+
+  compilers:
+    jade: (src) ->
+      # only compile index.jade file
+      if /index.jade$/.test src
+        "jade --pretty #{src} --out #{path.dirname src}"
+
+    # use requisite to bundle client-side coffee script files
+    coffee: (src, dst, cb) ->
+      requisite.bundle {entry: src}, (err, bundle) ->
+        return cb err if err?
+
+        fs.writeFileSync dst, bundle.toString()
+        cb null, true
+```
 
 ## Vim
 Integration with vim is provided by
