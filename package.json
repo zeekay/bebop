@@ -37,7 +37,7 @@
     "connect": "~2.7.3",
     "executive": "~0.4.1",
     "ws": "~0.4.25",
-    "vigil": "~0.2.7"
+    "vigil": "~0.2.8"
   },
   "devDependencies": {
     "coffee-script": "~1.6.3"
