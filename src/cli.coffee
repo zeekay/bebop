@@ -130,12 +130,14 @@ unless opts.forceCompile
     websocket = (require './websocket') server: app
 
     (require 'vigil').watch cwd, (filename, stat, isModule) ->
-      utils.log "  modified\x1B[0m #{filename}"
-
-      return websocket.modified filename unless opts.compile
+      unless opts.compile
+        utils.log "  modified\x1B[0m #{filename}"
+        return websocket.modified filename
 
       compile filename, (err, compiled) ->
-        websocket.modified filename unless compiled
+        unless compiled
+          utils.log "  modified\x1B[0m #{filename}"
+          websocket.modified filename
 
   app.run()
 
