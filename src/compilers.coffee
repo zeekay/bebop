@@ -29,7 +29,11 @@ module.exports =
     unless typeof cmd is 'string'
       return cb null, false
 
-    exec.quiet cmd, (err, stdout, stderr) ->
+    # use semicolon to delimite multiple commands
+    cmds = (c.trim() for c in (cmd.split ';') when c? and c.trim() != '')
+
+    # execute compile step
+    exec.quiet cmds, (err, stdout, stderr) ->
       return cb err if err?
 
       if stderr? and stderr.trim() != ''
