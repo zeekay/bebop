@@ -7,15 +7,13 @@
     "url": "http://github.com/zeekay/bebop/issues"
   },
   "keywords": [
-    "autocomplete",
-    "autocompletion",
-    "cli",
-    "command line",
-    "vim",
-    "websocket",
-    "static files",
+    "bebop",
+    "browser reloading",
     "compilers",
-    "preprocessing"
+    "preprocessors",
+    "static file server",
+    "vim",
+    "web development"
   ],
   "author": {
     "name": "Zach Kelling",
