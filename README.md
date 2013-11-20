@@ -1,7 +1,8 @@
 ## Bebop
-A tool for rapid web development which bundles a static file server, file
-watcher, WebSocket server for automatically reloading assets and interfacing
-with browser/server Javascript applications.
+#### Code ninja, code ninja go! Web development at ridiculous tempos.
+Bebop is a rapid web development tool with a built-in http server, preprocessing
+workflow support and intelligent browser reloading, allowing you to develop at
+breackneck speeds.
 
 ### Installation
 

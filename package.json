@@ -1,8 +1,11 @@
 {
   "name": "bebop",
-  "description": "Code ninja, code ninja go!",
+  "description": "Code ninja, code ninja go! Web development at ridiculous tempos.",
   "version": "1.0.13",
   "homepage": "http://github.com/zeekay/bebop",
+  "bugs": {
+    "url": "http://github.com/zeekay/bebop/issues"
+  },
   "keywords": [
     "autocomplete",
     "autocompletion",
@@ -12,7 +15,7 @@
     "websocket",
     "static files",
     "compilers",
-    "preprocessors"
+    "preprocessing"
   ],
   "author": {
     "name": "Zach Kelling",
@@ -28,9 +31,6 @@
   "main": "lib/",
   "bin": {
     "bebop": "bin/bebop"
-  },
-  "bugs": {
-    "url": "http://github.com/zeekay/bebop/issues"
   },
   "repository": {
     "type": "git",
