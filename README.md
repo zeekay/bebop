@@ -2,7 +2,7 @@
 #### Code ninja, code ninja go! Web development at ridiculous tempos.
 Bebop is a rapid web development tool with a built-in http server, preprocessing
 workflow support and intelligent browser reloading, allowing you to develop at
-breackneck speeds.
+breakneck speeds.
 
 ### Installation
 
