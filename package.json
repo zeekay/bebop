@@ -30,6 +30,10 @@
   "bin": {
     "bebop": "bin/bebop"
   },
+  "scripts": {
+    "prepublish": "cake build:prepublish",
+    "test": "cake test"
+  },
   "repository": {
     "type": "git",
     "url": "http://github.com/zeekay/bebop"
