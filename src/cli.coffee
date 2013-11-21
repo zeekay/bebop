@@ -20,6 +20,7 @@ usage = ->
     --host, -h      Hostname to bind to
     --no-compile    Do not compile files automatically
     --no-watch      Do not watch files for changes
+    --no-server     Do not run static file server
     --open, -o      Open browser automatically
     --port, -p      Port to listen on
     --secure, -s    Require authentication
@@ -43,6 +44,7 @@ opts =
   port:      1987
   watch:     true
   compilers: {}
+  runServer: true
 
 # allow user to override defaults
 for conf in confs
@@ -63,6 +65,8 @@ while opt = args.shift()
       usage()
     when '--open', '-o'
       opts.open = true
+    when '--no-server'
+      opts.runServer = false
     when '--no-watch'
       opts.watch = false
     when '--no-compile'
@@ -121,14 +125,18 @@ compile = (filename, cb = ->) ->
 
 # do initial compile
 (require 'vigil').walk cwd, (filename) ->
-  compile filename
+  compile filename if opts.compile
+
+# create static file server, websocket server or else noop
+if opts.runServer
+  app = server.createServer opts
+  websocket = (require './websocket') server: app
+else
+  app = run: ->
+  websocket = modified: ->
 
 unless opts.forceCompile
-  app = server.createServer opts
-
   if opts.watch
-    websocket = (require './websocket') server: app
-
     (require 'vigil').watch cwd, (filename, stat, isModule) ->
       unless opts.compile
         utils.log "  modified\x1B[0m #{filename}"
