@@ -3,9 +3,7 @@
   "description": "Code ninja, code ninja go! Develop at breakneck speeds.",
   "version": "1.1.0",
   "homepage": "http://github.com/zeekay/bebop",
-  "bugs": {
-    "url": "http://github.com/zeekay/bebop/issues"
-  },
+  "bugs": "http://github.com/zeekay/bebop/issues",
   "keywords": [
     "bebop",
     "browser reloading",
@@ -15,21 +13,10 @@
     "vim",
     "web development"
   ],
-  "author": {
-    "name": "Zach Kelling",
-    "email": "zk@monoid.io",
-    "url": "http://zeekay.io"
-  },
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "https://raw.github.com/zeekay/bebop/master/LICENSE"
-    }
-  ],
+  "author": "Zach Kelling <zk@monoid.io> (http://zeekay.io)"
+  "licenses": "MIT",
   "main": "lib/",
-  "bin": {
-    "bebop": "bin/bebop"
-  },
+  "bin": "bin/bebop",
   "scripts": {
     "prepublish": "cake build:prepublish",
     "test": "cake test"
@@ -39,10 +26,11 @@
     "url": "http://github.com/zeekay/bebop"
   },
   "dependencies": {
-    "connect": "~2.7.3",
-    "executive": "~0.4.2",
-    "ws": "~0.4.25",
-    "vigil": "~0.2.8"
+    "connect": "~2.11.0",
+    "consolidate": "~0.9.1",
+    "executive": "~0.4.4",
+    "vigil": "~0.2.9",
+    "ws": "~0.4.31"
   },
   "devDependencies": {
     "coffee-script": "~1.6.3"
