@@ -13,7 +13,7 @@
     "vim",
     "web development"
   ],
-  "author": "Zach Kelling <zk@monoid.io> (http://zeekay.io)"
+  "author": "Zach Kelling <zk@monoid.io> (http://zeekay.io)",
   "licenses": "MIT",
   "main": "lib/",
   "bin": "bin/bebop",
