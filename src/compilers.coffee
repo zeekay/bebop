@@ -2,17 +2,37 @@ exec = require 'executive'
 fs   = require 'fs'
 path = require 'path'
 
-module.exports =
-  mappings:
-    coffee: 'js'
-    jade: 'html'
-    styl: 'css'
+
+mappings =
+  coffee: 'js'
+  jade:   'html'
+  styl:   'css'
+
+
+compilers =
+  coffee: (src, dst) ->
+    dst = path.dirname dst
+    "coffee -bmc -o #{dst} #{src}"
+
+  jade: (src, dst) ->
+    dst = path.dirname dst
+    "jade --pretty #{src} --out #{dst}"
+
+  styl: (src, dst) ->
+    dst = path.dirname dst
+    "stylus #{src} -o #{dst}"
+
+
+class Preprocessor
+  constructor: (opts = {}) ->
+    @mappings  = opts.mappings  ? mappings
+    @compilers = opts.compilers ? compilers
 
   compile: (filename, cb) ->
     # get extension of file modified
     ext = (path.extname filename).substr 1
 
-    unless (compiler = @[ext])?
+    unless (compiler = @compilers[ext])?
       return cb null, false
 
     src = filename
@@ -41,14 +61,8 @@ module.exports =
 
       cb null, true
 
-  coffee: (src, dst) ->
-    dst = path.dirname dst
-    "coffee -bmc -o #{dst} #{src}"
 
-  jade: (src, dst) ->
-    dst = path.dirname dst
-    "jade --pretty #{src} --out #{dst}"
-
-  styl: (src, dst) ->
-    dst = path.dirname dst
-    "stylus #{src} -o #{dst}"
+module.exports =
+  Preprocessor: Preprocessor
+  compilers:    compilers
+  mappings:     mappings
