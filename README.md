@@ -39,7 +39,7 @@ path      = require 'path'
 requisite = require 'requisite'
 
 module.exports =
-  port: 3001
+  port: 3000
 
   compilers:
     jade: (src) ->
