@@ -60,3 +60,50 @@ module.exports =
 Integration with vim is provided by
 [vim-bebop](http://github.com/zeekay/vim-bebop). You can do all sorts of fancy
 stuff like evaluate Javascript, Coffeescript, get completions, etc.
+
+### API
+#### bebop.BebopClient
+Client which connects back to `BebopClientServer`, generally a browser.
+
+#### bebop.BebopClientServer
+Websocket server which clients, generally browsers, connect to.
+
+#### bebop.BebopControlServer
+Websocket server which can be connected to by controlling clients, generally editors.
+
+#### bebop.StaticServer
+Static file server which injects bebop client-side js automtatically, with
+optional support for basicAuth.
+
+#### bebop.Compiler
+File preprocessor used to compile from one language to another, compress files,
+etc. Can be configured uniquely for each project, allowing different files to be
+preprocessed as needed.
+
+```javascript
+Processor  = require('bebop').Processor
+processors = require('bebop').processors
+
+var processor = new Processor({
+  coffee: {
+    match: /\.coffee$/,
+    process: [processors.coffee, processors.uglify]
+  },
+  jade: {
+    match: /\.jade$/,
+    process: function(src) {
+      return 'jade --pretty ' + src;
+    }
+  },
+  stylus: {
+    match: /\.styl$/,
+    process: function(src) {
+      return 'stylus ' + src;
+    }
+  }
+})
+```
+
+#### bebop.middleware
+Connect/express middleware which also supports `http.Server` instances.
+Injects and serves bebop client JavaScript automatically.
