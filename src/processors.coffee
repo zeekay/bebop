@@ -7,3 +7,6 @@ module.exports =
 
   styl: (src) ->
     "stylus #{src}"
+
+  uglify: (src) ->
+    "uglifyjs #{src} -o #{src.replace /\.js$/, '.js.min'}"
