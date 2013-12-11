@@ -1,23 +1,16 @@
-processors = require './processors'
-
-
-defaultRules =
-  coffee: processors.coffee
-  jade:   processors.jade
-  stylus: processors.stylus
-
+defaultRules = require './processors'
 
 class Processor
   constructor: (rules) ->
+    @rules = []
+
     unless rules?
       rules = defaultRules
 
     if Array.isArray rules
-      addRule for rule in rules
+      @addRule for rule in rules
     else
-      addRule k,v for k,v of rules
-
-    @rules = []
+      @addRule k,v for k,v of rules
 
   addRule: (ext, rule) ->
     unless rule?
@@ -29,7 +22,7 @@ class Processor
     @rules.push rule
 
   findRule: (filename) ->
-    for rule in rules
+    for rule in @rules
       if rule.match.test filename
         return rule
     null

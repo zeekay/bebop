@@ -21,8 +21,10 @@ task 'watch', 'watch for changes and recompile project', ->
   exec 'node_modules/.bin/coffee -bcmw -o .test test/'
   exec 'node_modules/.bin/coffee -bcmw bebop-client/'
 
+task 'watch:test', ->
+  console.log 'watch and run tests on successful compile'
+
 task 'test', 'run tests', (options) ->
-  test = options.test ? '.test'
   if options.grep?
     grep = "--grep #{options.grep}"
   else
@@ -32,10 +34,9 @@ task 'test', 'run tests', (options) ->
   --colors
   --compilers coffee:coffee-script
   --reporter spec
-  --require test/_helper.js
   --timeout 5000
   #{grep}
-  #{test}"
+  test/"
 
 task 'gh-pages', 'Publish docs to gh-pages', ->
   brief = require 'brief'
