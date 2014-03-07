@@ -4,7 +4,7 @@ os   = require 'os'
 
 compilers = require './compilers'
 server    = require './server'
-utils     = require './utils'
+{log}     = require './utils'
 
 error = (message) ->
   console.error message
@@ -111,16 +111,17 @@ for ext, compiler of opts.compilers
 # compile files
 compile = (filename, cb = ->) ->
   compilers.compile filename, (err, compiled) ->
-    if err?
-      console.error err.toString()
-      console.error err.stack
-      return
-
     # use relative path if possible
     if filename.indexOf cwd == 0
       filename = (filename.replace cwd, '').replace /^\//, ''
 
-    utils.log "  compiled\x1B[0m #{filename}" if compiled
+    if err?
+      log.error 'error', "failed to compile #{filename}"
+      console.error if err.stderr? then err.stderr else err.stack
+      return
+
+    log.info 'compiled', filename if compiled
+
     cb null, compiled
 
 # do initial compile
@@ -139,12 +140,12 @@ unless opts.forceCompile
   if opts.watch
     (require 'vigil').watch cwd, (filename, stat, isModule) ->
       unless opts.compile
-        utils.log "  modified\x1B[0m #{filename}"
+        log.info 'modified', filename
         return websocket.modified filename
 
       compile filename, (err, compiled) ->
         unless compiled
-          utils.log "  modified\x1B[0m #{filename}"
+          log.info 'modified', filename
           websocket.modified filename
 
   app.run()
