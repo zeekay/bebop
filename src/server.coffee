@@ -21,6 +21,6 @@ module.exports = createServer: (opts = {}) ->
 
   server.run = ->
     server.listen opts.port, opts.host, ->
-      log "bebop\x1B[0m listening on #{opts.host}:#{opts.port}"
+      log.info 'bebop', "listening on #{opts.host}:#{opts.port}"
 
   server
