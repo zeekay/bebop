@@ -38,6 +38,6 @@
     "ws": "~0.4.31"
   },
   "devDependencies": {
-    "coffee-script": "~1.6.3"
+    "coffee-script": "~1.7.1"
   }
 }
