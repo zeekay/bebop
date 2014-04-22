@@ -23,7 +23,7 @@
   "main": "lib/",
   "bin": "bin/bebop",
   "scripts": {
-    "prepublish": "cake build:prepublish",
+    "prepublish": "cake build",
     "test": "cake test"
   },
   "repository": {
