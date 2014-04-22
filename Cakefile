@@ -29,13 +29,13 @@ task 'test', 'run tests', (options) ->
     grep = ''
 
   exec "NODE_ENV=test ./node_modules/.bin/mocha
-  --colors
-  --compilers coffee:coffee-script
-  --reporter spec
-  --require test/_helper.js
-  --timeout 5000
-  #{grep}
-  #{test}"
+      --colors
+      --reporter spec
+      --timeout 5000
+      --compilers coffee:coffee-script/register
+      --require postmortem/register
+      #{grep}
+      #{test}"
 
 task 'gh-pages', 'Publish docs to gh-pages', ->
   brief = require 'brief'
