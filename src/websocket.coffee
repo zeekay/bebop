@@ -1,35 +1,34 @@
-WebSocketServer = require('ws').Server
+ws = require 'ws'
 
-module.exports = (opts = {}) ->
-  if typeof opts is 'function'
-    server = opts
-    opts   = {server: server}
 
-  unless opts.server?
-    opts.port ?= 3456
+class WebSocketServer
+  defaultPort: 1987
+  defaultPath: '/ws'
 
-  opts.path ?= '/_bebop'
+  constructor: (opts = {}) ->
+    unless opts.server?
+      opts.port ?= @defaultPort
 
-  wss = new WebSocketServer opts
+    opts.path ?= @defaultPath
 
-  clients = {}
-  id = 0
+    @wss = new ws.Server opts
 
-  wss.on 'connection', (ws) ->
-    id += 1
-    ws.id = id
-    clients[ws.id] = ws
-    ws.on 'close', ->
-      delete clients[ws.id]
+    clients = {}
+    id = 0
 
-  server: wss
+    @wss.on 'connection', (ws) ->
+      id += 1
+      ws.id = id
+      clients[ws.id] = ws
+      ws.on 'close', ->
+        delete clients[ws.id]
 
   # Close connections
   close: ->
     for id of clients
       clients[id].close()
       delete clients[id]
-    wss.close()
+    @wss.close()
 
   # Send message to connections
   send: (message) ->
@@ -39,7 +38,27 @@ module.exports = (opts = {}) ->
       catch err
         console.error err.stack
 
+
+class BebopClientServer extends WebSocketServer
+  defaultPort: 1988
+
+  defaultPath: '/bebop-client/ws'
+
   modified: (filename) ->
     @send
       type: 'modified'
       filename: filename
+
+
+class BebopControlServer extends WebSocketServer
+  defaultPort: 1989
+
+  defaultPath: '/bebop-control/ws'
+
+
+
+
+module.exports =
+  WebsocketServer:    WebsocketServer
+  BebopClientServer:  BebopClientServer
+  BebopControlServer: BebopControlServer
