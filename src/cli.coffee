@@ -19,7 +19,8 @@ usage = ->
   Options:
     --config, -c    Specify bebop.coffee to use
     --compilers,    Specify compiler to use for a given extension
-    --force-compile Compile files and exit
+    --compile-only  Compile files and exit
+    --force-reload  Force reload when file is compiled
     --host, -h      Hostname to bind to
     --no-compile    Do not compile files automatically
     --no-watch      Do not watch files for changes
@@ -43,13 +44,15 @@ confs = [
 ]
 
 opts =
-  compile:   true
-  host:      'localhost'
-  port:      1987
-  watch:     true
-  compilers: {}
-  runServer: true
-  cwd:       cwd
+  compile:      true
+  compileOnly:  false
+  compilers:    {}
+  cwd:          cwd
+  forceReload:  false
+  host:         'localhost'
+  port:         1987
+  runServer:    true
+  watch:        true
 
 # require config file and override opts
 requireConfig = (path) ->
@@ -82,8 +85,10 @@ while opt = args.shift()
       opts.watch = false
     when '--no-compile'
       opts.compile = false
-    when '--force-compile'
-      opts.forceCompile = true
+    when '--compile-only'
+      opts.compileOnly = true
+    when '--force-reload'
+      opts.forceReload = true
     when '--host', '-h'
       opts.host = args.shift()
     when '--port', '-p'
@@ -139,9 +144,6 @@ compile = (filename, cb = ->) ->
 exclude = vigil.utils.excludeRe.toString()
 exclude = new RegExp (exclude.substring 1, exclude.length-1) + '|bebop.coffee$|bebop.js$'
 
-vigil.walk opts.cwd, {exclude: exclude}, (filename) ->
-  compile filename if opts.compile
-
 # create static file server, websocket server or else noop
 if opts.runServer
   app = server.createServer opts
@@ -150,7 +152,11 @@ else
   app = run: ->
   websocket = modified: ->
 
-unless opts.forceCompile
+if opts.compile
+  vigil.walk opts.cwd, {exclude: exclude}, (filename) ->
+    compile filename if opts.compile
+
+unless opts.compileOnly
   if opts.watch
     vigil.watch opts.cwd, (filename, stat, isModule) ->
       unless opts.compile
@@ -161,6 +167,9 @@ unless opts.forceCompile
         unless compiled
           log.info 'modified', filename
           websocket.modified filename
+        else
+          if opts.forceReload
+            websocket.modified filename
 
   app.run()
 
