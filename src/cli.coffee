@@ -53,7 +53,7 @@ requireConfig = (path) ->
   try
     conf = require.resolve conf
   catch err
-    continue
+    return
 
   if fs.existsSync conf
     for k,v of require conf
