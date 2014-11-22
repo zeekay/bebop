@@ -37,6 +37,7 @@ cwd = process.cwd()
 confs = [
   process.env.HOME + '/.bebop'
   cwd + '/.bebop'
+  cwd + '/bebop'
 ]
 
 opts =
