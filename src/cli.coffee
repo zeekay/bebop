@@ -49,6 +49,7 @@ opts =
   watch:     true
   compilers: {}
   runServer: true
+  cwd:       cwd
 
 # require config file and override opts
 requireConfig = (path) ->
@@ -122,8 +123,8 @@ for ext, compiler of opts.compilers
 compile = (filename, cb = ->) ->
   compilers.compile filename, (err, compiled) ->
     # use relative path if possible
-    if filename.indexOf cwd == 0
-      filename = (filename.replace cwd, '').replace /^\//, ''
+    if filename.indexOf opts.cwd == 0
+      filename = (filename.replace opts.cwd, '').replace /^\//, ''
 
     if err?
       log.error 'error', "failed to compile #{filename}"
@@ -138,7 +139,7 @@ compile = (filename, cb = ->) ->
 exclude = vigil.utils.excludeRe.toString()
 exclude = new RegExp (exclude.substring 1, exclude.length-1) + '|bebop.coffee$|bebop.js$'
 
-vigil.walk cwd, {exclude: exclude}, (filename) ->
+vigil.walk opts.cwd, {exclude: exclude}, (filename) ->
   compile filename if opts.compile
 
 # create static file server, websocket server or else noop
@@ -151,7 +152,7 @@ else
 
 unless opts.forceCompile
   if opts.watch
-    vigil.watch cwd, (filename, stat, isModule) ->
+    vigil.watch opts.cwd, (filename, stat, isModule) ->
       unless opts.compile
         log.info 'modified', filename
         return websocket.modified filename
