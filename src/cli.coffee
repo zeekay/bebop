@@ -2,6 +2,8 @@ exec = require 'executive'
 fs   = require 'fs'
 os   = require 'os'
 
+vigil = require 'vigil'
+
 compilers = require './compilers'
 server    = require './server'
 {log}     = require './utils'
@@ -29,7 +31,7 @@ usage = ->
   process.exit 0
 
 require.extensions['.coffee'] = ->
-  require 'coffee-script'
+  require 'coffee-script/register'
   require.extensions['.coffee'].apply require.extensions, arguments
 
 cwd = process.cwd()
@@ -51,7 +53,7 @@ opts =
 # require config file and override opts
 requireConfig = (path) ->
   try
-    conf = require.resolve conf
+    conf = require.resolve path
   catch err
     return
 
@@ -133,7 +135,10 @@ compile = (filename, cb = ->) ->
     cb null, compiled
 
 # do initial compile
-(require 'vigil').walk cwd, (filename) ->
+exclude = vigil.utils.excludeRe.toString()
+exclude = new RegExp (exclude.substring 1, exclude.length-1) + '|bebop.coffee$|bebop.js$'
+
+vigil.walk cwd, {exclude: exclude}, (filename) ->
   compile filename if opts.compile
 
 # create static file server, websocket server or else noop
@@ -146,7 +151,7 @@ else
 
 unless opts.forceCompile
   if opts.watch
-    (require 'vigil').watch cwd, (filename, stat, isModule) ->
+    vigil.watch cwd, (filename, stat, isModule) ->
       unless opts.compile
         log.info 'modified', filename
         return websocket.modified filename
