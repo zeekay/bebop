@@ -15,7 +15,8 @@ usage = ->
   bebop [options]
 
   Options:
-    --compilers, -c Specify compiler to use for a given extension
+    --config, -c    Specify bebop.coffee to use
+    --compilers,    Specify compiler to use for a given extension
     --force-compile Compile files and exit
     --host, -h      Hostname to bind to
     --no-compile    Do not compile files automatically
@@ -46,8 +47,8 @@ opts =
   compilers: {}
   runServer: true
 
-# allow user to override defaults
-for conf in confs
+# require config file and override opts
+requireConfig = (path) ->
   try
     conf = require.resolve conf
   catch err
@@ -57,12 +58,18 @@ for conf in confs
     for k,v of require conf
       opts[k] = v
 
+# allow user to override defaults
+for conf in confs
+  requireConfig conf
+
 args = process.argv.slice 2
 
 while opt = args.shift()
   switch opt
     when '--help', '-v'
       usage()
+    when '--config', '-c'
+      requireConfig args.shift()
     when '--open', '-o'
       opts.open = true
     when '--no-server'
