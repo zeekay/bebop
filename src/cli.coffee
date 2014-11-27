@@ -6,7 +6,7 @@ vigil = require 'vigil'
 
 compilers = require './compilers'
 server    = require './server'
-{log}     = require './utils'
+{defaultExclude, log}     = require './utils'
 
 error = (message) ->
   console.error message
@@ -20,6 +20,7 @@ usage = ->
     --config, -c    Specify bebop.coffee to use
     --compilers,    Specify compiler to use for a given extension
     --compile-only  Compile files and exit
+    --exclude, -x   Exclude files from being watched/compiled
     --force-reload  Force reload when file is compiled
     --host, -h      Hostname to bind to
     --no-compile    Do not compile files automatically
@@ -48,6 +49,7 @@ opts =
   compileOnly:  false
   compilers:    {}
   cwd:          cwd
+  exclude:      defaultExclude
   forceReload:  false
   host:         'localhost'
   port:         1987
@@ -87,6 +89,8 @@ while opt = args.shift()
       opts.compile = false
     when '--compile-only'
       opts.compileOnly = true
+    when '--exclude', '-x'
+      opts.exclude = new RegExp args.shift()
     when '--force-reload'
       opts.forceReload = true
     when '--host', '-h'
@@ -140,10 +144,6 @@ compile = (filename, cb = ->) ->
 
     cb null, compiled
 
-# do initial compile
-exclude = vigil.utils.excludeRe.toString()
-exclude = new RegExp (exclude.substring 1, exclude.length-1) + '|bebop.coffee$|bebop.js$'
-
 # create static file server, websocket server or else noop
 if opts.runServer
   app = server.createServer opts
@@ -153,7 +153,7 @@ else
   websocket = modified: ->
 
 if opts.compile
-  vigil.walk opts.cwd, {exclude: exclude}, (filename) ->
+  vigil.walk opts.cwd, {exclude: opts.exclude}, (filename) ->
     compile filename if opts.compile
 
 unless opts.compileOnly
