@@ -4,9 +4,9 @@ os   = require 'os'
 
 vigil = require 'vigil'
 
-compilers = require './compilers'
-server    = require './server'
-{defaultExclude, log}     = require './utils'
+compilers             = require './compilers'
+server                = require './server'
+{defaultExclude, log} = require './utils'
 
 error = (message) ->
   console.error message
@@ -49,7 +49,7 @@ opts =
   compileOnly:    false
   compilers:      {}
   cwd:            cwd
-  defaultExclude: false
+  defaultExclude: true
   exclude:        []
   forceReload:    false
   host:           'localhost'
@@ -114,8 +114,12 @@ while opt = args.shift()
     else
       error 'Unrecognized option' if opt.charAt(0) is '-'
 
+# Use default excludes
 if opts.defaultExclude
   opts.exclude = [vigil.utils.excludeRe, defaultExclude].concat opts.exclude
+
+# combine excludes
+excludeRe = new RegExp (re.source for re in opts.exclude).join '|'
 
 # setup any custom preprocessors
 for ext, compiler of opts.compilers
@@ -158,19 +162,15 @@ else
   app = run: ->
   websocket = modified: ->
 
-# combine excludes
-if Array.isArray opts.exclude
-  exclude = new RegExp "/#{(re.source for re in opts.exclude).join '|'}/"
-else
-  exclude = opts.exclude
-
 if opts.compile
-  vigil.walk opts.cwd, {exclude: exclude}, (filename) ->
+  vigil.walk opts.cwd, {exclude: excludeRe}, (filename) ->
     compile filename if opts.compile
 
 unless opts.compileOnly
   if opts.watch
     vigil.watch opts.cwd, (filename, stat, isModule) ->
+      return if excludeRe.test filename  # why does this happen? symlink?
+
       unless opts.compile
         log.info 'modified', filename
         return websocket.modified filename
