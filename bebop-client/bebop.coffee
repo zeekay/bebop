@@ -72,6 +72,7 @@ class Bebop
       return @load(node._resource)
 
     link = node._resource.tag.link
+    node[link] = '#break-the-url'
     node[link] = @urlRandomize(node._resource.url)
     @log 'resource-reloaded', node[link]
 
