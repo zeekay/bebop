@@ -45,16 +45,17 @@ confs = [
 ]
 
 opts =
-  compile:      true
-  compileOnly:  false
-  compilers:    {}
-  cwd:          cwd
-  exclude:      defaultExclude
-  forceReload:  false
-  host:         'localhost'
-  port:         1987
-  runServer:    true
-  watch:        true
+  compile:        true
+  compileOnly:    false
+  compilers:      {}
+  cwd:            cwd
+  defaultExclude: false
+  exclude:        []
+  forceReload:    false
+  host:           'localhost'
+  port:           1987
+  runServer:      true
+  watch:          true
 
 # require config file and override opts
 requireConfig = (path) ->
@@ -90,7 +91,9 @@ while opt = args.shift()
     when '--compile-only'
       opts.compileOnly = true
     when '--exclude', '-x'
-      opts.exclude = new RegExp args.shift()
+      opts.exclude.push new RegExp args.shift()
+    when '--no-default-exclude'
+      opts.defaultExclude = false
     when '--force-reload'
       opts.forceReload = true
     when '--host', '-h'
@@ -110,6 +113,9 @@ while opt = args.shift()
         opts.compilers[ext] = mod
     else
       error 'Unrecognized option' if opt.charAt(0) is '-'
+
+if opts.defaultExclude
+  opts.exclude = [vigil.utils.excludeRe, defaultExclude].concat opts.exclude
 
 # setup any custom preprocessors
 for ext, compiler of opts.compilers
@@ -152,8 +158,14 @@ else
   app = run: ->
   websocket = modified: ->
 
+# combine excludes
+if Array.isArray opts.exclude
+  exclude = new RegExp "/#{(re.source for re in opts.exclude).join '|'}/"
+else
+  exclude = opts.exclude
+
 if opts.compile
-  vigil.walk opts.cwd, {exclude: opts.exclude}, (filename) ->
+  vigil.walk opts.cwd, {exclude: exclude}, (filename) ->
     compile filename if opts.compile
 
 unless opts.compileOnly
