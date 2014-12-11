@@ -69,7 +69,7 @@
         if (node && node._resource.tag.name !== 'script') {
           return this.reload(node);
         } else {
-          return location.reload(true);
+          return window.location = window.location;
         }
       }
     };
