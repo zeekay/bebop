@@ -72,7 +72,12 @@ class Bebop
       return @load(node._resource)
 
     link = node._resource.tag.link
-    node[link] = '#break-the-url'
+
+    # hack to get chrome to reload css
+    if navigator.userAgent.toLowerCase().indexOf('chrome') > -1
+      node[link] = '#break-the-url'
+
+    # update url of resource
     node[link] = @urlRandomize(node._resource.url)
     @log 'resource-reloaded', node[link]
 
