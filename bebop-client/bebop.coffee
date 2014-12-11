@@ -51,7 +51,7 @@ class Bebop
       if node and node._resource.tag.name != 'script'
         @reload node
       else
-        location.reload true
+        window.location = window.location
 
   onopen: ->
     @tries = 0
