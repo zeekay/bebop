@@ -95,7 +95,9 @@
         return this.load(node._resource);
       }
       link = node._resource.tag.link;
-      node[link] = '#break-the-url';
+      if (navigator.userAgent.toLowerCase().indexOf('chrome') > -1) {
+        node[link] = '#break-the-url';
+      }
       node[link] = this.urlRandomize(node._resource.url);
       return this.log('resource-reloaded', node[link]);
     };
