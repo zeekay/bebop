@@ -168,9 +168,7 @@ if opts.compile
 
 unless opts.compileOnly
   if opts.watch
-    vigil.watch opts.cwd, (filename, stat, isModule) ->
-      return if excludeRe.test filename  # why does this happen? symlink?
-
+    vigil.watch opts.cwd, {exclude: excludeRe, patch: false}, (filename, stat, isModule) ->
       unless opts.compile
         log.info 'modified', filename
         return websocket.modified filename
