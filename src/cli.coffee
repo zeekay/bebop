@@ -17,20 +17,22 @@ usage = ->
   bebop [options]
 
   Options:
-    --config, -c    Specify bebop.coffee to use
-    --compilers,    Specify compiler to use for a given extension
     --compile-only  Compile files and exit
+    --compilers,    Specify compiler to use for a given extension
+    --config, -c    Specify bebop.coffee to use
     --exclude, -x   Exclude files for watching, compiling
-    --include, -i   Include files for watching, compiling
     --force-reload  Force reload when file is compiled
     --host, -h      Hostname to bind to
+    --include, -i   Include files for watching, compiling
     --no-compile    Do not compile files automatically
-    --no-watch      Do not watch files for changes
     --no-server     Do not run static file server
+    --no-watch      Do not watch files for changes
     --open, -o      Open browser automatically
-    --pre           Command to execute first
     --port, -p      Port to listen on
+    --pre           Command to execute first
     --secure, -s    Require authentication
+    --static-dir    Directory used as root for static file server
+    --work-dir      Directory used as root for compiling, watching
   """
   process.exit 0
 
@@ -50,7 +52,6 @@ opts =
   compile:        true
   compileOnly:    false
   compilers:      {}
-  cwd:            cwd
   defaultExclude: true
   exclude:        []
   forceReload:    false
@@ -59,6 +60,8 @@ opts =
   port:           1987
   pre:            (done) -> done()
   runServer:      true
+  staticDir:      cwd
+  workDir:        cwd
   watch:          true
 
 # require config file and override opts
@@ -116,6 +119,10 @@ while opt = args.shift()
       else
         opts.user = 'bebop'
         opts.pass = 'beepboop'
+    when '--static-dir'
+      opts.staticDir = args.shift()
+    when '--work-dir'
+      opts.workDir = args.shift()
     when '--compilers', '-c'
       for compiler in args.shift().split ','
         [ext, mod] = compiler.split ':'
@@ -157,8 +164,8 @@ for ext, compiler of opts.compilers
 compile = (filename, cb = ->) ->
   compilers.compile filename, (err, compiled) ->
     # use relative path if possible
-    if filename.indexOf opts.cwd == 0
-      filename = (filename.replace opts.cwd, '').replace /^\//, ''
+    if filename.indexOf opts.workDir == 0
+      filename = (filename.replace opts.workDir, '').replace /^\//, ''
 
     if err?
       log.error 'error', "failed to compile #{filename}"
@@ -175,7 +182,7 @@ opts.pre (err) ->
 
   # Do initial compile
   if opts.compile
-    vigil.walk opts.cwd, vigilOpts, (filename) ->
+    vigil.walk opts.workDir, vigilOpts, (filename) ->
       compile filename if opts.compile
 
   return if opts.compileOnly
@@ -190,7 +197,7 @@ opts.pre (err) ->
 
   if opts.watch
     # Start watch cycle
-    vigil.watch opts.cwd, vigilOpts, (filename, stat, isModule) ->
+    vigil.watch opts.workDir, vigilOpts, (filename, stat, isModule) ->
       unless opts.compile
         log.info 'modified', filename
         return websocket.modified filename
