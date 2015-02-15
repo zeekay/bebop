@@ -35,6 +35,7 @@
     "connect": "~2.11.0",
     "consolidate": "~0.9.1",
     "executive": "~0.4.4",
+    "mocha": "^2.1.0",
     "vigil": "^0.3.6",
     "ws": "^0.7.1"
   },
