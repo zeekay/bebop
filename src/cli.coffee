@@ -20,7 +20,8 @@ usage = ->
     --config, -c    Specify bebop.coffee to use
     --compilers,    Specify compiler to use for a given extension
     --compile-only  Compile files and exit
-    --exclude, -x   Exclude files from being watched/compiled
+    --exclude, -x   Exclude files for watching, compiling
+    --include, -i   Include files for watching, compiling
     --force-reload  Force reload when file is compiled
     --host, -h      Hostname to bind to
     --no-compile    Do not compile files automatically
@@ -53,6 +54,7 @@ opts =
   exclude:        []
   forceReload:    false
   host:           'localhost'
+  include:        []
   port:           1987
   runServer:      true
   watch:          true
@@ -90,6 +92,8 @@ while opt = args.shift()
       opts.compile = false
     when '--compile-only'
       opts.compileOnly = true
+    when '--include', '-i'
+      opts.include.push new RegExp args.shift()
     when '--exclude', '-x'
       opts.exclude.push new RegExp args.shift()
     when '--no-default-exclude'
@@ -114,14 +118,22 @@ while opt = args.shift()
     else
       error 'Unrecognized option' if opt.charAt(0) is '-'
 
-# Use default excludes
+# Setup include/expludes
 if opts.defaultExclude
   opts.exclude = [vigil.utils.excludeRe, defaultExclude].concat opts.exclude
 
-# combine excludes
-excludeRe = new RegExp (re.source for re in opts.exclude).join '|'
+if opts.include.length == 0
+  opts.include = null
 
-# setup any custom preprocessors
+# Options for vigil watch/walk
+vigilOpts =
+  exclude: opts.exclude
+  include: opts.include
+  patch:   false
+
+console.log vigilOpts
+
+# Setup any custom preprocessors
 for ext, compiler of opts.compilers
   if typeof compiler is 'string'
     try
@@ -138,7 +150,7 @@ for ext, compiler of opts.compilers
     # expected to be a function
     compilers[ext] = compiler
 
-# compile files
+# compile helper
 compile = (filename, cb = ->) ->
   compilers.compile filename, (err, compiled) ->
     # use relative path if possible
@@ -154,21 +166,22 @@ compile = (filename, cb = ->) ->
 
     cb null, compiled
 
-# create static file server, websocket server or else noop
-if opts.runServer
-  app = server.createServer opts
-  websocket = (require './websocket') server: app
-else
-  app = run: ->
-  websocket = modified: ->
-
+# Do initial compile
 if opts.compile
-  vigil.walk opts.cwd, {exclude: excludeRe}, (filename) ->
+  vigil.walk opts.cwd, vigilOpts, (filename) ->
     compile filename if opts.compile
 
+# Start watch cycle and optionally server.
 unless opts.compileOnly
+  if opts.runServer
+    app = server.createServer opts
+    websocket = (require './websocket') server: app
+  else
+    app = run: ->
+    websocket = modified: ->
+
   if opts.watch
-    vigil.watch opts.cwd, {exclude: excludeRe, patch: false}, (filename, stat, isModule) ->
+    vigil.watch opts.cwd, vigilOpts, (filename, stat, isModule) ->
       unless opts.compile
         log.info 'modified', filename
         return websocket.modified filename
@@ -183,6 +196,7 @@ unless opts.compileOnly
 
   app.run()
 
+  # Open browser window
   if opts.open
     switch os.platform()
       when 'darwin'
