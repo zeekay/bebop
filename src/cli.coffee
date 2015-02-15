@@ -28,6 +28,7 @@ usage = ->
     --no-watch      Do not watch files for changes
     --no-server     Do not run static file server
     --open, -o      Open browser automatically
+    --pre           Command to execute first
     --port, -p      Port to listen on
     --secure, -s    Require authentication
   """
@@ -56,6 +57,7 @@ opts =
   host:           'localhost'
   include:        []
   port:           1987
+  pre:            (done) -> done()
   runServer:      true
   watch:          true
 
@@ -102,6 +104,9 @@ while opt = args.shift()
       opts.forceReload = true
     when '--host', '-h'
       opts.host = args.shift()
+    when '--pre'
+      cmd = args.shift()
+      opts.pre = (done) -> exec cmd, done
     when '--port', '-p'
       opts.port = parseInt args.shift(), 10
     when '--secure', '-s'
@@ -164,13 +169,18 @@ compile = (filename, cb = ->) ->
 
     cb null, compiled
 
-# Do initial compile
-if opts.compile
-  vigil.walk opts.cwd, vigilOpts, (filename) ->
-    compile filename if opts.compile
+# Let's bop!
+opts.pre (err) ->
+  return if err?
 
-# Start watch cycle and optionally server.
-unless opts.compileOnly
+  # Do initial compile
+  if opts.compile
+    vigil.walk opts.cwd, vigilOpts, (filename) ->
+      compile filename if opts.compile
+
+  return if opts.compileOnly
+    return
+
   if opts.runServer
     app = server.createServer opts
     websocket = (require './websocket') server: app
@@ -179,6 +189,7 @@ unless opts.compileOnly
     websocket = modified: ->
 
   if opts.watch
+    # Start watch cycle
     vigil.watch opts.cwd, vigilOpts, (filename, stat, isModule) ->
       unless opts.compile
         log.info 'modified', filename
@@ -192,6 +203,7 @@ unless opts.compileOnly
           if opts.forceReload
             websocket.modified filename
 
+  # Start server
   app.run()
 
   # Open browser window
