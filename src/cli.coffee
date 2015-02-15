@@ -131,8 +131,6 @@ vigilOpts =
   include: opts.include
   patch:   false
 
-console.log vigilOpts
-
 # Setup any custom preprocessors
 for ext, compiler of opts.compilers
   if typeof compiler is 'string'
