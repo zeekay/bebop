@@ -31,7 +31,6 @@
     "url": "http://github.com/zeekay/bebop"
   },
   "dependencies": {
-    "coffee-script": "^1.8.0",
     "connect": "~2.11.0",
     "consolidate": "~0.9.1",
     "executive": "~0.4.4",
