@@ -34,7 +34,7 @@
     "connect": "^2.11.2",
     "executive": "~0.4.4",
     "marked": "^0.3.3",
-    "vigil": "^0.3.7",
+    "vigil": "^0.3.8",
     "ws": "^0.7.1"
   },
   "devDependencies": {

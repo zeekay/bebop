@@ -205,7 +205,6 @@ opts.pre (err) ->
       unless opts.compile
         log.info 'modified', filename
         return websocket.modified filename
-
       compile filename, (err, compiled) ->
         unless compiled
           log.info 'modified', filename
