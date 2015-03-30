@@ -5,8 +5,8 @@ path = require 'path'
 module.exports =
   mappings:
     coffee: 'js'
-    jade: 'html'
-    styl: 'css'
+    jade:   'html'
+    styl:   'css'
 
   compile: (filename, cb) ->
     # get extension of file modified
