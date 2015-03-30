@@ -218,6 +218,8 @@ opts.pre (err) ->
 
   # Open browser window
   if opts.open or opts.index != ''
+    opts.index = '' if opts.index == 'index.html'
+
     switch os.platform()
       when 'darwin'
         exec "open http://#{opts.host}:#{opts.port}/#{opts.index}"
