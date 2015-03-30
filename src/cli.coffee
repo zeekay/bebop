@@ -14,7 +14,7 @@ error = (message) ->
 
 usage = ->
   console.log """
-  bebop [options]
+  bebop [options] [file]
 
   Options:
     --compile-only  Compile files and exit
