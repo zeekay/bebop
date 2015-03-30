@@ -57,6 +57,7 @@ opts =
   forceReload:    false
   host:           'localhost'
   include:        []
+  index:          ''
   port:           1987
   pre:            (done) -> done()
   runServer:      true
@@ -128,7 +129,10 @@ while opt = args.shift()
         [ext, mod] = compiler.split ':'
         opts.compilers[ext] = mod
     else
-      error 'Unrecognized option' if opt.charAt(0) is '-'
+      if opt.charAt(0) is '-'
+        error 'Unrecognized option'
+      else
+        opts.index = opt
 
 # Setup include/expludes
 if opts.defaultExclude
@@ -214,9 +218,9 @@ opts.pre (err) ->
   app.run()
 
   # Open browser window
-  if opts.open
+  if opts.open or opts.index != ''
     switch os.platform()
       when 'darwin'
-        exec "open http://#{opts.host}:#{opts.port}"
+        exec "open http://#{opts.host}:#{opts.port}/#{opts.index}"
       when 'linux'
-        exec "xdg-open http://#{opts.host}:#{opts.port}"
+        exec "xdg-open http://#{opts.host}:#{opts.port}/#{opts.index}"

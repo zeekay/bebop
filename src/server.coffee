@@ -1,4 +1,5 @@
 {log} = require './utils'
+markdown = require './markdown'
 
 module.exports = createServer: (opts = {}) ->
   opts.host      ?= '0.0.0.0'
@@ -15,6 +16,7 @@ module.exports = createServer: (opts = {}) ->
   if opts.user and opts.pass
     app.use connect.basicAuth opts.user, opts.pass
 
+  app.use markdown()
   app.use connect.static opts.staticDir
   app.use connect.directory opts.staticDir, hidden: true
 
