@@ -189,7 +189,7 @@ opts.pre (err) ->
     vigil.walk opts.workDir, vigilOpts, (filename) ->
       compile filename if opts.compile
 
-  return if opts.compileOnly
+  if opts.compileOnly
     return
 
   if opts.runServer
