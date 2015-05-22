@@ -190,7 +190,7 @@ opts.pre (err) ->
       compile filename if opts.compile
 
   if opts.compileOnly
-    return
+    process.exit 0
 
   if opts.runServer
     app = server.createServer opts
