@@ -234,10 +234,9 @@ class Bebop
         identifier: identifier
 
     @ws.onclose = =>
-      return
       setTimeout =>
         @connect()
-      , 500
+      , 1000
 
     @ws.onerror = =>
       setTimeout =>
