@@ -37,8 +37,6 @@ middleware = (opts = {}) ->
       when '/bebop-client/bebop.js'
         headers =
           'Content-Type': 'application/javascript'
-          'SourceMap':    'bebop.map'
-          'X-SourceMap':  'bebop.map'
 
       when '/bebop-client/bebop.map'
         headers =
