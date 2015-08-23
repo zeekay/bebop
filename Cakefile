@@ -12,6 +12,10 @@ task 'build', 'build project', (options) ->
   exec 'node_modules/.bin/coffee -bcm -o .test/ test/'
   exec 'node_modules/.bin/coffee -cm bebop-client/'
 
+task 'build-min', 'build project', (options) ->
+  exec 'node_modules/.bin/coffee -bc -o lib/ src/'
+  exec 'node_modules/.bin/coffee -c bebop-client/'
+
 task 'watch', 'watch for changes and recompile project', ->
   exec 'node_modules/.bin/coffee -bcmw -o lib/ src/'
   exec 'node_modules/.bin/coffee -bcmw -o .test test/'
