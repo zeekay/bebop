@@ -1,4 +1,4 @@
-exec = require('executive').interactive
+exec = require('shortcake').exec.interactive
 
 option '-g', '--grep [filter]', 'test filter'
 option '-v', '--version [<newversion> | major | minor | patch | build]', 'new version'
@@ -22,20 +22,21 @@ task 'watch', 'watch for changes and recompile project', ->
   exec 'node_modules/.bin/coffee -cmw bebop-client/'
 
 task 'test', 'run tests', (options) ->
-  test = options.test ? '.test'
-  if options.grep?
-    grep = "--grep #{options.grep}"
-  else
-    grep = ''
+  invoke 'build', ->
+    test = options.test ? '.test'
+    if options.grep?
+      grep = "--grep #{options.grep}"
+    else
+      grep = ''
 
-  exec "NODE_ENV=test ./node_modules/.bin/mocha
-      --colors
-      --reporter spec
-      --timeout 5000
-      --compilers coffee:coffee-script/register
-      --require postmortem/register
-      #{grep}
-      #{test}"
+    exec "NODE_ENV=test ./node_modules/.bin/mocha
+        --colors
+        --reporter spec
+        --timeout 5000
+        --compilers coffee:coffee-script/register
+        --require postmortem/register
+        #{grep}
+        #{test}"
 
 task 'gh-pages', 'Publish docs to gh-pages', ->
   brief = require 'brief'
