@@ -4,10 +4,7 @@ node_js:
   - 0.12
   - iojs
 script: >
-  ./node_modules/.bin/mocha --reporter spec \
-                              --compilers coffee:coffee-script/register \
-                              --require postmortem/register \
-                              .test
+  cake test
 cache:
   directories:
     - node_modules
