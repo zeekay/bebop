@@ -5,4 +5,4 @@ exports.log =
   error: (type, msg) ->
     console.error "  \x1B[91m#{type}\x1B[0m #{msg}"
 
-exports.defaultExclude = /bebop.coffee$|bebop.js$|^_/
+exports.defaultExclude = /bebop.coffee$|bebop.js$/
