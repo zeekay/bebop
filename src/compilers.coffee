@@ -5,6 +5,7 @@ path = require 'path'
 module.exports =
   mappings:
     coffee: 'js'
+    hbs:    'html'
     jade:   'html'
     styl:   'css'
 
@@ -48,6 +49,11 @@ module.exports =
   jade: (src, dst) ->
     dst = path.dirname dst
     "jade --pretty #{src} --out #{dst}"
+
+  hbs: (src, dst) ->
+    handlebars = require 'handlebars'
+    template = handlebars.compile fs.readFileSync src, 'utf8'
+    fs.writeFileSync dst, (template {}), 'utf8'
 
   styl: (src, dst) ->
     dst = path.dirname dst
