@@ -49,9 +49,9 @@ class Bebop
     if isBrowser
       node = @findNode filename
       if node and node._resource.tag.name != 'script'
-        @reload node
+        @reloadNode node
       else
-        window.location = window.location
+        @reload()
 
   onopen: ->
     @tries = 0
@@ -65,8 +65,14 @@ class Bebop
     @ws.onclose = ->
     @ws.close()
 
+  reload: ->
+    setTimeout =>
+      @close()
+      location.reload()
+    , 2000
+
   # reloading
-  reload: (node) ->
+  reloadNode: (node) ->
     if node._resource.ext is 'js'
       node.parentNode.removeChild node
       return @load(node._resource)
@@ -257,11 +263,7 @@ class Bebop
           @onmodified message.filename
 
         when 'reload'
-          setTimeout =>
-            @close()
-
-            location.reload()
-          , 2000
+          @reload()
 
   send: (msg) ->
     @ws.send JSON.stringify msg
