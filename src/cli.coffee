@@ -12,6 +12,10 @@ error = (message) ->
   console.error message
   process.exit 1
 
+version = ->
+  console.log (require '../package.json').version
+  process.exit 0
+
 usage = ->
   console.log """
   bebop [options] [file]
@@ -33,6 +37,9 @@ usage = ->
     --secure, -s    Require authentication
     --static-dir    Directory used as root for static file server
     --work-dir      Directory used as root for compiling, watching
+
+    --help          Display this message
+    --version, -v   Display version
   """
   process.exit 0
 
@@ -84,8 +91,10 @@ args = process.argv.slice 2
 
 while opt = args.shift()
   switch opt
-    when '--help', '-v'
+    when '--help'
       usage()
+    when '--version', '-v'
+      version()
     when '--config', '-c'
       requireConfig args.shift()
     when '--open', '-o'
