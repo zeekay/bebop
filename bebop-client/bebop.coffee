@@ -260,7 +260,7 @@ class Bebop
           setTimeout =>
             @close()
 
-            location.reload true
+            location.reload()
           , 2000
 
   send: (msg) ->
