@@ -51,7 +51,7 @@ class Bebop
       if node and node._resource.tag.name != 'script'
         @reloadNode node
       else
-        @reload()
+        @reload true
 
   onopen: ->
     @tries = 0
