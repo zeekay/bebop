@@ -1,5 +1,7 @@
-{log} = require './utils'
+path     = require 'path'
 markdown = require './markdown'
+
+{log} = require './utils'
 
 module.exports = createServer: (opts = {}) ->
   opts.host      ?= '0.0.0.0'
@@ -24,6 +26,8 @@ module.exports = createServer: (opts = {}) ->
 
   server.run = ->
     server.listen opts.port, opts.host, ->
-      log.info 'bebop', "listening on #{opts.host}:#{opts.port}"
+      cwd = process.cwd()
+      dir = path.basename cwd
+      log.info 'bebop', "serving #{dir} at http://#{opts.host}:#{opts.port}"
 
   server
