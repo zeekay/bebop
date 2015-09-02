@@ -1,16 +1,16 @@
 colors = require 'colors/safe'
 
-colors.setTheme
-  silly:   'rainbow'
-  input:   'grey'
-  verbose: 'cyan'
-  prompt:  'grey'
-  info:    'green'
-  data:    'grey'
-  help:    'cyan'
-  warn:    'yellow'
-  debug:   'blue'
-  error:   'red'
+theme =
+  debug:    'blue'
+  info:     'white'
+  warn:     'yellow'
+  error:    'red'
+
+  bebop:    'black'
+  modified: 'cyan'
+  compiled: 'blue'
+
+colors.setTheme theme
 
 pretty = (obj) ->
   JSON.stringify obj, null, 2
@@ -19,7 +19,7 @@ log = ->
   return unless root.console?
     console.log.apply console, arguments
 
-for method in ['debug', 'info', 'warn', 'error']
+for method, _ of theme
   do (method) ->
     prefix = colors[method] method + ' '
     log[method] = (msg, extra) ->

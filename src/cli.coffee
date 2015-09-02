@@ -4,9 +4,10 @@ os   = require 'os'
 
 vigil = require 'vigil'
 
-compilers             = require './compilers'
-server                = require './server'
-{defaultExclude, log} = require './utils'
+compilers        = require './compilers'
+log              = require './log'
+server           = require './server'
+{defaultExclude} = require './utils'
 
 error = (message) ->
   console.error message
@@ -181,11 +182,11 @@ compile = (filename, cb = ->) ->
       filename = (filename.replace opts.workDir, '').replace /^\//, ''
 
     if err?
-      log.error 'error', "failed to compile #{filename}"
+      log.error "failed to compile #{filename}"
       console.error if err.stderr? then err.stderr else err.stack
       return
 
-    log.info 'compiled', filename if compiled
+    log.compiled "#{filename}" if compiled
 
     cb null, compiled
 
@@ -212,11 +213,11 @@ opts.pre (err) ->
     # Start watch cycle
     vigil.watch opts.workDir, vigilOpts, (filename, stat, isModule) ->
       unless opts.compile
-        log.info 'modified', filename
+        log.modified filename
         return websocket.modified filename
       compile filename, (err, compiled) ->
         unless compiled
-          log.info 'modified', filename
+          log.modified filename
           websocket.modified filename
         else
           if opts.forceReload

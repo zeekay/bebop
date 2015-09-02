@@ -3,5 +3,7 @@ lib/
 .test/
 npm-debug.log
 src/*.js
-bebop-client/*.js
+bebop.js
 *.map
+test/fixtures/app.js
+test/fixtures/app.js.map
