@@ -5,7 +5,7 @@ markdown = require './markdown'
 
 module.exports = createServer: (opts = {}) ->
   opts.host      ?= '0.0.0.0'
-  opts.port      ?= 3000
+  opts.port      ?= 1987
   opts.staticDir ?= process.cwd()
 
   connect = require 'connect'

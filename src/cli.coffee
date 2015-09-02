@@ -65,7 +65,7 @@ opts =
   host:           'localhost'
   include:        []
   index:          ''
-  port:           1987
+  port:           null
   pre:            (done) -> done()
   runServer:      true
   staticDir:      cwd
