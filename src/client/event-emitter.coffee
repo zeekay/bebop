@@ -1,14 +1,9 @@
-log = require './log'
-
-class EventEmitter
+module.exports = class EventEmitter
   constructor: (opts = {}) ->
-    @debug         = opts.debug ? false
     @_listeners    = {}
     @_allListeners = []
 
   on: (event, callback) ->
-    log.debug 'on', event, callback
-
     if event
       @_listeners[event] ?= []
       @_listeners[event].push callback
@@ -19,8 +14,6 @@ class EventEmitter
       @_allListeners.length - 1
 
   off: (event, index) ->
-    log.debug 'off', event, index
-
     # remove all if no event is specified
     return @_listeners = {} unless event
 
@@ -42,7 +35,3 @@ class EventEmitter
 
     for listener in @_allListeners
       listener.apply @, args
-
-    log.debug.apply log, args if @debug
-
-module.exports = EventEmitter
