@@ -43,6 +43,7 @@
     "executive": "^0.5.1",
     "mocha": "^2.1.0",
     "postmortem": "^0.1.8",
+    "requisite": "^1.9.17",
     "shortcake": "^0.2.4"
   }
 }
