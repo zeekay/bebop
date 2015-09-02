@@ -16,7 +16,8 @@ pretty = (obj) ->
   JSON.stringify obj, null, 2
 
 log = ->
-  console.log.apply console, arguments
+  return unless root.console?
+    console.log.apply console, arguments
 
 for method in ['debug', 'info', 'warn', 'error']
   do (method) ->
