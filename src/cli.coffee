@@ -186,7 +186,7 @@ compile = (filename, cb = ->) ->
       console.error if err.stderr? then err.stderr else err.stack
       return
 
-    log.compiled "#{filename}" if compiled
+    log.compiled filename if compiled
 
     cb null, compiled
 
