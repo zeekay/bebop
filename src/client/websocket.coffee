@@ -11,16 +11,11 @@ fallback = ->
   load url for url in urls
   root.WebSocket
 
-_WebSocket = root.WebSocket ? root.MozWebSocket ? fallback()
+WebSocket = root.WebSocket ? root.MozWebSocket ? fallback()
 
-module.exports = class WebSocket extends _WebSocket
-  constructor: (address) ->
-    super
+if root.isBrowser
+  WebSocket.identifier = location.href + ' - ' + navigator.userAgent
+else
+  WebSocket.identifier = process.argv[1] + ' - node'
 
-    if root.isBrowser
-      @identifier = location.href + ' - ' + navigator.userAgent
-    else
-      @identifier = process.argv[1] + ' - node'
-
-    if root.isBrowser
-      root.addEventListener 'beforeunload', => @close()
+module.exports = WebSocket

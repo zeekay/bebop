@@ -1,4 +1,5 @@
 EventEmitter = require './event-emitter'
+WebSocket    = require './websocket'
 dir          = require './dir'
 dump         = require './dump'
 log          = require './log'
@@ -55,46 +56,50 @@ class Bebop extends EventEmitter
         handlers[k] = v
 
     # Bind handlers WebSocket events
-    @on 'connect', (tries)   =>
+    @on 'connect', =>
       if @limit? and @limit > 0
-        if tries > @limit
+        if @tries > @limit
           log.error 'connection-failed', 'giving up!'
           return @closed = true
         else
-          @tries += 1
+          @tries = @tries + 1
 
     @on 'connected', (e) =>
-      log 'connected', e
+      log.info 'connected', e
       @tries = 0
       handlers.connected.call @, e
 
     @on 'close', (e) =>
-      log 'close', e
+      log.info 'close', e
       @closed = true
       handlers.close.call @, e
 
     @on 'error',   (err)     =>
-      log 'error', err
+      log.error 'error', err
       handlers.error.call   @, err
 
     @on 'message', (message) =>
-      log 'message', message
+      log.debug 'message', message
       handlers.message.call @, message
 
   # Create new WebSocket connection and connect to it
   connect: ->
-    @emit 'connect', @tries
+    @emit 'connect'
     return if @closed
 
     try
       @ws = new WebSocket @address
     catch err
+      log.warn 'Failed to instantiate WebSocket', err
       return @reconnect()
 
     @ws.onopen    = (e) => @emit 'connected', e
     @ws.onclose   = (e) => @emit 'close',     e
     @ws.onerror   = (e) => @emit 'error',     e.data
     @ws.onmessage = (e) => @emit 'message',   JSON.parse e.data
+
+    if root.isBrowser
+      root.addEventListener 'beforeunload', => @ws.close()
 
   # Retry connection on failure/timeout
   reconnect: ->

@@ -16,9 +16,9 @@ log.verbose = false
 for method in levels
   do (method) ->
     log[method] = ->
-      return if not log.verbose and method == 'debug'
+      # return if (not log.verbose and method == 'debug')
       args = Array.prototype.slice.call arguments
-      args.unshift method
+      args.unshift 'bebop:' + method
       log.apply @, args
 
 module.exports = log
