@@ -7,14 +7,25 @@ levels = [
   'error'
 ]
 
-log = ->
-  console?.log.apply console, arguments
+class Logger
+  constructor: (options) ->
+    for level in levels
+      do (level) =>
+        @[level] = =>
+          args = Array.prototype.slice.call arguments
+          args.unshift 'bebop:' + level
+          @log.apply @, args
 
-for method in levels
-  do (method) ->
-    log[method] = ->
-      args = Array.prototype.slice.call arguments
-      args.unshift 'bebop:' + method
-      log.apply @, args
+  log: ->
+    console?.log.apply console, arguments
 
-module.exports = log
+  setLevels: (levels) ->
+    @levels = levels
+
+  debug: (enable) ->
+    if enable
+      @setLevels levels
+    else
+      @setLevels ['info', 'warning', 'error']
+
+module.exports = new Logger()

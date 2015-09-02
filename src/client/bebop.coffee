@@ -20,15 +20,26 @@ class Bebop extends EventEmitter
     @timeout = opts.timeout  ? 500
     @debug   = opts.debug ? false
     @tries   = 0
+    @limit   = 10
 
     @init opts
 
   # Default event handlers
   defaultHandlers:
-    close:     (e)       -> @close e
-    connected: (e)       -> @sendConnected e
-    error:     (err)     -> @reconnect err
-    message:   (message) ->
+    close: (e) ->
+      log.debug 'Bebop.defaultHandlers.close'
+      @close e
+
+    connected: (e) ->
+      log.debug 'Bebop.defaultHandlers.connected'
+      @sendConnected e
+
+    error: (err)     ->
+      log.error 'Bebop.defaultHandlers.error', err
+      @reconnect err
+
+    message: (message) ->
+      log.error 'Bebop.defaultHandlers.message', message
       switch message.type
         when 'complete'
           @sendComplete message.name
@@ -59,33 +70,28 @@ class Bebop extends EventEmitter
     @on 'connect', =>
       if @limit? and @limit > 0
         if @tries > @limit
-          log.error 'connection-failed', 'giving up!'
-          return @closed = true
+          log.error 'Bebop.connect', 'connection-failed: giving up!'
+          return @failed = true
         else
           @tries = @tries + 1
 
     @on 'connected', (e) =>
-      log.info 'connected', e
       @tries = 0
       handlers.connected.call @, e
 
     @on 'close', (e) =>
-      log.info 'close', e
-      @closed = true
       handlers.close.call @, e
 
     @on 'error',   (err)     =>
-      log.error 'error', err
       handlers.error.call   @, err
 
     @on 'message', (message) =>
-      log.debug 'message', message
       handlers.message.call @, message
 
   # Create new WebSocket connection and connect to it
   connect: ->
     @emit 'connect'
-    return if @closed
+    return if @failed
 
     try
       @ws = new WebSocket @address
@@ -104,7 +110,7 @@ class Bebop extends EventEmitter
   # Retry connection on failure/timeout
   reconnect: ->
     @emit 'reconnect'
-    return if @closed
+    return if @failed
 
     root.setTimeout =>
       @connect()
@@ -114,7 +120,6 @@ class Bebop extends EventEmitter
   close: ->
     @emit 'closed'
     @ws.close()
-    @closed = true
 
   # Send WebSocket message
   send: (msg) ->
