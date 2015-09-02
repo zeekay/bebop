@@ -1,13 +1,14 @@
-fs = require 'fs'
+fs   = require 'fs'
+path = require 'path'
 
 # Generic connect compatible middleware to server client code.
 # Wrapped with a named function for easier debugging.
 middleware = (opts = {}) ->
   bebopJs = """
-            <script src="/bebop-client/bebop.js"></script>
+            <script src="/bebop.js"></script>
             <script>
               var bebop = new Bebop(#{JSON.stringify opts});
-              bebop.connect()
+              bebop.connect();
             </script>
             """
 
@@ -34,24 +35,26 @@ middleware = (opts = {}) ->
   # serve static js, map, coffee source files
   serveStatic = (req, res) ->
     switch req.url
-      when '/bebop-client/bebop.js'
-        headers =
-          'Content-Type': 'application/javascript'
+      when '/bebop.js'
+        contentType = 'application/javascript'
+      else
+        contentType = 'application/coffeescript'
 
-      when '/bebop-client/bebop.map'
-        headers =
-          'Content-Type': 'application/json'
+    headers =
+      'Content-Type': contentType
 
-      when '/bebop-client/bebop.coffee'
-        headers =
-          'Content-Type': 'application/coffeescript'
+    if /^\/src\/node_modules/.test req.url
+      req.url = req.url.substring 4
+
+    file = path.join __dirname, '/..', req.url
 
     res.writeHead 200, headers
-    fs.createReadStream(__dirname + '/..' + req.url).pipe res
+    fs.createReadStream(file).pipe res
 
   _middleware = (req, res, next) ->
     # Serve static files
-    return (serveStatic req, res) if /^\/bebop-client/.test req.url
+    if (/^\/bebop/.test req.url) or (/^\/src/.test req.url)
+      return (serveStatic req, res)
 
     # Inject script into html pages
     injectJs res
