@@ -1,4 +1,4 @@
-log = require '../log'
+log = require './log'
 
 class EventEmitter
   constructor: (opts = {}) ->

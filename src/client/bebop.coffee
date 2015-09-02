@@ -1,8 +1,7 @@
-log          = require '../log'
-
 EventEmitter = require './event-emitter'
-dir          = reqiure './dir'
+dir          = require './dir'
 dump         = require './dump'
+log          = require './log'
 stacktrace   = require './stacktrace'
 
 {reloadNode, findNode} = require './node'
@@ -65,15 +64,22 @@ class Bebop extends EventEmitter
           @tries += 1
 
     @on 'connected', (e) =>
+      log 'connected', e
       @tries = 0
       handlers.connected.call @, e
 
     @on 'close', (e) =>
+      log 'close', e
       @closed = true
       handlers.close.call @, e
 
-    @on 'error',   (err)     => handlers.error.call   @, err
-    @on 'message', (message) => handlers.message.call @, message
+    @on 'error',   (err)     =>
+      log 'error', err
+      handlers.error.call   @, err
+
+    @on 'message', (message) =>
+      log 'message', message
+      handlers.message.call @, message
 
   # Create new WebSocket connection and connect to it
   connect: ->
@@ -131,7 +137,7 @@ class Bebop extends EventEmitter
         stack: stacktrace e
 
   modified: (filename) ->
-    @emit 'modified', code
+    @emit 'modified', filename
 
     if isBrowser
       node = findNode filename

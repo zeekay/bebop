@@ -1,4 +1,5 @@
 tags = require './tags'
+log  = require './log'
 
 parseFilename = (filename) ->
   # Determine path, filename and extension
