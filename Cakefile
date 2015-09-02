@@ -10,16 +10,16 @@ task 'clean', 'clean project', (options) ->
 task 'build', 'build project', (options) ->
   exec 'node_modules/.bin/coffee -bcm -o lib/ src/'
   exec 'node_modules/.bin/coffee -bcm -o .test/ test/'
-  exec 'node_modules/.bin/coffee -cm bebop-client/'
+  exec 'node_modules/.bin/requisite src/client -g -o bebop-client.js'
 
 task 'build-min', 'build project', (options) ->
   exec 'node_modules/.bin/coffee -bc -o lib/ src/'
-  exec 'node_modules/.bin/coffee -c bebop-client/'
+  exec 'node_modules/.bin/requisite src/client -m -o bebop-client.min.js'
 
 task 'watch', 'watch for changes and recompile project', ->
   exec 'node_modules/.bin/coffee -bcmw -o lib/ src/'
   exec 'node_modules/.bin/coffee -bcmw -o .test test/'
-  exec 'node_modules/.bin/coffee -cmw bebop-client/'
+  exec 'node_modules/.bin/requisite src/client -g -w -o bebop-client.js'
 
 task 'test', 'run tests', (options) ->
   invoke 'build', ->

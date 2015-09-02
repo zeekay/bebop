@@ -10,44 +10,129 @@ stacktrace   = require './stacktrace'
 
 
 class Bebop extends EventEmitter
-  constructor: (opts) ->
+  constructor: (opts = {}) ->
+    super
+
     protocol = opts.protocol ? if location.protocol is 'http:' then 'ws://' else 'wss://'
     hostname = opts.hostname ? location.hostname
     port     = opts.port     ? location.port
     @address = opts.address  ? protocol + hostname + ':' + port + '/_bebop'
+    @timeout = opts.timeout  ? 500
+    @debug   = opts.debug ? false
     @tries   = 0
 
-  # Called when completion requested.
-  handleComplete: (msg) ->
-    try
-      obj = eval_.call(root, msg)
-      @send
-        type: 'complete'
-        result: dir obj
+    @init opts
 
+  # Default event handlers
+  defaultHandlers:
+    close:     (e)       -> @close e
+    connected: (e)       -> @sendConnected e
+    error:     (err)     -> @reconnect err
+    message:   (message) ->
+      switch message.type
+        when 'complete'
+          @sendComplete message.name
+        when 'eval'
+          @sendEval message.code
+        when 'modified'
+          @modified message.filename
+        when 'reload'
+          @reload()
+        else
+          log.warn "Unknown message type '#{message.type}'", message
+
+  # Initialize Bebop
+  init: (opts = {}) ->
+    # Allow user to override default handlers
+    handlers =
+      connected: opts.onconnected
+      close:     opts.onclose
+      error:     opts.onerror
+      message:   opts.onmessage
+
+    # Setup default handlers
+    for k,v of @defaultHandlers
+      unless handlers[k]?
+        handlers[k] = v
+
+    # Bind handlers WebSocket events
+    @on 'connect', (tries)   =>
+      if @limit? and @limit > 0
+        if tries > @limit
+          log.error 'connection-failed', 'giving up!'
+          return @closed = true
+        else
+          @tries += 1
+
+    @on 'connected', (e) =>
+      @tries = 0
+      handlers.connected.call @, e
+
+    @on 'close', (e) =>
+      @closed = true
+      handlers.close.call @, e
+
+    @on 'error',   (err)     => handlers.error.call   @, err
+    @on 'message', (message) => handlers.message.call @, message
+
+  # Create new WebSocket connection and connect to it
+  connect: ->
+    @emit 'connect', @tries
+    return if @closed
+
+    try
+      @ws = new WebSocket @address
+    catch err
+      return @reconnect()
+
+    @ws.onopen    = (e) => @emit 'connected', e
+    @ws.onclose   = (e) => @emit 'close',     e
+    @ws.onerror   = (e) => @emit 'error',     e.data
+    @ws.onmessage = (e) => @emit 'message',   JSON.parse e.data
+
+  # Retry connection on failure/timeout
+  reconnect: ->
+    @emit 'reconnect'
+    return if @closed
+
+    root.setTimeout =>
+      @connect()
+    , @timeout
+
+  # Close WebSocket connection
+  close: ->
+    @emit 'closed'
+    @ws.close()
+    @closed = true
+
+  # Send WebSocket message
+  send: (msg) ->
+    @emit 'send', msg
+    @ws.send JSON.stringify msg
+
+  # Return completions for code fragment
+  complete: (code) ->
+    @emit 'complete', code
+
+    try
+      dir (eval_.call root, code)
     catch e
-      @send
-        type: 'complete'
-        result: []
+      []
 
   # Called when eval requested.
-  handleEval: (msg) ->
-    try
-      res = eval_.call(root, msg)
-      @send
-        type: 'eval'
-        result: res
+  eval: (code) ->
+    @emit 'eval', code
 
+    try
+      res = eval_.call root, msg
     catch e
       error =
         error: e.message
         stack: stacktrace e
 
-      @send
-        type: 'eval'
-        result: error
+  modified: (filename) ->
+    @emit 'modified', code
 
-  handleModified: (filename) ->
     if isBrowser
       node = findNode filename
       if node and node._resource.tag.name != 'script'
@@ -55,80 +140,28 @@ class Bebop extends EventEmitter
       else
         @reload true
 
-  handleMessage: (message) ->
-    message = JSON.parse message.data
+  # Close connection and reload current page
+  reload: ->
+    @emit 'reload'
+    @close()
+    location.reload()
 
-    switch message.type
-      when 'complete'
-        @handleComplete message.name
-
-      when 'eval'
-        @handleEval message.code
-
-      when 'modified'
-        @handleModified message.filename
-
-      when 'reload'
-        @reload()
-
-  connected: ->
-    log.info 'connected'
-    @tries = 0
+  # Client responses to server RPC calls
+  sendConnected: ->
     @send
       type: 'connected'
       identifier: @ws.identifier
 
-  # close websocket connection
-  close: ->
-    log.info 'closed'
-    @ws.close()
-    @closed = true
+  # Return completions
+  sendComplete: (code) ->
+    @send
+      type: 'complete'
+      result: @complete code
 
-  reload: ->
-    @close()
-    location.reload()
-
-  retry: ->
-    return if @closed
-
-    root.setTimeout =>
-      @connect()
-    , 500
-
-  # WebSockets
-  connect: ->
-    if @tries > 10
-      return log.error 'connection-failed', 'giving up!'
-
-    @tries++
-
-    try
-      @ws = new WebSocket @address
-    catch err
-      return @retry()
-
-    @ws.onopen    = => @connected()
-    @ws.onclose   = => @retry()
-    @ws.onerror   = => @retry()
-    @ws.onmessage = (message) => @handleMessage message
-
-  send: (msg) ->
-    @ws.send JSON.stringify msg
-
-Bebop.start = (opts = {}) ->
-  root.bebop = bebop = new Bebop opts
-
-  if opts.useRepl
-    repl = require 'repl'
-    util = require 'util'
-
-    # colorful output
-    repl.writer = (obj, showHidden, depth) ->
-      util.inspect obj, showHidden, depth, true
-
-    bebop.onopen = ->
-      repl.start 'bebop> ', null, null, true
-
-  bebop.connect()
+  # Called when eval requested.
+  sendEval: (code) ->
+    @send
+      type:   'eval'
+      result: @eval code
 
 module.exports = Bebop
