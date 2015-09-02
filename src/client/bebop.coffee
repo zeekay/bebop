@@ -17,29 +17,41 @@ class Bebop extends EventEmitter
     hostname = opts.hostname ? location.hostname
     port     = opts.port     ? location.port
     @address = opts.address  ? protocol + hostname + ':' + port + '/_bebop'
-    @timeout = opts.timeout  ? 500
+    @timeout = opts.timeout  ? 1000
     @debug   = opts.debug ? false
     @tries   = 0
-    @limit   = 10
+    @limit   = -1
+
+    @_failed   = false
+    @_retries  = []
+    @_once =
+      error:  false
+      closed: false
 
     @init opts
 
   # Default event handlers
   defaultHandlers:
-    close: (e) ->
-      log.debug 'Bebop.defaultHandlers.close'
-      @close e
+    connected: ->
+      log.info 'connected'
+      @_once =
+        error:  false
+        closed: false
+      @sendConnected()
 
-    connected: (e) ->
-      log.debug 'Bebop.defaultHandlers.connected'
-      @sendConnected e
+    reconnecting: ->
+      log.info 'reconnecting'
 
-    error: (err)     ->
-      log.error 'Bebop.defaultHandlers.error', err
-      @reconnect err
+    closed: ->
+      log.info 'closed' unless @_once.closed
+      @_once.closed = true
+
+    error: ->
+      log.error 'error' unless @_once.error
+      @_once.error = true
 
     message: (message) ->
-      log.error 'Bebop.defaultHandlers.message', message
+      log.debug 'message'
       switch message.type
         when 'complete'
           @sendComplete message.name
@@ -56,10 +68,11 @@ class Bebop extends EventEmitter
   init: (opts = {}) ->
     # Allow user to override default handlers
     handlers =
-      connected: opts.onconnected
-      close:     opts.onclose
-      error:     opts.onerror
-      message:   opts.onmessage
+      connected:    opts.onconnected
+      closed:       opts.onclosed
+      error:        opts.onerror
+      message:      opts.onmessage
+      reconnecting: opts.reconnecting
 
     # Setup default handlers
     for k,v of @defaultHandlers
@@ -68,57 +81,80 @@ class Bebop extends EventEmitter
 
     # Bind handlers WebSocket events
     @on 'connect', =>
-      if @limit? and @limit > 0
+      if @limit? and @limit >= 0
         if @tries > @limit
           log.error 'Bebop.connect', 'connection-failed: giving up!'
-          return @failed = true
+          return @_failed = true
         else
           @tries = @tries + 1
 
-    @on 'connected', (e) =>
+    @on 'connected', =>
       @tries = 0
-      handlers.connected.call @, e
+      handlers.connected.apply @, arguments
 
-    @on 'close', (e) =>
-      handlers.close.call @, e
+    @on 'closed', =>
+      handlers.closed.apply @, arguments
 
-    @on 'error',   (err)     =>
-      handlers.error.call   @, err
+    @on 'error', =>
+      handlers.error.apply @, arguments
 
-    @on 'message', (message) =>
-      handlers.message.call @, message
+    @on 'message', =>
+      handlers.message.apply @, arguments
+
+    @on 'reconnecting', =>
+      handlers.reconnecting.apply @, arguments
 
   # Create new WebSocket connection and connect to it
   connect: ->
-    @emit 'connect'
-    return if @failed
+    return if @_failed
+
+    @emit 'connecting'
 
     try
       @ws = new WebSocket @address
     catch err
-      log.warn 'Failed to instantiate WebSocket', err
+      log.warn 'Failed to create WebSocket', err
       return @reconnect()
 
-    @ws.onopen    = (e) => @emit 'connected', e
-    @ws.onclose   = (e) => @emit 'close',     e
-    @ws.onerror   = (e) => @emit 'error',     e.data
-    @ws.onmessage = (e) => @emit 'message',   JSON.parse e.data
+    @ws.onopen = =>
+      @stopRetrying()
+      args = Array::slice.call arguments
+      args.unshift 'connected'
+      @emit.apply @, args
+
+    @ws.onclose = =>
+      args = Array::slice.call arguments
+      args.unshift 'closed'
+      @emit.apply @, args
+
+    @ws.onerror = =>
+      args = Array::slice.call arguments
+      args.unshift 'error'
+      @emit.apply @, args
+
+    @ws.onmessage = (e) =>
+      @emit 'message', JSON.parse e.data
 
     if root.isBrowser
       root.addEventListener 'beforeunload', => @ws.close()
 
   # Retry connection on failure/timeout
   reconnect: ->
-    @emit 'reconnect'
-    return if @failed
+    return if @_failed
 
-    root.setTimeout =>
+    @emit 'reconnecting'
+
+    @_retries.push root.setTimeout =>
       @connect()
     , @timeout
 
+  stopRetrying: ->
+    @tries = 0
+    clearTimeout t for t in @_retries
+    @_retries = []
+
   # Close WebSocket connection
   close: ->
-    @emit 'closed'
     @ws.close()
 
   # Send WebSocket message
