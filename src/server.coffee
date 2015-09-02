@@ -24,10 +24,23 @@ module.exports = createServer: (opts = {}) ->
 
   server = require('http').createServer app
 
-  server.run = ->
-    server.listen opts.port, opts.host, ->
-      cwd = process.cwd()
-      dir = path.basename cwd
-      log.bebop "serving #{dir} at http://#{opts.host}:#{opts.port}"
+  server.setMaxListeners(100)
+
+  server.on 'listening', ->
+    cwd = process.cwd()
+    dir = path.basename cwd
+    log.bebop "serving #{dir} at http://#{opts.host}:#{opts.port}"
+
+  server.run = (cb = ->) ->
+    process.once 'uncaughtException', (err) ->
+      if err.code == 'EADDRINUSE'
+        log.error 'address in use, retrying...'
+        server.close()
+        opts.port++
+        setTimeout server.run, 1000
+      else
+        throw new err
+
+    server.listen opts.port, opts.host
 
   server
