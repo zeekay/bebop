@@ -8,7 +8,6 @@ middleware = (opts = {}) ->
             <script src="/bebop.js"></script>
             <script>
               var bebop = new Bebop(#{JSON.stringify opts});
-              bebop.debug = true;
               bebop.connect();
             </script>
             """
