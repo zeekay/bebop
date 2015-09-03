@@ -45,8 +45,11 @@ usage = ->
   process.exit 0
 
 require.extensions['.coffee'] = ->
-  require 'coffee-script/register'
-  require.extensions['.coffee'].apply require.extensions, arguments
+  try
+    require 'coffee-script/register'
+    require.extensions['.coffee'].apply require.extensions, arguments
+  catch err
+    log.warn 'CoffeeScript not installed: npm install -g coffee-script@latest'
 
 cwd = process.cwd()
 
