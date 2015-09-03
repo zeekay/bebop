@@ -41,6 +41,6 @@ module.exports = createServer: (opts = {}) ->
       else
         throw new err
 
-    server.listen opts.port, opts.host
+    server.listen opts.port, opts.host, cb
 
   server

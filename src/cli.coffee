@@ -224,14 +224,13 @@ opts.pre (err) ->
             websocket.modified filename
 
   # Start server
-  app.run()
+  app.run ->
+    if opts.open or opts.index != ''
+      # Open browser window
+      opts.index = '' if opts.index == 'index.html'
 
-  # Open browser window
-  if opts.open or opts.index != ''
-    opts.index = '' if opts.index == 'index.html'
-
-    switch os.platform()
-      when 'darwin'
-        exec "open http://#{opts.host}:#{opts.port}/#{opts.index}"
-      when 'linux'
-        exec "xdg-open http://#{opts.host}:#{opts.port}/#{opts.index}"
+      switch os.platform()
+        when 'darwin'
+          exec "open http://#{opts.host}:#{opts.port}/#{opts.index}"
+        when 'linux'
+          exec "xdg-open http://#{opts.host}:#{opts.port}/#{opts.index}"
