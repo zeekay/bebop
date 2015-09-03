@@ -39,7 +39,7 @@ module.exports = createServer: (opts = {}) ->
         opts.port++
         setTimeout server.run, 1000
       else
-        throw new err
+        throw err
 
     server.listen opts.port, opts.host, cb
 
