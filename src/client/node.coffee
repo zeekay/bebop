@@ -1,6 +1,8 @@
 tags = require './tags'
 log  = require './log'
 
+{urlRandomize} = require './utils'
+
 parseFilename = (filename) ->
   # Determine path, filename and extension
   # Not terribly robust, might want to use *gasp* regex
