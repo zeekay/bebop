@@ -22,9 +22,9 @@ usage = ->
   bebop [options] [file]
 
   Options:
-    --compile-only  Compile files and exit
+    --compile, -c   Compile files and exit
     --compilers,    Specify compiler to use for a given extension
-    --config, -c    Specify bebop.coffee to use
+    --config,       Specify bebop.coffee to use
     --exclude, -x   Exclude files for watching, compiling
     --force-reload  Force reload when file is compiled
     --host, -h      Hostname to bind to
@@ -96,7 +96,7 @@ while opt = args.shift()
       usage()
     when '--version', '-v'
       version()
-    when '--config', '-c'
+    when '--config'
       requireConfig args.shift()
     when '--open', '-o'
       opts.open = true
@@ -106,7 +106,7 @@ while opt = args.shift()
       opts.watch = false
     when '--no-compile'
       opts.compile = false
-    when '--compile-only'
+    when '--compile', '-c'
       opts.compileOnly = true
     when '--include', '-i'
       opts.include.push new RegExp args.shift()

@@ -1,0 +1,55 @@
+@font-face {
+	font-family: 'icomoon';
+	src:url('fonts/icomoon.eot?y94n5j');
+	src:url('fonts/icomoon.eot?#iefixy94n5j') format('embedded-opentype'),
+		url('fonts/icomoon.ttf?y94n5j') format('truetype'),
+		url('fonts/icomoon.woff?y94n5j') format('woff'),
+		url('fonts/icomoon.svg?y94n5j#icomoon') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+	font-family: 'icomoon';
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+
+	/* Better Font Rendering =========== */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.icon-music-note:before {
+	content: "\e6e4";
+}
+
+.icon-music-note2:before {
+	content: "\e6e5";
+}
+
+.icon-music-note3:before {
+	content: "\e6e6";
+}
+
+.icon-trumpet:before {
+	content: "\e6ea";
+}
+.icon-power:before {
+	content: "\e7b9";
+}
+.icon-power-crossed:before {
+	content: "\e7ba";
+}
+.icon-sync:before {
+	content: "\e8da";
+}
+.icon-sync-crossed:before {
+	content: "\e8dc";
+}
+.icon-cross2:before {
+	content: "\e935";
+}
