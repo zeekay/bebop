@@ -10,7 +10,7 @@ server           = require './server'
 {defaultExclude} = require './utils'
 
 error = (message) ->
-  console.error message
+  log.error message
   process.exit 1
 
 version = ->
@@ -123,7 +123,7 @@ while opt = args.shift()
       opts.pre = (done) -> exec cmd, done
     when '--port', '-p'
       p = args.shift()
-      error 'Port was not specified' unless p
+      error 'missing port' unless p
       opts.port = parseInt p, 10
     when '--secure', '-s'
       credentials = args.shift()
