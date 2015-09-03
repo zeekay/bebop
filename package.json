@@ -33,9 +33,8 @@
   "dependencies": {
     "colors": "^1.1.2",
     "connect": "^2.11.2",
-    "executive": "~0.4.4",
+    "executive": "^0.4.8",
     "marked": "^0.3.3",
-    "requisite": "^1.10.1",
     "vigil": "^0.4.0",
     "ws": "^0.8.0"
   },
@@ -45,7 +44,7 @@
     "executive": "^0.5.1",
     "mocha": "^2.1.0",
     "postmortem": "^0.1.8",
-    "requisite": "^1.9.17",
+    "requisite": "^1.10.1",
     "shortcake": "^0.2.4"
   }
 }
