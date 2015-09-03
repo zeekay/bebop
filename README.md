@@ -23,7 +23,32 @@ $ cd ~/myapp
 $ bebop
 ```
 
-Check `bebop --help` for various options/configuration.
+### CLI
+```sh
+› bebop --help
+bebop [options] [file]
+
+Options:
+  --compile, -c   Compile files and exit
+  --compilers,    Specify compiler to use for a given extension
+  --config,       Specify bebop.coffee to use
+  --exclude, -x   Exclude files for watching, compiling
+  --force-reload  Force reload when file is compiled
+  --host, -h      Hostname to bind to
+  --include, -i   Include files for watching, compiling
+  --no-compile    Do not compile files automatically
+  --no-server     Do not run static file server
+  --no-watch      Do not watch files for changes
+  --open, -o      Open browser automatically
+  --port, -p      Port to listen on
+  --pre           Command to execute first
+  --secure, -s    Require authentication
+  --static-dir    Directory used as root for static file server
+  --work-dir      Directory used as root for compiling, watching
+
+  --help          Display this message
+  --version, -v   Display version
+```
 
 ### Configuration
 You can configure Bebop by creating a `.bebop` file in either your home
