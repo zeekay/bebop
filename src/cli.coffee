@@ -122,7 +122,9 @@ while opt = args.shift()
       cmd = args.shift()
       opts.pre = (done) -> exec cmd, done
     when '--port', '-p'
-      opts.port = parseInt args.shift(), 10
+      p = args.shift()
+      error 'Port was not specified' unless p
+      opts.port = parseInt p, 10
     when '--secure', '-s'
       credentials = args.shift()
       if credentials
