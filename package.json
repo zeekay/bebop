@@ -33,7 +33,7 @@
   "dependencies": {
     "colors": "^1.1.2",
     "connect": "^2.11.2",
-    "executive": "^0.4.8",
+    "executive": "^0.5.1",
     "marked": "^0.3.3",
     "vigil": "^0.4.0",
     "ws": "^0.8.0"
@@ -41,7 +41,6 @@
   "devDependencies": {
     "chai": "^3.2.0",
     "coffee-script": "^1.9.3",
-    "executive": "^0.5.1",
     "mocha": "^2.1.0",
     "postmortem": "^0.1.8",
     "requisite": "^1.10.1",
