@@ -32,9 +32,11 @@ wrapper =
         filename: filename
     server
 
-['compilers', 'middleware', 'server', 'utils', 'websocket'].forEach (property) ->
-  Object.defineProperty wrapper, property,
-    enumerable: true
-    get: -> require './' + property
+Object.defineProperties wrapper,
+  compilers:  enumerable: true, get: -> require './compilers'
+  middleware: enumerable: true, get: -> require './middleware'
+  server:     enumerable: true, get: -> require './server'
+  utils:      enumerable: true, get: -> require './utils'
+  websocket:  enumerable: true, get: -> require './websocket'
 
 module.exports = wrapper

@@ -14,12 +14,7 @@
     "web development"
   ],
   "author": "Zach Kelling <zk@monoid.io> (http://zeekay.io)",
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "https://github.com/zeekay/bebop/blob/master/LICENSE"
-    }
-  ],
+  "license": "MIT",
   "main": "lib/",
   "bin": "bin/bebop",
   "scripts": {
@@ -44,6 +39,6 @@
     "mocha": "^2.1.0",
     "postmortem": "^0.1.8",
     "requisite": "^1.10.1",
-    "shortcake": "^0.2.4"
+    "shortcake": "^0.3.0"
   }
 }
