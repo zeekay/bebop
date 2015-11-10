@@ -1,26 +1,38 @@
-path     = require 'path'
-markdown = require './markdown'
+basicAuth   = require 'basic-auth-connect'
+connect     = require 'connect'
+favicons    = require 'connect-favicons'
+index       = require 'serve-index'
+logger      = require 'morgan'
+parseUrl    = require 'parseurl'
+path        = require 'path'
+serveStatic = require 'serve-static'
 
-log = require './log'
+log        = require './log'
+markdown   = require './markdown'
+middleware = require './middleware'
 
 module.exports = createServer: (opts = {}) ->
   opts.host      ?= '0.0.0.0'
   opts.port      ?= 1987
   opts.staticDir ?= process.cwd()
 
-  connect = require 'connect'
-
   app = connect()
-  app.use connect.favicon()
-  app.use require('./middleware')()
-  app.use connect.logger 'dev'
+
+  # Connect no longer parses url for you
+  app.use (req, res, next) ->
+    req.path = parseUrl(req).pathname
+    next()
+
+  app.use favicons __dirname + '/../assets'
+  app.use middleware()
+  app.use logger 'dev'
 
   if opts.user and opts.pass
-    app.use connect.basicAuth opts.user, opts.pass
+    app.use basicAuth opts.user, opts.pass
 
   app.use markdown()
-  app.use connect.static opts.staticDir
-  app.use connect.directory opts.staticDir, hidden: true
+  app.use serveStatic opts.staticDir
+  app.use index opts.staticDir, hidden: true
 
   server = require('http').createServer app
 
