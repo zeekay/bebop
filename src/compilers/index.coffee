@@ -4,6 +4,8 @@ path = require 'path'
 
 sass = require './sass'
 
+{requireLocal} = require '../utils'
+
 module.exports =
   mappings:
     coffee: 'js'
@@ -55,7 +57,7 @@ module.exports =
     "jade --pretty #{src} --out #{dst}"
 
   hbs: (src, dst) ->
-    handlebars = require 'handlebars'
+    handlebars = requireLocal 'handlebars'
     template = handlebars.compile fs.readFileSync src, 'utf8'
     fs.writeFileSync dst, (template {}), 'utf8'
 
