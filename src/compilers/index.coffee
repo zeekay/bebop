@@ -2,11 +2,15 @@ exec = require 'executive'
 fs   = require 'fs'
 path = require 'path'
 
+sass = require './sass'
+
 module.exports =
   mappings:
     coffee: 'js'
     hbs:    'html'
     jade:   'html'
+    sass:   'css'
+    scss:   'css'
     styl:   'css'
 
   compile: (filename, cb) ->
@@ -58,3 +62,6 @@ module.exports =
   styl: (src, dst) ->
     dst = path.dirname dst
     "stylus #{src} -o #{dst}"
+
+  sass: sass
+  scss: sass
