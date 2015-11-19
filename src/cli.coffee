@@ -109,9 +109,9 @@ while opt = args.shift()
     when '--compile', '-c'
       opts.compileOnly = true
     when '--include', '-i'
-      opts.include.push new RegExp args.shift()
+      opts.include.push args.shift()
     when '--exclude', '-x'
-      opts.exclude.push new RegExp args.shift()
+      opts.exclude.push args.shift()
     when '--no-default-exclude'
       opts.defaultExclude = false
     when '--force-reload'
@@ -149,9 +149,6 @@ while opt = args.shift()
 # Setup include/expludes
 if opts.defaultExclude
   opts.exclude = [vigil.utils.excludeRe, defaultExclude].concat opts.exclude
-
-if opts.include.length == 0
-  opts.include = null
 
 # Options for vigil watch/walk
 vigilOpts =
@@ -198,6 +195,7 @@ opts.pre (err) ->
 
   # Do initial compile
   if opts.compile
+    console.log vigilOpts
     vigil.walk opts.workDir, vigilOpts, (filename) ->
       compile filename if opts.compile
 
