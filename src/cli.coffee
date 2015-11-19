@@ -195,7 +195,6 @@ opts.pre (err) ->
 
   # Do initial compile
   if opts.compile
-    console.log vigilOpts
     vigil.walk opts.workDir, vigilOpts, (filename) ->
       compile filename if opts.compile
 
