@@ -142,7 +142,7 @@ while opt = args.shift()
         opts.compilers[ext] = mod
     else
       if opt.charAt(0) is '-'
-        error 'Unrecognized option'
+        error "Unrecognized option: '#{opt}'"
       else
         opts.index = opt
 
