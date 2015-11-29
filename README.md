@@ -1,4 +1,5 @@
-## bebop [![Build Status](https://travis-ci.org/zeekay/bebop.svg?branch=master)](https://travis-ci.org/zeekay/bebop)
+## bebop [![Build Status](https://travis-ci.org/zeekay/bebop.svg?branch=master)](https://travis-ci.org/zeekay/bebop) [![npm version](https://badge.fury.io/js/bebop.svg)](https://badge.fury.io/js/bebop)
+
 #### Code ninja, code ninja go! Develop at breakneck speeds.
 Bebop is a rapid web development tool with a built-in http server, preprocessing
 workflow support and intelligent browser reloading, freeing you to hit the keys
