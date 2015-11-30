@@ -1,4 +1,4 @@
-exec = require('shortcake').exec.interactive
+require 'shortcake'
 
 option '-g', '--grep [filter]', 'test filter'
 option '-v', '--version [<newversion> | major | minor | patch | build]', 'new version'
@@ -7,41 +7,44 @@ task 'clean', 'clean project', (options) ->
   exec 'rm -rf lib'
 
 task 'build', 'build project', (options) ->
-  exec 'node_modules/.bin/coffee -bcm -o lib/ src/'
-  exec 'node_modules/.bin/requisite src/client -g -o bebop.js'
+  exec.parallel '''
+  coffee -bcm -o lib/ src/
+  requisite src/client -g -o bebop.js
+  '''
 
 task 'build-min', 'build project', (options) ->
-  exec 'node_modules/.bin/coffee -bc -o lib/ src/'
-  exec 'node_modules/.bin/requisite src/client -m -o bebop.js'
+  exec.parallel '''
+  coffee -bc -o lib/ src/
+  requisite src/client -m -o bebop.js
+  '''
 
 task 'watch', 'watch for changes and recompile project', ->
-  exec 'node_modules/.bin/coffee -bcmw -o lib/ src/'
-  exec 'node_modules/.bin/requisite src/client -g -w -o bebop.js'
+  exec.parallel '''
+  coffee -bcmw -o lib/ src/
+  requisite src/client -g -w -o bebop.js
+  '''
 
 task 'test', 'run tests', (options) ->
-  invoke 'build', ->
-    test = options.test ? 'test'
-    if options.grep?
-      grep = "--grep #{options.grep}"
-    else
-      grep = ''
+  grep = if opts.grep then "--grep #{opts.grep}" else ''
+  test = opts.test ? 'test/'
 
-    exec "NODE_ENV=test ./node_modules/.bin/mocha
-        --colors
-        --reporter spec
-        --timeout 5000
-        --compilers coffee:coffee-script/register
-        --require postmortem/register
-        #{grep}
-        #{test}"
+  exec "NODE_ENV=test mocha
+                      --colors
+                      --reporter spec
+                      --timeout 5000
+                      --compilers coffee:coffee-script/register
+                      --require postmortem/register
+                      --require co-mocha
+                      #{grep}
+                      #{test}"
 
 task 'gh-pages', 'Publish docs to gh-pages', ->
   brief = require 'brief'
   brief.update()
 
 task 'publish', 'publish project', (options) ->
-  exec """
+  exec.parallel '''
   git push
   git push --tags
   npm publish
-  """.split '\n'
+  '''
