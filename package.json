@@ -45,7 +45,7 @@
     "mocha": "^2.3.4",
     "postmortem": "^0.2.3",
     "requisite": "^1.13.6",
-    "shortcake": "^0.3.0",
+    "shortcake": "^1.0.4",
     "source-map-support": "^0.3.3"
   }
 }
