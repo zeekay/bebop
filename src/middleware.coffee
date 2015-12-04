@@ -35,11 +35,12 @@ middleware = (opts = {}) ->
 
   # serve static js, map, coffee source files
   serveStatic = (req, res) ->
-    switch req.url
-      when '/bebop.js'
-        contentType = 'application/javascript'
-      else
-        contentType = 'application/coffeescript'
+    if /\.js$/.test req.url
+      contentType = 'application/javascript'
+    else if /\.coffee$/.test req.url
+      contentType = 'application/coffeescript'
+    else
+      contentType = 'text/html'
 
     headers =
       'Content-Type': contentType
@@ -54,8 +55,8 @@ middleware = (opts = {}) ->
 
   _middleware = (req, res, next) ->
     # Serve static files
-    if (/^\/bebop/.test req.url) or (/^\/src/.test req.url)
-      return (serveStatic req, res)
+    if /^\/bebop|src\/client\/bebop/.test req.url
+      return serveStatic req, res
 
     # Inject script into html pages
     injectJs res
