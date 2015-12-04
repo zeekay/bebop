@@ -24,14 +24,14 @@ module.exports = createServer: (opts = {}) ->
     next()
 
   app.use favicons __dirname + '/../assets'
-  app.use middleware()
   app.use logger 'dev'
 
   if opts.user and opts.pass
     app.use basicAuth opts.user, opts.pass
 
+  app.use middleware()
   app.use markdown()
-  app.use serveStatic opts.staticDir
+  app.use serveStatic opts.staticDir, fallthrough: true
   app.use index opts.staticDir, hidden: true
 
   server = require('http').createServer app
@@ -51,7 +51,9 @@ module.exports = createServer: (opts = {}) ->
         opts.port++
         setTimeout server.run, 1000
       else
-        throw err
+        console.log err
+        console.log err.stack
+        process.exit 1
 
     server.listen opts.port, opts.host, cb
 
