@@ -52,7 +52,6 @@ task 'test', 'Run tests', ['build'], (opts) ->
         #{grep}
         #{test}"
 
-  server.close()
   process.exit status if opts.ci
 
 task 'test-ci', 'Run tests', (opts) ->
