@@ -1,5 +1,8 @@
 require 'shortcake'
 
+use 'cake-version'
+use 'cake-publish'
+
 option '-g', '--grep [filter]', 'test filter'
 option '-v', '--version [<newversion> | major | minor | patch | build]', 'new version'
 
@@ -41,10 +44,3 @@ task 'test', 'run tests', (options) ->
 task 'gh-pages', 'Publish docs to gh-pages', ->
   brief = require 'brief'
   brief.update()
-
-task 'publish', 'publish project', (options) ->
-  exec.parallel '''
-  git push
-  git push --tags
-  npm publish
-  '''
