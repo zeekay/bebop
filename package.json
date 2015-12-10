@@ -46,7 +46,7 @@
     "coffee-script": "^1.10.0",
     "mocha": "^2.3.4",
     "postmortem": "^0.2.3",
-    "requisite": "^1.13.6",
+    "requisite": "1.14.5",
     "shortcake": "1.1.11"
   }
 }
