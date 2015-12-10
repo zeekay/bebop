@@ -27,19 +27,38 @@ task 'watch', 'watch for changes and recompile project', ->
   requisite src/client -g -w -o bebop.js
   '''
 
-task 'test', 'run tests', (options) ->
-  grep = if opts.grep then "--grep #{opts.grep}" else ''
-  test = opts.test ? 'test/'
+task 'test', 'Run tests', ['build'], (opts) ->
+  bail     = opts.bail     ? true
+  coverage = opts.coverage ? false
+  grep     = opts.grep     ? ''
+  test     = opts.test     ? 'test/'
+  verbose  = opts.verbose  ? ''
 
-  exec "NODE_ENV=test mocha
-                      --colors
-                      --reporter spec
-                      --timeout 5000
-                      --compilers coffee:coffee-script/register
-                      --require postmortem/register
-                      --require co-mocha
-                      #{grep}
-                      #{test}"
+  bail    = '--bail' if bail
+  grep    = "--grep #{opts.grep}" if grep
+  verbose = 'VERBOSE=true' if verbose
+
+  if coverage
+    bin = 'istanbul --print=none cover _mocha --'
+  else
+    bin = 'mocha'
+
+  {status} = yield exec.interactive "NODE_ENV=test #{verbose}
+        #{bin}
+        --colors
+        --reporter spec
+        --timeout 10000000
+        --compilers coffee:coffee-script/register
+        --require co-mocha
+        --require postmortem/register
+        #{bail}
+        #{grep}
+        #{test}"
+
+  process.exit status if opts.ci
+
+task 'test-ci', 'Run tests', (opts) ->
+  invoke 'test', bail: true, coverage: true, ci: true
 
 task 'gh-pages', 'Publish docs to gh-pages', ->
   brief = require 'brief'
