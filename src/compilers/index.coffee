@@ -36,16 +36,11 @@ module.exports =
     cmd = compiler src, dst
 
     if isFunction cmd
-      console.log 'isFunction'
       return cmd cb
     if isPromise cmd
-      console.log 'isPromise'
       return cmd
     unless isString cmd
-      console.log '!isString'
       return cb null, cmd ? false
-
-    console.log 'isString'
 
     # use semicolon to delimite multiple commands
     cmds = (c.trim() for c in (cmd.split ';') when c? and c.trim() != '')
