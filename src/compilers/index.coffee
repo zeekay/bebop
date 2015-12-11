@@ -1,6 +1,9 @@
-exec = require 'executive'
-fs   = require 'fs'
-path = require 'path'
+exec       = require 'executive'
+fs         = require 'fs'
+isFunction = require 'is-function'
+isPromise  = require 'is-promise'
+isString   = require 'is-string'
+path       = require 'path'
 
 sass = require './sass'
 
@@ -32,9 +35,17 @@ module.exports =
     # compiler returns cmd for us to exec
     cmd = compiler src, dst
 
-    # not a file we should compile
-    unless typeof cmd is 'string'
-      return cb null, false
+    if isFunction cmd
+      console.log 'isFunction'
+      return cmd cb
+    if isPromise cmd
+      console.log 'isPromise'
+      return cmd
+    unless isString cmd
+      console.log '!isString'
+      return cb null, cmd ? false
+
+    console.log 'isString'
 
     # use semicolon to delimite multiple commands
     cmds = (c.trim() for c in (cmd.split ';') when c? and c.trim() != '')
