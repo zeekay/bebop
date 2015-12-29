@@ -31,7 +31,13 @@ module.exports = createServer: (opts = {}) ->
 
   app.use middleware()
   app.use markdown()
-  app.use serveStatic opts.staticDir, fallthrough: true
+  app.use serveStatic opts.staticDir,
+    dotfiles:    'deny'
+    etag:        false
+    extensions:  ['html', 'htm']
+    fallthrough: true
+    index:       ['index.html', 'index.htm']
+
   app.use index opts.staticDir, hidden: true
 
   server = require('http').createServer app
