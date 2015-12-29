@@ -22,6 +22,7 @@ usage = ->
   bebop [options] [file]
 
   Options:
+    --auto          Automatically compile even without a local config file
     --compile, -c   Compile files and exit
     --compilers,    Specify compiler to use for a given extension
     --config,       Specify bebop.coffee to use
@@ -57,7 +58,7 @@ confs = [
 ]
 
 opts =
-  compile:        true
+  compile:        false
   compileOnly:    false
   compilers:      {}
   defaultExclude: true
@@ -83,6 +84,7 @@ requireConfig = (path) ->
   if fs.existsSync conf
     for k,v of require conf
       opts[k] = v
+    opts.compile = true # Automatically compile if config file is found
 
 # allow user to override defaults
 for conf in confs
@@ -104,6 +106,8 @@ while opt = args.shift()
       opts.runServer = false
     when '--no-watch'
       opts.watch = false
+    when '--auto'
+      opts.compile = true
     when '--no-compile'
       opts.compile = false
     when '--compile', '-c'
