@@ -15,7 +15,7 @@ module.exports = (opts = {}) ->
     smartLists: true
     smartypants: false
 
-  css = fs.readFileSync __dirname +  '/../lib/github-markdown.css', 'utf-8'
+  css = fs.readFileSync __dirname +  '/../assets/github-markdown.css', 'utf-8'
 
   (req, res, next) ->
     {pathname} = (url.parse req.url, true, true)
