@@ -12,7 +12,7 @@ task 'clean', 'clean project', (options) ->
 task 'build', 'build project', (options) ->
   exec.parallel '''
   coffee -bcm -o lib/ src/
-  requisite src/client -g -o bebop.js
+  requisite src/client -o bebop.js
   '''
 
 task 'build-min', 'build project', (options) ->
@@ -24,7 +24,7 @@ task 'build-min', 'build project', (options) ->
 task 'watch', 'watch for changes and recompile project', ->
   exec.parallel '''
   coffee -bcmw -o lib/ src/
-  requisite src/client -g -w -o bebop.js
+  requisite src/client -w -o bebop.js
   '''
 
 task 'test', 'Run tests', ['build'], (opts) ->
