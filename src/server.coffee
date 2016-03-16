@@ -1,10 +1,10 @@
 basicAuth   = require 'basic-auth-connect'
 connect     = require 'connect'
 favicons    = require 'connect-favicons'
-index       = require 'serve-index'
 logger      = require 'morgan'
 parseUrl    = require 'parseurl'
 path        = require 'path'
+serveIndex  = require 'serve-index'
 serveStatic = require 'serve-static'
 
 log        = require './log'
@@ -15,12 +15,15 @@ module.exports = createServer: (opts = {}) ->
   opts.host      ?= '0.0.0.0'
   opts.port      ?= 1987
   opts.staticDir ?= process.cwd()
+  opts.fallback   = '/' + (opts.fallback ? '').replace /^[./]+/, ''
 
   app = connect()
 
   # Connect no longer parses url for you
   app.use (req, res, next) ->
-    req.path = parseUrl(req).pathname
+    url = parseUrl req
+    req.path   = url.pathname
+    req.search = url.search
     next()
 
   app.use favicons __dirname + '/../assets'
@@ -31,14 +34,32 @@ module.exports = createServer: (opts = {}) ->
 
   app.use middleware()
   app.use markdown()
-  app.use serveStatic opts.staticDir,
+
+  serve = serveStatic opts.staticDir,
     dotfiles:    'deny'
     etag:        false
     extensions:  ['html', 'htm']
     fallthrough: true
     index:       ['index.html', 'index.htm']
 
-  app.use index opts.staticDir, hidden: true
+  app.use serve
+  app.use serveIndex opts.staticDir, hidden: true
+
+  app.use (req, res, next) ->
+    ext = path.extname req.path
+
+    return next() unless opts.fallback
+    return next() unless (ext is '') or /\.html?/.test ext
+
+    # Update URL to match fallback
+    req.url = opts.fallback + (req.search ? '')
+
+    # Force URL to get parsed again
+    delete req._parsedUrl
+    delete req._parsedOriginalUrl
+
+    # Try and serve fallback
+    serve req, res, next
 
   server = require('http').createServer app
 

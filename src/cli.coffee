@@ -22,23 +22,24 @@ usage = ->
   bebop [options] [file]
 
   Options:
-    --auto          Automatically compile even without a local config file
-    --compile, -c   Compile files and exit
-    --compilers,    Specify compiler to use for a given extension
-    --config,       Specify bebop.coffee to use
-    --exclude, -x   Exclude files for watching, compiling
-    --force-reload  Force reload when file is compiled
-    --host, -h      Hostname to bind to
-    --include, -i   Include files for watching, compiling
-    --no-compile    Do not compile files automatically
-    --no-server     Do not run static file server
-    --no-watch      Do not watch files for changes
-    --open, -o      Open browser automatically
-    --port, -p      Port to listen on
-    --pre           Command to execute first
-    --secure, -s    Require authentication
-    --static-dir    Directory used as root for static file server
-    --work-dir      Directory used as root for compiling, watching
+    --auto                      Automatically compile even without a local config file
+    --compile, -c               Compile files and exit
+    --compilers <ext:compiler>  Specify compiler to use for a given extension
+    --config <file>             Specify bebop.coffee to use
+    --exclude, -x <file>        Exclude files from watching, compiling
+    --force-reload              Force reload when file is compiled
+    --host, -h <hostname>       Hostname to bind to
+    --include, -i <file>        Include files for watching, compiling
+    --no-compile                Do not compile files automatically
+    --no-server                 Do not run static file server
+    --no-watch                  Do not watch files for changes
+    --open, -o                  Open browser automatically
+    --port, -p <port>           Port to listen on
+    --pre <cmd>                 Command to execute first
+    --secure, -s <user:pass>    Require authentication
+    --static-dir <path>         Directory used as root for static file server
+    --work-dir <path>           Directory used as root for compiling, watching
+    --fallback <path>           Path to serve when index file is missing
 
     --help          Display this message
     --version, -v   Display version
@@ -63,6 +64,7 @@ opts =
   compilers:      {}
   defaultExclude: true
   exclude:        []
+  fallback:       null
   forceReload:    false
   host:           'localhost'
   include:        []
@@ -71,8 +73,8 @@ opts =
   pre:            (done) -> done()
   runServer:      true
   staticDir:      cwd
-  workDir:        cwd
   watch:          true
+  workDir:        cwd
 
 # require config file and override opts
 requireConfig = (path) ->
@@ -120,6 +122,8 @@ while opt = args.shift()
       opts.defaultExclude = false
     when '--force-reload'
       opts.forceReload = true
+    when '--fallback'
+      opts.fallback = args.shift()
     when '--host', '-h'
       opts.host = args.shift()
     when '--pre'
