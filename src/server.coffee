@@ -24,6 +24,9 @@ module.exports = createServer: (opts = {}) ->
     url = url.parse req.url
     req.path   = url.pathname
     req.search = url.search
+    req.set = (headers) ->
+      for k,v of headers
+        res.setHeader k, v
     next()
 
   app.use favicons __dirname + '/../assets'
