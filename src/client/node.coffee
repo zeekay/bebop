@@ -1,7 +1,6 @@
-tags = require './tags'
-log  = require './log'
-
-{urlRandomize} = require './utils'
+tags  = require './tags'
+log   = require './log'
+utils = require './utils'
 
 parseFilename = (filename) ->
   # Determine path, filename and extension
@@ -45,7 +44,7 @@ reloadNode = (node) ->
     node[link] = '#break-the-url'
 
   # update url of resource
-  node[link] = urlRandomize node._resource.url
+  node[link] = utils.urlRandomize node._resource.url
   log.info 'resource-reloaded', node[link]
 
 load = (resource) ->
