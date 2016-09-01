@@ -2,10 +2,10 @@ basicAuth   = require 'basic-auth-connect'
 connect     = require 'connect'
 favicons    = require 'connect-favicons'
 logger      = require 'morgan'
-parseUrl    = require 'parseurl'
 path        = require 'path'
 serveIndex  = require 'serve-index'
 serveStatic = require 'serve-static'
+url         = require 'url'
 
 log        = require './log'
 markdown   = require './markdown'
@@ -21,7 +21,7 @@ module.exports = createServer: (opts = {}) ->
 
   # Connect no longer parses url for you
   app.use (req, res, next) ->
-    url = parseUrl req
+    url = url.parse req.url
     req.path   = url.pathname
     req.search = url.search
     next()
