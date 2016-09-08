@@ -189,8 +189,7 @@ compile = (filename, cb = ->) ->
       filename = (filename.replace opts.workDir, '').replace /^\//, ''
 
     if err?
-      log.error "failed to compile #{filename}"
-      console.error if err.stderr? then err.stderr else err.stack
+      log.error "failed to compile #{filename}", err
       return
 
     log.compiled filename if compiled

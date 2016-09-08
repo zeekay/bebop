@@ -5,7 +5,7 @@ path = require 'path'
 # Wrapped with a named function for easier debugging.
 middleware = (opts = {}) ->
   bebopJs = """
-            <script src="/bebop.js"></script>
+            <script src="/bebop.min.js"></script>
             <script>
               var bebop = new Bebop(#{JSON.stringify opts});
               bebop.debug = true;
