@@ -28,8 +28,26 @@ for method, _ of theme
       else
         msg = prefix + '\n' + pretty msg
 
+      err = null
+
+      # detect errors
+      if msg instanceof Error
+        err = msg
+        msg = err.toString()
+
+        unless extra?
+          extra = err.stack
+
+      if extra instanceof Error
+        err = extra
+        extra = err.toString()
+        extra = '\n' + err.stack
+
       if extra?
-        console.log msg, '\n' + pretty extra
+        msg = msg + '\n' + pretty extra
+
+      if err?
+        console.error msg
       else
         console.log msg
 
