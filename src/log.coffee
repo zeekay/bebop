@@ -12,8 +12,17 @@ theme =
 
 colors.setTheme theme
 
-pretty = (obj) ->
+prettyJSON = (obj) ->
   JSON.stringify obj, null, 2
+
+prettyError = (err) ->
+  msg = err.toString()
+  if err.stdout?
+    msg += err.stdout
+  if err.stderr?
+    msg += err.stderr
+  msg += '\n' + err.stack
+  msg
 
 log = ->
   return unless root.console?
@@ -32,19 +41,15 @@ for method, _ of theme
 
       # detect errors
       if msg instanceof Error
-        err = msg
-        msg = err.toString()
-
-        unless extra?
-          extra = err.stack
+        msg = prettyError msg
 
       if extra instanceof Error
-        err = extra
-        extra = err.toString()
-        extra = '\n' + err.stack
+        extra = prettyError extra
+      else
+        extra = prettyJSON extra
 
       if extra?
-        msg = msg + '\n' + pretty extra
+        msg = msg + '\n' + extra
 
       if err?
         console.error msg
