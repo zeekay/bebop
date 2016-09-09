@@ -16,12 +16,16 @@ prettyJSON = (obj) ->
   JSON.stringify obj, null, 2
 
 prettyError = (err) ->
-  msg = err.toString()
+  msg = err.toString() + '\n'
+  std = []
   if err.stdout?
-    msg += err.stdout
+    std.push err.stdout
   if err.stderr?
-    msg += err.stderr
-  msg += '\n' + err.stack
+    std.push err.stderr
+  if std.length > 0
+    msg += std.join '\n'
+  else
+    msg += err.stack
   msg
 
 log = ->
