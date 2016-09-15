@@ -28,7 +28,7 @@
   "dependencies": {
     "basic-auth-connect": "^1.0.0",
     "colors": "^1.1.2",
-    "connect": "3.4.1",
+    "connect": "3.5.0",
     "connect-favicons": "0.1.5",
     "executive": "1.1.7",
     "http-errors": "1.5.0",

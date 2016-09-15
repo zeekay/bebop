@@ -21,12 +21,18 @@ module.exports = createServer: (opts = {}) ->
 
   # Connect no longer parses url for you
   app.use (req, res, next) ->
+    # Convenient for our middleware later
     url = url.parse req.url
     req.path   = url.pathname
     req.search = url.search
+
+    # Required for compatibility with non-standard connect middleware
     res.set = (headers) ->
       for k,v of headers
         res.setHeader k, v
+    res.send = (body) ->
+      res.end body
+
     next()
 
   app.use favicons __dirname + '/../assets'
