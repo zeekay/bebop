@@ -39,7 +39,7 @@ usage = ->
     --secure, -s <user:pass>    Require authentication
     --static-dir <path>         Directory used as root for static file server
     --work-dir <path>           Directory used as root for compiling, watching
-    --fallback <path>           Path to serve when index file is missing
+    --index <file>              Index file to attempt to serve when directory requested
 
     --help          Display this message
     --version, -v   Display version
@@ -68,7 +68,8 @@ opts =
   forceReload:    false
   host:           'localhost'
   include:        []
-  index:          ''
+  index:          ['index.html', 'index.htm']
+  initialPath:    ''
   port:           null
   pre:            (done) -> done()
   runServer:      true
@@ -152,7 +153,7 @@ while opt = args.shift()
       if opt.charAt(0) is '-'
         error "Unrecognized option: '#{opt}'"
       else
-        opts.index = opt
+        opts.initialPath = opt
 
 # Setup include/expludes
 if opts.defaultExclude
@@ -231,12 +232,9 @@ opts.pre (err) ->
 
   # Start server
   app.run ->
-    if opts.open or opts.index != ''
-      # Open browser window
-      opts.index = '' if opts.index == 'index.html'
-
+    if opts.open or opts.initialPath != ''
       switch os.platform()
         when 'darwin'
-          exec "open http://#{opts.host}:#{opts.port}/#{opts.index}"
+          exec "open http://#{opts.host}:#{opts.port}/#{opts.initialPath}"
         when 'linux'
-          exec "xdg-open http://#{opts.host}:#{opts.port}/#{opts.index}"
+          exec "xdg-open http://#{opts.host}:#{opts.port}/#{opts.initialPath}"
