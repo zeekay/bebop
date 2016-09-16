@@ -11,67 +11,92 @@ log        = require './log'
 markdown   = require './markdown'
 middleware = require './middleware'
 
+trailingHtmlRe  = /\.html$/    # Path ends with .html
+trailingSlashRe = /\.html\/$/  # Slash erroneously appended to path name
+
+# Connect is fairly minimal, flesh out req, res with a few helper
+# methods/properties. Required for compatibility with non-standard connect
+# middleware which expects various express conventions.
+fakeExpress = (req, res, next) ->
+  # Slim stand-ins for what you get with Express
+  res.redirect = (loc) ->
+    res.writeHead 302, Location: loc
+    res.end()
+
+  res.set = (headers) ->
+    for k,v of headers
+      res.setHeader k, v
+
+  res.send = (body) ->
+    res.end body
+
+  # Convenient for our middleware later
+  url = url.parse req.url
+  req.path   = url.pathname
+  req.search = url.search
+  next()
+
+# Strip .html from paths for nicer user experience
+stripHtml = (req, res, next) ->
+  unless trailingHtmlRe.test req.url
+    return next()
+
+  loc = req.url.replace /index.html$/, ''
+  loc = loc.replace trailingHtmlRe, ''
+  res.redirect loc
+
+# Detect odd bug with some browsers and redirect
+stripSlash = (req, res, next) ->
+  unless trailingSlashRe.test req.url
+    return next()
+  loc = req.url.replace trailingSlashRe, '.html'
+  res.redirect loc
+
 module.exports = createServer: (opts = {}) ->
   opts.host      ?= '0.0.0.0'
   opts.port      ?= 1987
   opts.staticDir ?= process.cwd()
-  opts.fallback   = '/' + (opts.fallback ? '').replace /^[./]+/, ''
 
   app = connect()
 
-  # Connect no longer parses url for you
-  app.use (req, res, next) ->
-    # Convenient for our middleware later
-    url = url.parse req.url
-    req.path   = url.pathname
-    req.search = url.search
+  # Use some helper middleware
+  app.use fakeExpress
+  app.use stripHtml
+  app.use stripSlash
 
-    # Required for compatibility with non-standard connect middleware
-    res.set = (headers) ->
-      for k,v of headers
-        res.setHeader k, v
-    res.send = (body) ->
-      res.end body
-
-    next()
-
+  # Fallback to our favicons
   app.use favicons __dirname + '/../assets'
+
+  # Log requests
   app.use logger 'dev'
 
+  # Support Basic Auth
   if opts.user and opts.pass
     app.use basicAuth opts.user, opts.pass
 
+  # Install Bebop middleware
   app.use middleware()
+
+  # Markdown helper
   app.use markdown()
 
+  # Serve static files and HTML indexes
   serve = serveStatic opts.staticDir,
-    dotfiles:    'deny'
+    # Never want to cache for local development purposes
     etag:        false
-    extensions:  ['html', 'htm']
+
+    # Fallthrough and serve directory listings
     fallthrough: true
-    index:       ['index.html', 'index.htm']
+
+    # Allow a few options to be customized
+    dotfiles:    opts.dotfiles   ? 'deny'
+    extensions:  opts.extensions ? ['html', 'htm']
+    index:       opts.index      ? ['index.html', 'index.htm']
 
   app.use serve
   app.use serveIndex opts.staticDir, hidden: true
 
-  app.use (req, res, next) ->
-    ext = path.extname req.path
-
-    return next() unless opts.fallback
-    return next() unless (ext is '') or /\.html?/.test ext
-
-    # Update URL to match fallback
-    req.url = opts.fallback + (req.search ? '')
-
-    # Force URL to get parsed again
-    delete req._parsedUrl
-    delete req._parsedOriginalUrl
-
-    # Try and serve fallback
-    serve req, res, next
-
   server = require('http').createServer app
-
   server.setMaxListeners(100)
 
   server.on 'listening', ->
