@@ -19,18 +19,21 @@ version = ->
 
 usage = ->
   console.log """
-  bebop [options] [file]
+  bebop <command> [options] [file]
+
+  Commands:
+    compile|c  Compile files and exit
+    help       Display this message
+    version    Display version
 
   Options:
     --auto                      Automatically compile even without a local config file
-    --compile, -c               Compile files and exit
     --compilers <ext:compiler>  Specify compiler to use for a given extension
     --config <file>             Specify bebop.coffee to use
     --exclude, -x <file>        Exclude files from watching, compiling
     --force-reload              Force reload when file is compiled
     --host, -h <hostname>       Hostname to bind to
     --include, -i <file>        Include files for watching, compiling
-    --no-compile                Do not compile files automatically
     --no-server                 Do not run static file server
     --no-watch                  Do not watch files for changes
     --open, -o                  Open browser automatically
@@ -40,9 +43,6 @@ usage = ->
     --static-dir <path>         Directory used as root for static file server
     --work-dir <path>           Directory used as root for compiling, watching
     --index <file>              Index file to attempt to serve when directory requested
-
-    --help          Display this message
-    --version, -v   Display version
   """
   process.exit 0
 
@@ -87,7 +87,7 @@ requireConfig = (path) ->
   if fs.existsSync conf
     for k,v of require conf
       opts[k] = v
-    opts.compile = true # Automatically compile if config file is found
+    opts.compile = true # Compile if config file is found
 
 # allow user to override defaults
 for conf in confs
@@ -97,10 +97,15 @@ args = process.argv.slice 2
 
 while opt = args.shift()
   switch opt
-    when '--help'
+    # commands
+    when 'compile', 'c', '--compile', '-c'
+      opts.compileOnly = true
+    when 'help', '--help'
       usage()
-    when '--version', '-v'
+    when 'version', '--version', '-v'
       version()
+
+    # options
     when '--config'
       requireConfig args.shift()
     when '--open', '-o'
@@ -111,10 +116,6 @@ while opt = args.shift()
       opts.watch = false
     when '--auto'
       opts.compile = true
-    when '--no-compile'
-      opts.compile = false
-    when '--compile', '-c'
-      opts.compileOnly = true
     when '--include', '-i'
       opts.include.push args.shift()
     when '--exclude', '-x'
