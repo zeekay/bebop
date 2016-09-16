@@ -119,7 +119,6 @@ module.exports = createServer: (opts = {}) ->
         setTimeout server.run, 1000
       else
         log.error err
-        console.trace()
         process.exit 1
 
     server.listen opts.port, opts.host, cb
