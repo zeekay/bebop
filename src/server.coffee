@@ -80,8 +80,7 @@ module.exports = createServer: (opts = {}) ->
   # Markdown helper
   app.use markdown()
 
-  # Serve static files and HTML indexes
-  serve = serveStatic opts.staticDir,
+  serveOpts =
     # Never want to cache for local development purposes
     etag:        false
 
@@ -93,7 +92,14 @@ module.exports = createServer: (opts = {}) ->
     extensions:  opts.extensions ? ['html', 'htm']
     index:       opts.index      ? ['index.html', 'index.htm']
 
-  app.use serve
+  # Serve static files and HTML indexes
+  app.use serveStatic opts.staticDir, serveOpts
+
+  # Fallback to workdir, if it differs. This allows a separate directory to be
+  # used for build output
+  if opts.staticDir != opts.workDir
+    app.use serveStatic opts.workDir, serveOpts
+
   app.use serveIndex opts.staticDir, hidden: true
 
   server = require('http').createServer app
@@ -112,8 +118,8 @@ module.exports = createServer: (opts = {}) ->
         opts.port++
         setTimeout server.run, 1000
       else
-        console.log err
-        console.log err.stack
+        log.error err
+        console.trace()
         process.exit 1
 
     server.listen opts.port, opts.host, cb
