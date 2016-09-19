@@ -187,7 +187,7 @@ for ext, compiler of opts.compilers
 compile = (filename, cb = ->) ->
   compilers.compile filename, (err, compiled) ->
     # use relative path if possible
-    if filename.indexOf opts.workDir == 0
+    if (filename.indexOf opts.workDir) == 0
       filename = (filename.replace opts.workDir, '').replace /^\//, ''
 
     if err?
