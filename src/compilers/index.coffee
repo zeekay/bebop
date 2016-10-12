@@ -6,6 +6,7 @@ isString   = require 'is-string'
 path       = require 'path'
 
 sass = require './sass'
+pug  = require './pug'
 
 {requireLocal} = require '../utils'
 
@@ -14,6 +15,7 @@ module.exports =
     coffee: 'js'
     hbs:    'html'
     jade:   'html'
+    pug:    'html'
     sass:   'css'
     scss:   'css'
     styl:   'css'
@@ -58,14 +60,16 @@ module.exports =
     dst = path.dirname dst
     "coffee -bmc -o #{dst} #{src}"
 
-  jade: (src, dst) ->
-    dst = path.dirname dst
-    "jade --pretty #{src} --out #{dst}"
-
   hbs: (src, dst) ->
     handlebars = requireLocal 'handlebars'
     template = handlebars.compile fs.readFileSync src, 'utf8'
     fs.writeFileSync dst, (template {}), 'utf8'
+
+  jade: (src, dst) ->
+    dst = path.dirname dst
+    "jade --pretty #{src} --out #{dst}"
+
+  pug: pug
 
   styl: (src, dst) ->
     dst = path.dirname dst
