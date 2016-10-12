@@ -2,7 +2,7 @@ fs = require 'fs'
 
 {requireLocal} = require '../utils'
 
-module.exports = (src, dst, cb) ->
+module.exports = (src, dst, cb = ->) ->
   pug = requireLocal 'pug'
 
   html = pug.renderFile src,
