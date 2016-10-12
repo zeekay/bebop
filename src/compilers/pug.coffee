@@ -1,3 +1,7 @@
+fs = require 'fs'
+
+{requireLocal} = require '../utils'
+
 module.exports = (src, dst, cb) ->
   pug = requireLocal 'pug'
 
