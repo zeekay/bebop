@@ -43,17 +43,17 @@
     "ws": "1.1.1"
   },
   "devDependencies": {
-    "cake-publish": "0.1.1",
+    "cake-publish": "0.1.5",
     "cake-version": "0.1.9",
     "chai": "^3.4.1",
     "co-mocha": "^1.1.2",
     "codecov.io": "^0.1.6",
     "coffee-script": "^1.10.0",
-    "coveralls": "2.11.12",
+    "coveralls": "2.11.14",
     "istanbul": "^0.4.1",
-    "mocha": "3.0.2",
+    "mocha": "3.1.2",
     "postmortem": "^0.2.4",
-    "requisite": "1.18.9",
+    "requisite": "1.19.1",
     "shortcake": "1.1.18"
   }
 }
