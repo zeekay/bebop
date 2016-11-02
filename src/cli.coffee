@@ -218,8 +218,8 @@ opts.pre (err) ->
     websocket = modified: ->
 
   if opts.watch
-    # Start watch cycle
-    vigil.watch opts.workDir, vigilOpts, (filename, stat, isModule) ->
+    # Watch work dir and recompile on changes
+    vigil.watch opts.workDir, vigilOpts, (filename) ->
       unless opts.compile
         log.modified filename
         return websocket.modified filename
@@ -231,6 +231,12 @@ opts.pre (err) ->
         else
           if opts.forceReload
             websocket.modified filename
+
+    # Watch static dir and reload on changes
+    if opts.staticDir != opts.watchDir
+      vigil.watch opts.staticDir, vigilOpts, (filename) ->
+        log.modified filename
+        return websocket.modified filename
 
   # Start server
   app.run ->
