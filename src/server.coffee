@@ -10,6 +10,7 @@ url         = require 'url'
 log        = require './log'
 markdown   = require './markdown'
 middleware = require './middleware'
+{firstAddress} = require './utils'
 
 trailingHtmlRe  = /\.html$/    # Path ends with .html
 trailingSlashRe = /\.html\/$/  # Slash erroneously appended to path name
