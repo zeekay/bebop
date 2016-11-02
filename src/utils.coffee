@@ -13,3 +13,19 @@ exports.requireLocal = (modulePath) ->
     catch err
       log.error modulePath + ' not found, try npm install -g ' + modulePath
       process.exit 1
+
+# Returns first IPv4 address
+exports.firstAddress = ->
+  os = require 'os'
+
+  for _, iface of os.networkInterfaces()
+    for addr in iface
+      # Skip IPv6 addresses
+      unless addr.family is 'IPv4'
+        continue
+
+      # Skip private addresses
+      if addr.internal
+        continue
+
+      return addr.address
