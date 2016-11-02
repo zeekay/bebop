@@ -20,7 +20,10 @@ module.exports =
     scss:   'css'
     styl:   'css'
 
-  compile: (filename, cb) ->
+  compile: (filename, opts = {}, cb = ->) ->
+    if typeof opts is 'function'
+      [opts, cb] = [{}, opts]
+
     # get extension of file modified
     ext = (path.extname filename).substr 1
 
@@ -29,6 +32,10 @@ module.exports =
 
     src = filename
     dst = filename.replace (new RegExp ext + '$'), @mappings[ext]
+
+    # Default to compiling to staticDir if workDir and static dir differ
+    if opts.staticDir? and opts.workDir?
+      dst = dst.replace opts.workDir, opts.staticDir
 
     # compiler has callback, call function
     if compiler.length == 3
