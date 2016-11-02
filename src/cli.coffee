@@ -73,8 +73,8 @@ opts =
   port:           null
   pre:            (done) -> done()
   runServer:      true
-  staticDir:      cwd
   watch:          true
+  staticDir:      cwd
   workDir:        cwd
 
 # require config file and override opts
@@ -185,7 +185,7 @@ for ext, compiler of opts.compilers
 
 # compile helper
 compile = (filename, cb = ->) ->
-  compilers.compile filename, (err, compiled) ->
+  compilers.compile filename, opts, (err, compiled) ->
     # use relative path if possible
     if (filename.indexOf opts.workDir) == 0
       filename = (filename.replace opts.workDir, '').replace /^\//, ''
@@ -211,10 +211,10 @@ opts.pre (err) ->
     return
 
   if opts.runServer
-    app = server.createServer opts
+    app       = server.createServer opts
     websocket = (require './websocket') server: app
   else
-    app = run: ->
+    app       = run: ->
     websocket = modified: ->
 
   if opts.watch
@@ -223,6 +223,7 @@ opts.pre (err) ->
       unless opts.compile
         log.modified filename
         return websocket.modified filename
+
       compile filename, (err, compiled) ->
         unless compiled
           log.modified filename
