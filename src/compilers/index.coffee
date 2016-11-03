@@ -33,9 +33,9 @@ module.exports =
     src = filename
     dst = filename.replace (new RegExp ext + '$'), @mappings[ext]
 
-    # Default to compiling to staticDir if workDir and static dir differ
-    if opts.staticDir? and opts.workDir?
-      dst = dst.replace opts.workDir, opts.staticDir
+    # Rewrite destination so it's in buildDir
+    if opts.buildDir?
+      dst = dst.replace opts.assetDir, opts.buildDir
 
     # compiler has callback, call function
     if compiler.length == 3
