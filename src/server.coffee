@@ -56,7 +56,8 @@ stripSlash = (req, res, next) ->
 module.exports = createServer: (opts = {}) ->
   opts.host      ?= '0.0.0.0'
   opts.port      ?= 1987
-  opts.staticDir ?= process.cwd()
+  opts.buildDir  ?= process.cwd()
+  opts.workDir   ?= process.cwd()
 
   app = connect()
 
@@ -93,23 +94,21 @@ module.exports = createServer: (opts = {}) ->
     extensions:  opts.extensions ? ['html', 'htm']
     index:       opts.index      ? ['index.html', 'index.htm']
 
-  # Serve static files and HTML indexes
-  app.use serveStatic opts.staticDir, serveOpts
+  # Serve files and indexes from build directory
+  app.use serveStatic opts.buildDir, serveOpts
+  app.use serveIndex  opts.buildDir, hidden: true
 
-  # Fallback to workdir, if it differs. This allows a separate directory to be
-  # used for build output
-  if opts.staticDir != opts.workDir
-    app.use serveStatic opts.workDir, serveOpts
-
-  app.use serveIndex opts.staticDir, hidden: true
+  # Also serve content from assets and current working directories. This is
+  # useful for serving files referenced by sourcemaps.
+  for dir in [opts.assetDir, opts.workDir]
+    if dir? and dir != '' and dir != opts.buildDir
+      app.use serveStatic dir, serveOpts
 
   server = require('http').createServer app
   server.setMaxListeners(100)
 
   server.on 'listening', ->
-    cwd = process.cwd()
-    dir = path.basename cwd
-    log.bebop "serving #{dir} at http://#{opts.host}:#{opts.port}"
+    log.bebop "serving #{path.basename opts.workDir} at http://#{opts.host}:#{opts.port}"
 
   server.run = (cb = ->) ->
     process.once 'uncaughtException', (err) ->

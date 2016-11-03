@@ -40,8 +40,9 @@ usage = ->
     --port, -p <port>           Port to listen on
     --pre <cmd>                 Command to execute first
     --secure, -s <user:pass>    Require authentication
-    --static-dir <path>         Directory used as root for static file server
-    --work-dir <path>           Directory used as root for compiling, watching
+    --asset-dir <path>          Directory used as root for compiling, watching
+    --build-dir <path>          Directory used as root for static file server
+    --work-dir  <path>          Directory used as root for process
     --index <file>              Index file to attempt to serve when directory requested
   """
   process.exit 0
@@ -74,7 +75,8 @@ opts =
   pre:            (done) -> done()
   runServer:      true
   watch:          true
-  staticDir:      cwd
+  assetDir:       cwd
+  buildDir:       cwd
   workDir:        cwd
 
 # require config file and override opts
@@ -142,8 +144,10 @@ while opt = args.shift()
       else
         opts.user = 'bebop'
         opts.pass = 'beepboop'
-    when '--static-dir'
-      opts.staticDir = args.shift()
+    when '--asset-dir'
+      opts.assetDir = args.shift()
+    when '--build-dir'
+      opts.buildDir = args.shift()
     when '--work-dir'
       opts.workDir = args.shift()
     when '--compilers', '-c'
@@ -183,12 +187,14 @@ for ext, compiler of opts.compilers
     # expected to be a function
     compilers[ext] = compiler
 
-# compile helper
+# Filename path relative to current working dir
+relativeName = (filename) ->
+  filename.replace opts.workDir + '/', ''
+
+# Compile modified file
 compile = (filename, cb = ->) ->
   compilers.compile filename, opts, (err, compiled) ->
-    # use relative path if possible
-    if (filename.indexOf opts.workDir) == 0
-      filename = (filename.replace opts.workDir, '').replace /^\//, ''
+    filename = relativeName filename
 
     if err?
       log.error "failed to compile #{filename}", err
@@ -218,8 +224,8 @@ opts.pre (err) ->
     websocket = modified: ->
 
   if opts.watch
-    # Watch work dir and recompile on changes
-    vigil.watch opts.workDir, vigilOpts, (filename) ->
+    # Watch asset dir and recompile on changes
+    vigil.watch opts.assetDir, vigilOpts, (filename) ->
       unless opts.compile
         log.modified filename
         return websocket.modified filename
@@ -232,9 +238,9 @@ opts.pre (err) ->
           if opts.forceReload
             websocket.modified filename
 
-    # Watch static dir and reload on changes
-    if opts.staticDir != opts.watchDir
-      vigil.watch opts.staticDir, vigilOpts, (filename) ->
+    # Watch build dir and reload on changes
+    if opts.buildDir != opts.assetDir
+      vigil.watch opts.buildDir, vigilOpts, (filename) ->
         log.modified filename
         return websocket.modified filename
 
