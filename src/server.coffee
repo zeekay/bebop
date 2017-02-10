@@ -107,7 +107,7 @@ module.exports = createServer: (opts = {}) ->
   server = require('http').createServer app
   server.setMaxListeners(100)
 
-  server.on 'listening', ->
+  server.once 'listening', ->
     log.bebop "serving #{path.basename opts.workDir} at"
     console.log  "    http://#{opts.host}:#{opts.port}"
     console.log  "    http://localhost:#{opts.port}"
