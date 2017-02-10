@@ -108,9 +108,13 @@ module.exports = createServer: (opts = {}) ->
   server.setMaxListeners(100)
 
   server.once 'listening', ->
-    log.bebop "serving #{path.basename opts.workDir} at"
-    console.log  "    http://#{opts.host}:#{opts.port}"
-    console.log  "    http://localhost:#{opts.port}"
+    if opts.host == '0.0.0.0'
+      host = firstAddress()
+      log.bebop "serving #{path.basename opts.workDir} at"
+      console.log  "    http://#{host}:#{opts.port}"
+      console.log  "    http://localhost:#{opts.port}"
+    else
+      log.bebop "serving #{path.basename opts.workDir} at http://#{opts.host}:#{opts.port}"
 
   server.run = (cb = ->) ->
     process.once 'uncaughtException', (err) ->
@@ -124,6 +128,5 @@ module.exports = createServer: (opts = {}) ->
         process.exit 1
 
     server.listen opts.port, opts.host, cb
-    server.listen opts.port, 'localhost', cb
 
   server
