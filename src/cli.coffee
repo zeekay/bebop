@@ -7,7 +7,7 @@ vigil = require 'vigil'
 compilers = require './compilers'
 log       = require './log'
 server    = require './server'
-{defaultExclude, firstAddress} = require './utils'
+{defaultExclude} = require './utils'
 
 error = (message) ->
   log.error message
@@ -67,7 +67,7 @@ opts =
   exclude:        []
   fallback:       null
   forceReload:    false
-  host:           firstAddress()
+  host:           '0.0.0.0'
   include:        []
   index:          ['index.html', 'index.htm']
   initialPath:    ''
