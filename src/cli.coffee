@@ -44,6 +44,7 @@ usage = ->
     --build-dir <path>          Directory used as root for static file server
     --work-dir  <path>          Directory used as root for process
     --index <file>              Index file to attempt to serve when directory requested
+    --hide-icon                 Hide Bebop's favicon
   """
   process.exit 0
 
@@ -78,6 +79,7 @@ opts =
   assetDir:       cwd
   buildDir:       cwd
   workDir:        cwd
+  hideIcon:       false
 
 # require config file and override opts
 requireConfig = (path) ->
@@ -154,6 +156,8 @@ while opt = args.shift()
       for compiler in args.shift().split ','
         [ext, mod] = compiler.split ':'
         opts.compilers[ext] = mod
+    when '--hide-icon'
+      opts.hideIcon = true
     else
       if opt.charAt(0) is '-'
         error "Unrecognized option: '#{opt}'"

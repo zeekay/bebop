@@ -54,10 +54,11 @@ stripSlash = (req, res, next) ->
   res.redirect loc
 
 module.exports = createServer: (opts = {}) ->
-  opts.host      ?= '0.0.0.0'
-  opts.port      ?= 1987
-  opts.buildDir  ?= process.cwd()
-  opts.workDir   ?= process.cwd()
+  opts.host     ?= '0.0.0.0'
+  opts.port     ?= 1987
+  opts.buildDir ?= process.cwd()
+  opts.workDir  ?= process.cwd()
+  opts.hideIcon ?= false
 
   app = connect()
 
@@ -67,7 +68,8 @@ module.exports = createServer: (opts = {}) ->
   app.use stripSlash
 
   # Fallback to our favicons
-  app.use favicons __dirname + '/../assets'
+  unless opts.hideIcon?
+    app.use favicons __dirname + '/../assets'
 
   # Log requests
   app.use logger 'dev'
