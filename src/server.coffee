@@ -53,6 +53,15 @@ stripSlash = (req, res, next) ->
   loc = req.url.replace trailingSlashRe, '.html'
   res.redirect loc
 
+# Automatically redirect to root /node_modules handler
+nodeModulesRedirect = (req, res, next) ->
+  nm = req.path.indexOf 'node_modules'
+  if ~nm
+    res.writeHead 301, Location: "/#{req.path.substr nm}"
+    res.end()
+  else
+    next()
+
 module.exports = createServer: (opts = {}) ->
   opts.host     ?= '0.0.0.0'
   opts.port     ?= 1987
@@ -99,6 +108,10 @@ module.exports = createServer: (opts = {}) ->
   # Serve files and indexes from build directory
   app.use serveStatic opts.buildDir, serveOpts
   app.use serveIndex  opts.buildDir, hidden: true
+
+  # Automatically server files from node_modules for easier debugging
+  app.use '/node_modules', (serveStatic process.cwd() + '/node_modules', serveOpts)
+  app.use nodeModulesRedirect
 
   # Also serve content from assets and current working directories. This is
   # useful for serving files referenced by sourcemaps.
