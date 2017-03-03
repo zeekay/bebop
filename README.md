@@ -1,6 +1,8 @@
 # bebop [![Build Status](https://travis-ci.org/zeekay/bebop.svg?branch=master)](https://travis-ci.org/zeekay/bebop) [![npm version](https://badge.fury.io/js/bebop.svg)](https://badge.fury.io/js/bebop)
 ##### Jazzy build tool for sophisticated front-end development.
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/zeekay/bebop.svg)](https://greenkeeper.io/)
+
 Bebop is a rapid web development tool with a built-in http server, preprocessing
 workflow support and intelligent browser reloading, freeing you to hit the keys
 like an undead techno-zombie Charlie Parker.
