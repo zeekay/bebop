@@ -28,32 +28,29 @@
   "dependencies": {
     "basic-auth-connect": "^1.0.0",
     "colors": "^1.1.2",
-    "connect": "3.5.0",
+    "connect": "3.6.0",
     "connect-favicons": "0.1.5",
-    "executive": "1.1.7",
-    "http-errors": "1.5.0",
-    "is-function": "1.0.1",
-    "is-promise": "2.1.0",
-    "is-string": "1.0.4",
+    "es-is": "3.2.1",
+    "executive": "1.1.9",
     "marked": "^0.3.5",
-    "morgan": "^1.6.1",
+    "morgan": "1.8.1",
     "serve-index": "1.8.0",
-    "serve-static": "1.11.1",
-    "vigil": "^0.6.0",
-    "ws": "1.1.1"
+    "serve-static": "1.12.1",
+    "vigil": "0.7.3",
+    "ws": "2.2.0"
   },
   "devDependencies": {
     "cake-publish": "0.1.5",
     "cake-version": "0.1.9",
     "chai": "^3.4.1",
-    "co-mocha": "^1.1.2",
+    "co-mocha": "1.2.0",
     "codecov.io": "^0.1.6",
-    "coffee-script": "^1.10.0",
-    "coveralls": "2.11.14",
+    "coffee-script": "1.12.4",
+    "coveralls": "2.12.0",
+    "handroll": "0.3.2",
     "istanbul": "^0.4.1",
-    "mocha": "3.1.2",
+    "mocha": "3.2.0",
     "postmortem": "^0.2.4",
-    "requisite": "1.19.1",
-    "shortcake": "1.1.18"
+    "shortcake": "1.2.5"
   }
 }
