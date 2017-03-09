@@ -1,41 +1,43 @@
-WebSocketServer = require('ws').Server
+import ws from 'ws'
 
-module.exports = (opts = {}) ->
-  if typeof opts is 'function'
-    server = opts
-    opts   = {server: server}
 
-  unless opts.server?
-    opts.port ?= 3456
+class WebsocketServer
+  constructor: (opts = {}) ->
+    if typeof opts is 'function'
+      server = opts
+      opts   = {server: server}
 
-  opts.path ?= '/_bebop'
+    unless opts.server?
+      opts.port ?= 3456
 
-  wss = new WebSocketServer opts
+    opts.path ?= '/_bebop'
 
-  clients = {}
-  id = 0
+    wss = new ws.Server opts
 
-  wss.on 'connection', (ws) ->
-    id += 1
-    ws.id = id
-    clients[ws.id] = ws
-    ws.on 'close', ->
-      delete clients[ws.id]
+    @clients = {}
+    id = 0
 
-  server: wss
+    wss.on 'connection', (ws) ->
+      id += 1
+      ws.id = id
+      @clients[ws.id] = ws
+      ws.on 'close', ->
+        delete @clients[ws.id]
+
+    @wss = wss
 
   # Close connections
   close: ->
-    for id of clients
-      clients[id].close()
-      delete clients[id]
-    wss.close()
+    for id of @clients
+      @clients[id].close()
+      delete @clients[id]
+    @wss.close()
 
   # Send message to connections
   send: (message) ->
-    for id of clients
+    for id of @clients
       try
-        clients[id].send JSON.stringify message
+        @clients[id].send JSON.stringify message
       catch err
         console.error err.stack
 

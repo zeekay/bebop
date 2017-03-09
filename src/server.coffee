@@ -1,66 +1,18 @@
-basicAuth   = require 'basic-auth-connect'
-connect     = require 'connect'
-favicons    = require 'connect-favicons'
-logger      = require 'morgan'
-path        = require 'path'
-serveIndex  = require 'serve-index'
-serveStatic = require 'serve-static'
-url         = require 'url'
+import basicAuth   from 'basic-auth-connect'
+import connect     from 'connect'
+import favicons    from 'connect-favicons'
+import http        from 'http'
+import logger      from 'morgan'
+import path        from 'path'
+import serveIndex  from 'serve-index'
+import serveStatic from 'serve-static'
+import url         from 'url'
 
-log        = require './log'
-markdown   = require './markdown'
-middleware = require './middleware'
-{firstAddress} = require './utils'
+import log             from './log'
+import markdown        from './markdown'
+import * as middleware from './middleware'
 
-trailingHtmlRe  = /\.html$/    # Path ends with .html
-trailingSlashRe = /\.html\/$/  # Slash erroneously appended to path name
-
-# Connect is fairly minimal, flesh out req, res with a few helper
-# methods/properties. Required for compatibility with non-standard connect
-# middleware which expects various express conventions.
-fakeExpress = (req, res, next) ->
-  # Slim stand-ins for what you get with Express
-  res.redirect = (loc) ->
-    res.writeHead 302, Location: loc
-    res.end()
-
-  res.set = (headers) ->
-    for k,v of headers
-      res.setHeader k, v
-
-  res.send = (body) ->
-    res.end body
-
-  # Convenient for our middleware later
-  url = url.parse req.url
-  req.path   = url.pathname
-  req.search = url.search
-  next()
-
-# Strip .html from paths for nicer user experience
-stripHtml = (req, res, next) ->
-  unless trailingHtmlRe.test req.url
-    return next()
-
-  loc = req.url.replace /index.html$/, ''
-  loc = loc.replace trailingHtmlRe, ''
-  res.redirect loc
-
-# Detect odd bug with some browsers and redirect
-stripSlash = (req, res, next) ->
-  unless trailingSlashRe.test req.url
-    return next()
-  loc = req.url.replace trailingSlashRe, '.html'
-  res.redirect loc
-
-# Automatically redirect to root /node_modules handler
-nodeModulesRedirect = (req, res, next) ->
-  nm = req.path.indexOf 'node_modules'
-  if ~nm
-    res.writeHead 301, Location: "/#{req.path.substr nm}"
-    res.end()
-  else
-    next()
+import {firstAddress} from './utils'
 
 module.exports = createServer: (opts = {}) ->
   opts.host     ?= '0.0.0.0'
@@ -72,9 +24,9 @@ module.exports = createServer: (opts = {}) ->
   app = connect()
 
   # Use some helper middleware
-  app.use fakeExpress
-  app.use stripHtml
-  app.use stripSlash
+  app.use middleware.fakeExpress
+  app.use middleware.stripHtml
+  app.use middleware.stripSlash
 
   # Fallback to our favicons
   unless opts.hideIcon?
@@ -87,8 +39,8 @@ module.exports = createServer: (opts = {}) ->
   if opts.user and opts.pass
     app.use basicAuth opts.user, opts.pass
 
-  # Install Bebop middleware
-  app.use middleware()
+  # Install Bebop livereload middleware
+  app.use middleware.liveReload()
 
   # Markdown helper
   app.use markdown()
@@ -111,7 +63,7 @@ module.exports = createServer: (opts = {}) ->
 
   # Automatically server files from node_modules for easier debugging
   app.use '/node_modules', (serveStatic process.cwd() + '/node_modules', serveOpts)
-  app.use nodeModulesRedirect
+  app.use middleware.nodeModulesRedirect
 
   # Also serve content from assets and current working directories. This is
   # useful for serving files referenced by sourcemaps.
@@ -119,7 +71,7 @@ module.exports = createServer: (opts = {}) ->
     if dir? and dir != '' and dir != opts.buildDir
       app.use serveStatic dir, serveOpts
 
-  server = require('http').createServer app
+  server = http.createServer app
   server.setMaxListeners(100)
 
   server.once 'listening', ->
