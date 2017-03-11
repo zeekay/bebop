@@ -15,7 +15,8 @@
   ],
   "author": "Zach Kelling <zk@monoid.io> (http://zeekay.io)",
   "license": "MIT",
-  "main": "lib/",
+  "main": "dist/bebop.js",
+  "module": "dist/bebop.mjs",
   "bin": "bin/bebop",
   "scripts": {
     "prepublish": "cake build:min",
@@ -47,7 +48,7 @@
     "codecov.io": "^0.1.6",
     "coffee-script": "1.12.4",
     "coveralls": "2.12.0",
-    "handroll": "0.3.2",
+    "handroll": "0.7.2",
     "istanbul": "^0.4.1",
     "mocha": "3.2.0",
     "postmortem": "^0.2.4",
