@@ -4,20 +4,19 @@ import url    from 'url'
 
 import css    from '../assets/github-markdown.css'
 
-class Markdown
-  constructor: (opts = {}) ->
-/   maxAge = opts.maxAge or 0
+marked.setOptions
+  renderer: new marked.Renderer()
 
-    marked.setOptions
-      renderer: new marked.Renderer()
+  breaks:      false
+  gfm:         true
+  pedantic:    false
+  sanitize:    true
+  smartLists:  true
+  smartypants: false
+  tables:      true
 
-      breaks:      false
-      gfm:         true
-      pedantic:    false
-      sanitize:    true
-      smartLists:  true
-      smartypants: false
-      tables:      true
+export default (opts = {}) ->
+  maxAge = opts.maxAge or 0
 
   (req, res, next) ->
     {pathname} = (url.parse req.url, true, true)
@@ -61,10 +60,3 @@ class Markdown
             </body>
           </html>
           """
-
-# Generic connect compatible middleware to server client code.
-export default markdown = (opts = {}) ->
-  md = new Markdown opts
-
-  # Wrap with a named function for easier debugging.
-  `function markdown(req, res, next) { return md.middleware(req, res, next); };`

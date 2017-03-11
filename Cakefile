@@ -4,16 +4,28 @@ use 'cake-version'
 use 'cake-publish'
 
 option '-g', '--grep [filter]', 'test filter'
-option '-v', '--version [<newversion> | major | minor | patch | build]', 'new version'
 
 task 'clean', 'clean project', (options) ->
   exec 'rm -rf lib'
 
 task 'build', 'build project', (options) ->
-  exec.parallel '''
-    coffee -bcm -o lib/ src/
-    requisite src/client -m -o bebop.min.js
-    '''
+  handroll = require 'handroll'
+
+  Promise.all [
+    handroll.write
+      dest:   'src/bebop.min.js'
+      entry:  'src/client/index.coffee'
+      format: 'web'
+      minify: true
+
+    handroll.write
+      entry:  'src/index.coffee'
+      format: 'cjs'
+
+    handroll.write
+      entry:  'src/index.coffee'
+      format: 'es'
+  ]
 
 task 'build:min', 'build project', (options) ->
   exec.parallel '''
