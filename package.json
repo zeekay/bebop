@@ -30,7 +30,7 @@
     "colors": "^1.1.2",
     "connect": "3.5.0",
     "connect-favicons": "0.1.5",
-    "executive": "1.1.8",
+    "executive": "1.1.10",
     "http-errors": "1.5.1",
     "is-function": "1.0.1",
     "is-promise": "2.1.0",
