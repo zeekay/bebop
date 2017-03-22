@@ -1,37 +1,31 @@
 require 'shortcake'
 
-use 'cake-version'
+use 'cake-bundle'
+use 'cake-outdated'
 use 'cake-publish'
+use 'cake-version'
 
 option '-g', '--grep [filter]', 'test filter'
 
 task 'clean', 'clean project', (options) ->
-  exec 'rm -rf lib'
+  exec 'rm -rf dist/'
 
 task 'build', 'build project', (options) ->
-  handroll = require 'handroll'
-
   Promise.all [
-    handroll.write
+    bundle.write
       dest:   'src/bebop.min.js'
       entry:  'src/client/index.coffee'
       format: 'web'
       minify: true
 
-    handroll.write
+    bundle.write
       entry:  'src/index.coffee'
       format: 'cjs'
 
-    handroll.write
+    bundle.write
       entry:  'src/index.coffee'
       format: 'es'
   ]
-
-task 'build:min', 'build project', (options) ->
-  exec.parallel '''
-    coffee -bc -o lib/ src/
-    requisite src/client -m -o bebop.min.js
-    '''
 
 task 'watch', 'watch for changes and recompile project', ->
   exec.parallel '''
