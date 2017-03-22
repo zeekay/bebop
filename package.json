@@ -43,7 +43,7 @@
     "ws": "2.2.2"
   },
   "devDependencies": {
-    "cake-publish": "0.1.5",
+    "cake-publish": "0.1.6",
     "cake-version": "0.1.10",
     "chai": "^3.4.1",
     "co-mocha": "^1.1.2",
