@@ -1,7 +1,7 @@
-dir = require './dir'
+import dir from './dir'
 
 # inspired by https://github.com/douglascrockford/JSON-js/blob/master/cycle.js
-module.exports = (object, cb) ->
+export default (object, cb) ->
   objects = []
   paths = []
 

@@ -1,17 +1,17 @@
-EventEmitter = require './event-emitter'
-WebSocket    = require './websocket'
-dir          = require './dir'
-dump         = require './dump'
-log          = require './log'
-stacktrace   = require './stacktrace'
+import EventEmitter from './event-emitter'
+import WebSocket    from './websocket'
+import dir          from './dir'
+import dump         from './dump'
+import log          from './log'
+import stacktrace   from './stacktrace'
 
-{reloadNode, findNode} = require './node'
-{root}                 = require './utils'
+import {reloadNode, findNode}      from './node'
+import {isBrowser, location, root} from './utils'
 
 
 class Bebop extends EventEmitter
   constructor: (opts = {}) ->
-    super
+    super()
 
     protocol = opts.protocol ? if location.protocol is 'http:' then 'ws://' else 'wss://'
     hostname = opts.hostname ? location.hostname
@@ -135,7 +135,7 @@ class Bebop extends EventEmitter
     @ws.onmessage = (e) =>
       @emit 'message', JSON.parse e.data
 
-    if root.isBrowser
+    if isBrowser
       root.addEventListener 'beforeunload', => @ws.close()
 
   # Retry connection on failure/timeout
@@ -196,7 +196,7 @@ class Bebop extends EventEmitter
   reload: ->
     @emit 'reload'
     @close()
-    location.reload()
+    root.location?.reload()
 
   # Client responses to server RPC calls
   sendConnected: ->
@@ -216,4 +216,4 @@ class Bebop extends EventEmitter
       type:   'eval'
       result: @eval code
 
-module.exports = Bebop
+export default Bebop

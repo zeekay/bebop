@@ -9,7 +9,6 @@ import serveStatic from 'serve-static'
 import url         from 'url'
 
 import log             from './log'
-import markdown        from './markdown'
 import * as middleware from './middleware'
 
 import {firstAddress} from './utils'
@@ -43,7 +42,7 @@ module.exports = createServer: (opts = {}) ->
   app.use middleware.liveReload()
 
   # Markdown helper
-  app.use markdown()
+  app.use middleware.markdown()
 
   serveOpts =
     # Never want to cache for local development purposes

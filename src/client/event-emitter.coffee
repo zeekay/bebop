@@ -1,4 +1,4 @@
-module.exports = class EventEmitter
+class EventEmitter
   constructor: (opts = {}) ->
     @_listeners    = {}
     @_allListeners = []
@@ -35,3 +35,5 @@ module.exports = class EventEmitter
 
     for listener in @_allListeners
       listener.apply @, args
+
+export default EventEmitter
