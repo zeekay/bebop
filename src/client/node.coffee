@@ -1,6 +1,6 @@
-tags  = require './tags'
-log   = require './log'
-utils = require './utils'
+import tags  from './tags'
+import log from './log'
+import {urlRandomize} from './utils'
 
 parseFilename = (filename) ->
   # Determine path, filename and extension
@@ -17,7 +17,7 @@ parseFilename = (filename) ->
 
   resource
 
-findNode = (filename) ->
+export findNode = (filename) ->
   return if filename is ''
   return unless (resource = parseFilename filename).tag?
 
@@ -32,7 +32,7 @@ findNode = (filename) ->
   null
 
 # reloading
-reloadNode = (node) ->
+export reloadNode = (node) ->
   if node._resource.ext is 'js'
     node.parentNode.removeChild node
     return load(node._resource)
@@ -44,17 +44,12 @@ reloadNode = (node) ->
     node[link] = '#break-the-url'
 
   # update url of resource
-  node[link] = utils.urlRandomize node._resource.url
+  node[link] = urlRandomize node._resource.url
   log.info 'resource-reloaded', node[link]
 
-load = (resource) ->
+export load = (resource) ->
   node = document.createElement(resource.tag.name)
   node[resource.tag.link] = resource.url
   node.type = resource.tag.type
   document.getElementsByTagName('head')[0].appendChild node
   log.info 'resource-loaded', node[resource.tag.link]
-
-module.exports =
-  findNode:   findNode
-  reloadNode: reloadNode
-  load:       load

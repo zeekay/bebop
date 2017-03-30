@@ -1,4 +1,4 @@
-module.exports =
+export default tags =
   js:
     link: 'src'
     name: 'script'

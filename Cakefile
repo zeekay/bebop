@@ -11,18 +11,25 @@ task 'clean', 'clean project', (options) ->
   exec 'rm -rf dist/'
 
 task 'build', 'build project', (options) ->
-  Promise.all [
-    bundle.write
-      dest:   'src/bebop.min.js'
-      entry:  'src/client/index.coffee'
-      format: 'web'
-      minify: true
+  b = new Bundle
+    compilers:
+      coffee:
+        version: 1
 
-    bundle.write
+  Promise.all [
+    b.write
+      entry:    'src/client/index.coffee'
+      dest:     'bebop.min.js'
+      format:   'web'
+      minify:   true
+      external: false
+      browser:  true
+
+    b.write
       entry:  'src/index.coffee'
       format: 'cjs'
 
-    bundle.write
+    b.write
       entry:  'src/index.coffee'
       format: 'es'
   ]

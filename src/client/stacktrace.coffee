@@ -48,7 +48,7 @@ other = (curr) ->
   stack
 
 # Stacktrace, borrowed from https://github.com/eriwen/javascript-stacktrace
-module.exports = (e) ->
+export default (e) ->
   if e['arguments'] and e.stack
     return method.chrome(e)
 
