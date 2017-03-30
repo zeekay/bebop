@@ -13,7 +13,7 @@ import * as middleware from './middleware'
 
 import {firstAddress} from './utils'
 
-module.exports = createServer: (opts = {}) ->
+export default createServer: (opts = {}) ->
   opts.host     ?= '0.0.0.0'
   opts.port     ?= 1987
   opts.buildDir ?= process.cwd()

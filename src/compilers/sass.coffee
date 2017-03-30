@@ -1,9 +1,8 @@
-fs   = require 'fs'
-path = require 'path'
+import fs   from 'fs'
+import path from 'path'
 
-log = require '../log'
-
-{requireLocal} = require '../utils'
+import log            from '../log'
+import {requireLocal} from '../utils'
 
 
 findNpm = (url) ->
@@ -33,7 +32,7 @@ resolveNpm = do ->
     return
 
 
-module.exports = (src, dst, cb) ->
+export default (src, dst, cb) ->
   sass = requireLocal 'node-sass'
 
   sass.render

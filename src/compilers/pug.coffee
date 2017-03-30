@@ -1,8 +1,8 @@
-fs = require 'fs'
+import fs from 'fs'
 
-{requireLocal} = require '../utils'
+import {requireLocal} from '../utils'
 
-module.exports = (src, dst, cb = ->) ->
+export default (src, dst, cb = ->) ->
   pug = requireLocal 'pug'
 
   html = pug.renderFile src,

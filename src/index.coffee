@@ -1,8 +1,8 @@
-import Bebop      from './bebop'
-import compilers  from './compilers'
-import middleware from './middleware'
-import server     from './server'
-import websocket  from './websocket'
+import Bebop           from './bebop'
+import compilers       from './compilers'
+import * as middleware from './middleware'
+import server          from './server'
+import websocket       from './websocket'
 
 bebop = new Bebop
 
