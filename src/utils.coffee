@@ -3,7 +3,6 @@ import path from 'path'
 
 import log  from './log'
 
-
 export defaultExclude = /bebop.coffee$|bebop.js$/
 
 # Locally require a module
