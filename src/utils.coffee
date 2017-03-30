@@ -18,7 +18,7 @@ export requireLocal = (modulePath) ->
       process.exit 1
 
 # Return the first IPv4 address
-exports firstAddress = ->
+export firstAddress = ->
   for _, iface of os.networkInterfaces()
     for addr in iface
       # Skip IPv6 addresses

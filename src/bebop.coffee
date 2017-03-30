@@ -1,9 +1,9 @@
 import vigil from 'vigil'
 
-import compilers  from './compilers'
-import middleware from './middleware'
-import server     from './server'
-import websocket  from './websocket'
+import compilers    from './compilers'
+import {liveReload} from './middleware'
+import server       from './server'
+import websocket    from './websocket'
 
 
 class Bebop
@@ -11,7 +11,7 @@ class Bebop
   attach: (server, opts = {}) ->
 
     # attach our middleware
-    server = middleware server
+    server = liveReload server
 
     # Attach websocket server
     websocketServer = websocket server: server
@@ -42,3 +42,5 @@ class Bebop
         filename: filename
 
     wss
+
+export default Bebop

@@ -1,7 +1,7 @@
 # Connect is fairly minimal, flesh out req, res with a few helper
 # methods/properties. Required for compatibility with non-standard connect
 # middleware which expects various express conventions.
-export default fakeExpress = (req, res, next) ->
+export default (req, res, next) ->
   # Slim stand-ins for what you get with Express
   res.redirect = (loc) ->
     res.writeHead 302, Location: loc

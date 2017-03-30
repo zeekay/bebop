@@ -2,7 +2,7 @@ import fs     from 'fs'
 import marked from 'marked'
 import url    from 'url'
 
-import css    from '../assets/github-markdown.css'
+import css    from '../../assets/github-markdown.css'
 
 marked.setOptions
   renderer: new marked.Renderer()

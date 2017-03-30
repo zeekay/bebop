@@ -45,3 +45,6 @@ class WebsocketServer
     @send
       type: 'modified'
       filename: filename
+
+export default WebsocketServer
+

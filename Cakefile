@@ -18,20 +18,14 @@ task 'build', 'build project', (options) ->
 
   Promise.all [
     b.write
-      entry:    'src/client/index.coffee'
-      dest:     'bebop.min.js'
-      format:   'web'
-      minify:   true
-      external: false
-      browser:  true
+      entry:  'src/client/index.coffee'
+      dest:   'bebop.min.js'
+      format: 'web'
+      minify: true
 
     b.write
-      entry:  'src/index.coffee'
-      format: 'cjs'
-
-    b.write
-      entry:  'src/index.coffee'
-      format: 'es'
+      entry:   'src/index.coffee'
+      formats: ['cjs', 'es']
   ]
 
 task 'watch', 'watch for changes and recompile project', ->
