@@ -43,10 +43,10 @@
     "ws": "2.2.2"
   },
   "devDependencies": {
-    "cake-bundle": "0.2.20",
+    "cake-bundle": "0.2.21",
     "cake-outdated": "0.1.18",
     "cake-publish": "0.1.10",
-    "cake-version": "0.1.14",
+    "cake-version": "0.1.15",
     "chai": "^3.5.0",
     "co-mocha": "1.2.0",
     "codecov.io": "^0.1.6",
