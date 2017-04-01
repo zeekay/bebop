@@ -8,13 +8,12 @@ use 'cake-version'
 option '-g', '--grep [filter]', 'test filter'
 
 task 'clean', 'clean project', (options) ->
-  exec 'rm -rf dist/'
+  exec 'rm -rf lib/'
 
 task 'build', 'build project', (options) ->
   b = new Bundle
     compilers:
-      coffee:
-        version: 1
+      coffee: version: 1
 
   yield b.write
     entry:   'src/index.coffee'
