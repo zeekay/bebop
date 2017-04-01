@@ -46,7 +46,7 @@
     "cake-bundle": "0.2.19",
     "cake-outdated": "0.1.16",
     "cake-publish": "0.1.10",
-    "cake-version": "0.1.14",
+    "cake-version": "0.1.15",
     "chai": "^3.5.0",
     "co-mocha": "1.2.0",
     "codecov.io": "^0.1.6",
