@@ -19,6 +19,7 @@
   "module": "lib/bebop.mjs",
   "js:next": "lib/bebop.mjs",
   "files": [
+    "assets/",
     "bebop.min.js",
     "bin/bebop",
     "lib/",
