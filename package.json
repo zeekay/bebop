@@ -56,6 +56,6 @@
     "istanbul": "^0.4.5",
     "mocha": "3.2.0",
     "postmortem": "^0.2.4",
-    "shortcake": "1.2.7"
+    "shortcake": "1.2.8"
   }
 }
