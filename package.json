@@ -43,7 +43,7 @@
     "ws": "2.2.2"
   },
   "devDependencies": {
-    "cake-bundle": "0.2.18",
+    "cake-bundle": "0.2.19",
     "cake-outdated": "0.1.16",
     "cake-publish": "0.1.10",
     "cake-version": "0.1.14",
@@ -56,6 +56,6 @@
     "istanbul": "^0.4.5",
     "mocha": "3.2.0",
     "postmortem": "^0.2.4",
-    "shortcake": "1.2.7"
+    "shortcake": "1.2.8"
   }
 }
