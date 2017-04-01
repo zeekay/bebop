@@ -87,19 +87,19 @@ Integration with vim is provided by
 [vim-bebop](http://github.com/zeekay/vim-bebop). You can do all sorts of fancy
 stuff like evaluate Javascript, Coffeescript, get completions, etc.
 
-[travis-img]:     https://img.shields.io/travis/zeekay/referential.svg
-[travis-url]:     https://travis-ci.org/zeekay/referential
-[coveralls-img]:  https://coveralls.io/repos/zeekay/referential/badge.svg?branch=master&service=github
-[coveralls-url]:  https://coveralls.io/github/zeekay/referential?branch=master
-[dependency-url]: https://david-dm.org/zeekay/referential
-[dependency-img]: https://david-dm.org/zeekay/referential.svg
-[npm-img]:        https://img.shields.io/npm/v/referential.svg
-[npm-url]:        https://www.npmjs.com/package/referential
+[travis-img]:     https://img.shields.io/travis/zeekay/bebop.svg
+[travis-url]:     https://travis-ci.org/zeekay/bebop
+[coveralls-img]:  https://coveralls.io/repos/zeekay/bebop/badge.svg?branch=master&service=github
+[coveralls-url]:  https://coveralls.io/github/zeekay/bebop?branch=master
+[dependency-url]: https://david-dm.org/zeekay/bebop
+[dependency-img]: https://david-dm.org/zeekay/bebop.svg
+[npm-img]:        https://img.shields.io/npm/v/bebop.svg
+[npm-url]:        https://www.npmjs.com/package/bebop
 [gitter-img]:     https://badges.gitter.im/join-chat.svg
 [gitter-url]:     https://gitter.im/zeekay/hi
 
 <!-- not used -->
-[downloads-img]:     https://img.shields.io/npm/dm/referential.svg
-[downloads-url]:     http://badge.fury.io/js/referential
-[devdependency-img]: https://david-dm.org/zeekay/referential/dev-status.svg
-[devdependency-url]: https://david-dm.org/zeekay/referential#info=devDependencies
+[downloads-img]:     https://img.shields.io/npm/dm/bebop.svg
+[downloads-url]:     http://badge.fury.io/js/bebop
+[devdependency-img]: https://david-dm.org/zeekay/bebop/dev-status.svg
+[devdependency-url]: https://david-dm.org/zeekay/bebop#info=devDependencies
