@@ -18,6 +18,12 @@
   "main": "lib/bebop.js",
   "module": "lib/bebop.mjs",
   "js:next": "lib/bebop.mjs",
+  "files": [
+    "bebop.min.js",
+    "bin/bebop",
+    "lib/",
+    "src/"
+  ]
   "bin": "bin/bebop",
   "scripts": {
     "prepublishOnly": "cake build",
