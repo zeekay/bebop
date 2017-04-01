@@ -1,7 +1,5 @@
-# bebop [![Build Status](https://travis-ci.org/zeekay/bebop.svg?branch=master)](https://travis-ci.org/zeekay/bebop) [![npm version](https://badge.fury.io/js/bebop.svg)](https://badge.fury.io/js/bebop)
+# bebop [![NPM version][npm-img]][npm-url] [![Build Status][travis-img]][travis-url] [![Coverage Status][coveralls-img]][coveralls-url] [![Dependency Status][dependency-img]][dependency-url] [![Gitter chat][gitter-img]][gitter-url]
 ##### Jazzy build tool for sophisticated front-end development.
-
-[![Greenkeeper badge](https://badges.greenkeeper.io/zeekay/bebop.svg)](https://greenkeeper.io/)
 
 Bebop is a rapid web development tool with a built-in http server, preprocessing
 workflow support and intelligent browser reloading, freeing you to hit the keys
@@ -88,3 +86,20 @@ module.exports =
 Integration with vim is provided by
 [vim-bebop](http://github.com/zeekay/vim-bebop). You can do all sorts of fancy
 stuff like evaluate Javascript, Coffeescript, get completions, etc.
+
+[travis-img]:     https://img.shields.io/travis/zeekay/referential.svg
+[travis-url]:     https://travis-ci.org/zeekay/referential
+[coveralls-img]:  https://coveralls.io/repos/zeekay/referential/badge.svg?branch=master&service=github
+[coveralls-url]:  https://coveralls.io/github/zeekay/referential?branch=master
+[dependency-url]: https://david-dm.org/zeekay/referential
+[dependency-img]: https://david-dm.org/zeekay/referential.svg
+[npm-img]:        https://img.shields.io/npm/v/referential.svg
+[npm-url]:        https://www.npmjs.com/package/referential
+[gitter-img]:     https://badges.gitter.im/join-chat.svg
+[gitter-url]:     https://gitter.im/zeekay/hi
+
+<!-- not used -->
+[downloads-img]:     https://img.shields.io/npm/dm/referential.svg
+[downloads-url]:     http://badge.fury.io/js/referential
+[devdependency-img]: https://david-dm.org/zeekay/referential/dev-status.svg
+[devdependency-url]: https://david-dm.org/zeekay/referential#info=devDependencies
