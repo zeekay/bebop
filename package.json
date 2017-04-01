@@ -43,8 +43,8 @@
     "ws": "2.2.2"
   },
   "devDependencies": {
-    "cake-bundle": "0.2.19",
-    "cake-outdated": "0.1.16",
+    "cake-bundle": "0.2.20",
+    "cake-outdated": "0.1.18",
     "cake-publish": "0.1.10",
     "cake-version": "0.1.14",
     "chai": "^3.5.0",
