@@ -1,4 +1,4 @@
-colors = require 'colors/safe'
+import colors from 'colors/safe'
 
 theme =
   debug:    'blue'
@@ -62,4 +62,4 @@ for method, _ of theme
       else
         console.log msg
 
-module.exports = log
+export default log

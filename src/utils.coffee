@@ -1,9 +1,12 @@
-path = require 'path'
-log  = require './log'
+import os   from 'os'
+import path from 'path'
 
-exports.defaultExclude = /bebop.coffee$|bebop.js$/
+import log  from './log'
 
-exports.requireLocal = (modulePath) ->
+export defaultExclude = /bebop.coffee$|bebop.js$/
+
+# Locally require a module
+export requireLocal = (modulePath) ->
   localPath = path.join process.cwd(), '/node_modules/', modulePath
   try
     return require localPath
@@ -14,10 +17,8 @@ exports.requireLocal = (modulePath) ->
       log.error modulePath + ' not found, try npm install -g ' + modulePath
       process.exit 1
 
-# Returns first IPv4 address
-exports.firstAddress = ->
-  os = require 'os'
-
+# Return the first IPv4 address
+export firstAddress = ->
   for _, iface of os.networkInterfaces()
     for addr in iface
       # Skip IPv6 addresses

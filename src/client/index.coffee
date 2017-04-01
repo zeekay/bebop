@@ -1,4 +1,6 @@
-Bebop  = require './bebop'
-{root} = require './utils'
+import Bebop  from './bebop'
+import {root} from './utils'
 
-root.Bebop = module.exports = Bebop
+window?.Bebop = Bebop
+
+export default Bebop

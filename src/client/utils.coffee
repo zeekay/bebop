@@ -1,23 +1,25 @@
-querystring = require 'querystring'
+import querystring from 'querystring'
 
-exports.root = do ->
-  if typeof window is 'undefined'
-    root = global
+export isBrowser = do -> window?
+
+export location = do ->
+  if isBrowser
+    window.location
   else
-    root = window
-    root.isBrowser = true
-
-  root.location ?=
     protocol: 'http:'
     hostname: 'localhost'
     port:     '3333'
 
-  root
+export root = do ->
+  if isBrowser
+    window
+  else
+    global
 
 random = ->
   (((1 + Math.random()) * 0x100000) | 0).toString(16)
 
-exports.urlRandomize = (url) ->
+export urlRandomize = (url) ->
   [path, query] = url.split '?'
 
   unless query?

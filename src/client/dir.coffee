@@ -1,5 +1,5 @@
 # introspection
-module.exports = (object) ->
+export default (object) ->
   valid = (name) ->
     invalid = ['arguments', 'caller', 'name', 'length', 'prototype']
     for i of invalid

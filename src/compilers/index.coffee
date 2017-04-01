@@ -1,16 +1,14 @@
-exec       = require 'executive'
-fs         = require 'fs'
-isFunction = require 'is-function'
-isPromise  = require 'is-promise'
-isString   = require 'is-string'
-path       = require 'path'
+import exec from 'executive'
+import fs   from 'fs'
+import path from 'path'
+import {isFunction, isPromise, isString} from 'es-is'
 
-sass = require './sass'
-pug  = require './pug'
+import sass from './sass'
+import pug  from './pug'
 
-{requireLocal} = require '../utils'
+import {requireLocal} from '../utils'
 
-module.exports =
+export default compilers =
   mappings:
     coffee: 'js'
     hbs:    'html'

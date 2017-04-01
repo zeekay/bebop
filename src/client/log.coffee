@@ -1,4 +1,4 @@
-{root} = require './utils'
+import {root} from './utils'
 
 levels = [
   'debug'
@@ -28,4 +28,4 @@ class Logger
     else
       @setLevels ['info', 'warning', 'error']
 
-module.exports = new Logger()
+export default new Logger()
