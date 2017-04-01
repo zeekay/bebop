@@ -24,7 +24,7 @@
     "bin/bebop",
     "lib/",
     "src/"
-  ]
+  ],
   "bin": "bin/bebop",
   "scripts": {
     "prepublishOnly": "cake build",
