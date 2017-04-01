@@ -3,7 +3,7 @@ import dir    from './dir'
 import dump   from './dump'
 import {root} from './utils'
 
-exportGlobals = (bebop)->
+exportGlobals = (bebop) ->
   globals =
     bebop: bebop
     dir:   dir

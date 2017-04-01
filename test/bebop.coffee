@@ -1,5 +1,5 @@
 should = require('chai').should()
-bebop  = require '../lib'
+bebop  = require '../'
 
 describe 'bebop', ->
   it 'should bebop', (done) ->

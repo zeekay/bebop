@@ -16,23 +16,19 @@ task 'build', 'build project', (options) ->
       coffee:
         version: 1
 
-  Promise.all [
-    b.write
-      entry:  'src/client/index.coffee'
-      dest:   'bebop.min.js'
-      format: 'web'
-      minify: true
+  yield b.write
+    entry:   'src/index.coffee'
+    formats: ['cjs', 'es']
 
-    b.write
-      entry:   'src/index.coffee'
-      formats: ['cjs', 'es']
-  ]
+  yield b.write
+    entry:     'src/client/index.coffee'
+    dest:      'bebop.min.js'
+    format:    'web'
+    browser:   true
+    minify:    false
+    sourceMap: false
 
 task 'watch', 'watch for changes and recompile project', ->
-  exec.parallel '''
-    coffee -bcmw -o lib/ src/
-    requisite src/client -m -w -o bebop.min.js
-    '''
 
 task 'test', 'Run tests', ['build'], (opts) ->
   bail     = opts.bail     ? true

@@ -15,12 +15,12 @@
   ],
   "author": "Zach Kelling <z@zeekay.io>",
   "license": "MIT",
-  "main": "dist/bebop.js",
-  "module": "dist/bebop.mjs",
-  "js:next": "dist/bebop.mjs",
+  "main": "lib/bebop.js",
+  "module": "lib/bebop.mjs",
+  "js:next": "lib/bebop.mjs",
   "bin": "bin/bebop",
   "scripts": {
-    "prepublish": "cake build:min",
+    "prepublishOnly": "cake build",
     "test": "cake test"
   },
   "repository": {
