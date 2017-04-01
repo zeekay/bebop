@@ -34,7 +34,7 @@
     "connect-favicons": "0.1.5",
     "es-is": "3.2.1",
     "executive": "1.2.6",
-    "http-errors": "1.5.1",
+    "http-errors": "1.6.1",
     "marked": "^0.3.6",
     "morgan": "1.8.1",
     "serve-index": "1.8.0",
