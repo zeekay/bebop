@@ -1,9 +1,9 @@
+bebop.min.js
 node_modules/
 lib/
 .test/
 npm-debug.log
 src/*.js
-bebop.js
 *.map
 test/fixtures/app.js
 test/fixtures/app.js.map
