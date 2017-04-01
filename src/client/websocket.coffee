@@ -1,5 +1,5 @@
-{root} = require './utils'
-{load} = require './node'
+import {root, isBrowser} from './utils'
+import {load} from './node'
 
 root.WEB_SOCKET_SWF_LOCATION = 'https://cdnjs.cloudflare.com/ajax/libs/web-socket-js/1.0.0/WebSocketMain.swf'
 urls = [
@@ -13,9 +13,9 @@ fallback = ->
 
 WebSocket = root.WebSocket ? root.MozWebSocket ? fallback()
 
-if root.isBrowser
+if isBrowser
   WebSocket.identifier = location.href + ' - ' + navigator.userAgent
 else
   WebSocket.identifier = process.argv[1] + ' - node'
 
-module.exports = WebSocket
+export default WebSocket

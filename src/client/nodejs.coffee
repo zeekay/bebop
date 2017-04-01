@@ -1,9 +1,9 @@
-Bebop  = require './bebop'
-dir    = require './dir'
-dump   = require './dump'
-{root} = require './utils'
+import Bebop  from './bebop'
+import dir    from './dir'
+import dump   from './dump'
+import {root} from './utils'
 
-exportGlobals = (bebop)->
+exportGlobals = (bebop) ->
   globals =
     bebop: bebop
     dir:   dir

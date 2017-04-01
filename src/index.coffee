@@ -1,42 +1,15 @@
-wrapper =
-  # Attach to a server and spin up websocket server, serve static files, etc
-  attach: (server, opts = {}) ->
-    # attach our middleware
-    server = (require './middleware') server
+import Bebop           from './bebop'
+import compilers       from './compilers'
+import * as middleware from './middleware'
+import server          from './server'
+import websocket       from './websocket'
 
-    # Attach websocket server
-    websocketServer = (require './websocket') server: server
+bebop = new Bebop
 
-    server:          server
-    websocketServer: websocketServer
+bebop.Bebop      = Bebop
+bebop.compilers  = compilers
+bebop.middleware = middleware
+bebop.server     = server
+bebop.websocket  = websocket
 
-    {close, send} = websocketServer
-    {listen}      = server
-
-    close: ->
-      close.apply websocketServer, arguments
-
-    send:
-      send.apply websocketServer, arguments
-
-    listen: ->
-      listen.apply server, arguments
-
-  # Attach and reload on file changes
-  reload: (server, dir) ->
-    dir = process.cwd() unless dir?
-    bebop = @attach(server)
-    require('vigil').watch dir, (filename) ->
-      bebop.send
-        type: 'reload'
-        filename: filename
-    server
-
-Object.defineProperties wrapper,
-  compilers:  enumerable: true, get: -> require './compilers'
-  middleware: enumerable: true, get: -> require './middleware'
-  server:     enumerable: true, get: -> require './server'
-  utils:      enumerable: true, get: -> require './utils'
-  websocket:  enumerable: true, get: -> require './websocket'
-
-module.exports = wrapper
+export default bebop

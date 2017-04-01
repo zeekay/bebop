@@ -1,31 +1,34 @@
 require 'shortcake'
 
-use 'cake-version'
+use 'cake-bundle'
+use 'cake-outdated'
 use 'cake-publish'
+use 'cake-version'
 
 option '-g', '--grep [filter]', 'test filter'
-option '-v', '--version [<newversion> | major | minor | patch | build]', 'new version'
 
 task 'clean', 'clean project', (options) ->
-  exec 'rm -rf lib'
+  exec 'rm -rf dist/'
 
 task 'build', 'build project', (options) ->
-  exec.parallel '''
-    coffee -bcm -o lib/ src/
-    requisite src/client -m -o bebop.min.js
-    '''
+  b = new Bundle
+    compilers:
+      coffee:
+        version: 1
 
-task 'build:min', 'build project', (options) ->
-  exec.parallel '''
-    coffee -bc -o lib/ src/
-    requisite src/client -m -o bebop.min.js
-    '''
+  yield b.write
+    entry:   'src/index.coffee'
+    formats: ['cjs', 'es']
+
+  yield b.write
+    entry:     'src/client/index.coffee'
+    dest:      'bebop.min.js'
+    format:    'web'
+    browser:   true
+    minify:    false
+    sourceMap: false
 
 task 'watch', 'watch for changes and recompile project', ->
-  exec.parallel '''
-    coffee -bcmw -o lib/ src/
-    requisite src/client -m -w -o bebop.min.js
-    '''
 
 task 'test', 'Run tests', ['build'], (opts) ->
   bail     = opts.bail     ? true
