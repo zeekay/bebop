@@ -72,7 +72,7 @@ opts =
   include:        []
   index:          ['index.html', 'index.htm']
   initialPath:    ''
-  port:           null
+  port:           1987
   runServer:      true
   watch:          true
   assetDir:       cwd
@@ -214,7 +214,8 @@ process.exit 0 if opts.compileOnly
 # Create server
 if opts.runServer
   server    = new Server opts
-  websocket = new WebSocketServer server
+  # websocket = new WebSocketServer server, opts
+  websocket = modified: ->
 else
   server    = run: ->
   websocket = modified: ->
