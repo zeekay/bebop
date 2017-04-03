@@ -1,20 +1,21 @@
-exec = require 'executive'
-fs   = require 'fs'
-os   = require 'os'
+import exec  from 'executive'
+import fs    from 'fs'
+import os    from 'os'
+import vigil from 'vigil'
 
-vigil = require 'vigil'
-
-compilers = require './compilers'
-log       = require './log'
-server    = require './server'
-{defaultExclude} = require './utils'
+import Server           from './server'
+import WebSocketServer  from './websocket'
+import compilers        from './compilers'
+import log              from './log'
+import {defaultExclude} from './utils'
+import {version}        from '../package.json'
 
 error = (message) ->
   log.error message
   process.exit 1
 
-version = ->
-  console.log (require '../package.json').version
+version_ = ->
+  console.log version
   process.exit 0
 
 usage = ->
@@ -107,7 +108,7 @@ while opt = args.shift()
     when 'help', '--help'
       usage()
     when 'version', '--version', '-v'
-      version()
+      version_()
 
     # options
     when '--config'
@@ -210,7 +211,7 @@ compile = (filename, cb = ->) ->
 
 # Let's bop!
 opts.pre (err) ->
-  return if err?
+  return console.error err if err?
 
   # Do initial compile
   if opts.compile
@@ -221,8 +222,8 @@ opts.pre (err) ->
     return
 
   if opts.runServer
-    app       = server.createServer opts
-    websocket = (require './websocket') server: app
+    app       = new Server opts
+    websocket = new WebSocketServer server: app
   else
     app       = run: ->
     websocket = modified: ->

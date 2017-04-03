@@ -1,2 +1,1048 @@
 #!/usr/bin/env node
-require('../lib/cli')
+'use strict';
+
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var exec = _interopDefault(require('executive'));
+var fs = _interopDefault(require('fs'));
+var os = _interopDefault(require('os'));
+var vigil = _interopDefault(require('vigil'));
+var basicAuth = _interopDefault(require('basic-auth-connect'));
+var connect = _interopDefault(require('connect'));
+var favicons = _interopDefault(require('connect-favicons'));
+var http = _interopDefault(require('http'));
+var logger = _interopDefault(require('morgan'));
+var path = _interopDefault(require('path'));
+var serveIndex = _interopDefault(require('serve-index'));
+var serveStatic = _interopDefault(require('serve-static'));
+var url = _interopDefault(require('url'));
+var colors = _interopDefault(require('colors/safe'));
+var marked = _interopDefault(require('marked'));
+var ws = _interopDefault(require('ws'));
+var esIs = require('es-is');
+
+// src/log.coffee
+var _;
+var fn;
+var log;
+var method;
+var prettyError;
+var prettyJSON;
+var theme;
+
+theme = {
+  debug: 'blue',
+  info: 'white',
+  warn: 'yellow',
+  error: 'red',
+  bebop: 'black',
+  modified: 'cyan',
+  compiled: 'blue'
+};
+
+colors.setTheme(theme);
+
+prettyJSON = function(obj) {
+  return JSON.stringify(obj, null, 2);
+};
+
+prettyError = function(err) {
+  var msg, std;
+  std = [];
+  if (err.stdout != null) {
+    std.push(err.stdout);
+  }
+  if (err.stderr != null) {
+    std.push(err.stderr);
+  }
+  if (std.length > 0) {
+    return std.join('\n');
+  } else {
+    msg = err.stack;
+    return msg = msg.replace(/^Error: /, '');
+  }
+};
+
+log = function() {
+  if (root.console == null) {
+    return console.log.apply(console, arguments);
+  }
+};
+
+fn = function(method) {
+  var prefix;
+  prefix = colors[method](method + ' ');
+  return log[method] = function(msg, extra) {
+    var err;
+    err = null;
+    switch (typeof msg) {
+      case 'string':
+        msg = msg;
+        break;
+      case 'object':
+        if (msg instanceof Error) {
+          msg = prettyError(msg);
+        } else {
+          msg = '\n' + prettyJSON(msg);
+        }
+    }
+    if (extra instanceof Error) {
+      extra = prettyError(extra);
+    } else {
+      extra = prettyJSON(extra);
+    }
+    if (extra != null) {
+      msg = msg + '\n' + extra;
+    }
+    msg = prefix + msg;
+    if (err != null) {
+      return console.error(msg);
+    } else {
+      return console.log(msg);
+    }
+  };
+};
+for (method in theme) {
+  _ = theme[method];
+  fn(method);
+}
+
+var log$1 = log;
+
+// src/middleware/fake-express.coffee
+var fakeExpress = function(req, res, next) {
+  var url$$1;
+  res.redirect = function(loc) {
+    res.writeHead(302, {
+      Location: loc
+    });
+    return res.end();
+  };
+  res.set = function(headers) {
+    var k, results, v;
+    results = [];
+    for (k in headers) {
+      v = headers[k];
+      results.push(res.setHeader(k, v));
+    }
+    return results;
+  };
+  res.send = function(body) {
+    return res.end(body);
+  };
+  url$$1 = url$$1.parse(req.url);
+  req.path = url$$1.pathname;
+  req.search = url$$1.search;
+  return next();
+};
+
+// src/middleware/live-reload.coffee
+var LiveReload;
+var livereload;
+var serveStatic$1;
+
+serveStatic$1 = function(req, res, next) {
+  var contentType, file;
+  switch (path.extname(req.url)) {
+    case '.js':
+      contentType = 'application/javascript';
+      break;
+    case '.coffee':
+      contentType = 'application/coffeescript';
+      break;
+    case '.map':
+      contentType = 'application/json';
+      break;
+    default:
+      next();
+  }
+  if (/^\/src\/node_modules/.test(req.url)) {
+    req.url = req.url.substring(4);
+  }
+  file = path.join(__dirname, '/..', req.url);
+  res.writeHead(200, {
+    'Content-Type': contentType
+  });
+  return fs.createReadStream(file).pipe(res);
+};
+
+LiveReload = (function() {
+  function LiveReload(opts) {
+    if (opts == null) {
+      opts = {};
+    }
+    this.js = "<script src=\"/bebop.min.js\"></script>\n<script>\n  var bebop = new Bebop(" + (JSON.stringify(opts)) + ");\n  bebop.debug = true;\n  bebop.connect();\n</script>";
+  }
+
+  LiveReload.prototype.injectJs = function(res) {
+    var appendScript, end, setHeader;
+    appendScript = false;
+    end = res.end;
+    setHeader = res.setHeader;
+    res.setHeader = function(name, value) {
+      if (/text\/html/i.test(value)) {
+        appendScript = true;
+      } else if (name === 'Content-Length' && appendScript) {
+        value = parseInt(value, 10) + this.js.length;
+      }
+      return setHeader.call(res, name, value);
+    };
+    return res.end = function(chunk, encoding) {
+      if (appendScript) {
+        res.write(this.js, encoding);
+      }
+      return end.call(res, chunk, encoding);
+    };
+  };
+
+  LiveReload.prototype.middleware = function(req, res, next) {
+    if (/^\/bebop|src\/client\/bebop/.test(req.url)) {
+      return this.serveStatic(req, res, next);
+    }
+    this.injectJs(res);
+    return next();
+  };
+
+  return LiveReload;
+
+})();
+
+var liveReload = livereload = function(opts) {
+  var liveReload;
+  if (opts == null) {
+    opts = {};
+  }
+  liveReload = new LiveReload(opts);
+  return function liveReload(req, res, next) { return liveReload.middleware(req, res, next); };
+};
+
+// src/middleware/node-modules-redirect.coffee
+var nodeModulesRedirect;
+
+var nodeModulesRedirect$1 = nodeModulesRedirect = function(req, res, next) {
+  var nm;
+  nm = req.path.indexOf('node_modules');
+  if (~nm) {
+    res.writeHead(301, {
+      Location: "/" + (req.path.substr(nm))
+    });
+    return res.end();
+  } else {
+    return next();
+  }
+};
+
+// src/middleware/strip-html.coffee
+var stripHtml;
+var trailingHtmlRe;
+
+trailingHtmlRe = /\.html$/;
+
+var stripHtml$1 = stripHtml = function(req, res, next) {
+  var loc;
+  if (!trailingHtmlRe.test(req.url)) {
+    return next();
+  }
+  loc = req.url.replace(/index.html$/, '');
+  loc = loc.replace(trailingHtmlRe, '');
+  return res.redirect(loc);
+};
+
+// src/middleware/strip-slash.coffee
+var stripSlash;
+var trailingSlashRe;
+
+trailingSlashRe = /\.html\/$/;
+
+var stripSlash$1 = stripSlash = function(req, res, next) {
+  var loc;
+  if (!trailingSlashRe.test(req.url)) {
+    return next();
+  }
+  loc = req.url.replace(trailingSlashRe, '.html');
+  return res.redirect(loc);
+};
+
+// assets/github-markdown.css
+var css = "";
+
+// src/middleware/markdown.coffee
+marked.setOptions({
+  renderer: new marked.Renderer(),
+  breaks: false,
+  gfm: true,
+  pedantic: false,
+  sanitize: true,
+  smartLists: true,
+  smartypants: false,
+  tables: true
+});
+
+var markdown = function(opts) {
+  var maxAge;
+  if (opts == null) {
+    opts = {};
+  }
+  maxAge = opts.maxAge || 0;
+  return function(req, res, next) {
+    var path$$1, pathname;
+    pathname = (url.parse(req.url, true, true)).pathname;
+    if (!/\.md$/.test(pathname)) {
+      return next();
+    }
+    path$$1 = pathname.replace(/^\//, '');
+    return fs.exists(path$$1, function(exists) {
+      var now;
+      if (!exists) {
+        return next();
+      }
+      now = new Date().toUTCString();
+      res.setHeader('Content-Type', 'text/html; charset=UTF-8');
+      if (!res.getHeader('Cache-Control')) {
+        res.setHeader('Cache-Control', 'public, max-age=' + (maxAge / 1000));
+      }
+      if (!res.getHeader('Date')) {
+        res.setHeader('Date', now);
+      }
+      if (!res.getHeader('Last-Modified')) {
+        res.setHeader('Last-Modified', now);
+      }
+      if (req.method === 'HEAD') {
+        res.writeHead(200);
+        return res.end();
+      }
+      if (req.method !== 'GET') {
+        return next();
+      }
+      return fs.readFile(path$$1, 'utf-8', function(err, data) {
+        if (err != null) {
+          throw err;
+        }
+        res.writeHead(200);
+        return res.end("<html>\n  <head>\n    <title>" + path$$1 + "</title>\n    <style>\n    " + css + "\n    </style>\n  </head>\n  <body>\n  " + (marked(data)) + "\n  </body>\n</html>");
+      });
+    });
+  };
+};
+
+// src/middleware/index.coffee
+
+// src/utils.coffee
+var defaultExclude = /bebop.coffee$|bebop.js$/;
+
+var requireLocal = function(modulePath) {
+  var err, localPath;
+  localPath = path.join(process.cwd(), '/node_modules/', modulePath);
+  try {
+    return require(localPath);
+  } catch (error) {
+    err = error;
+    try {
+      return require(modulePath);
+    } catch (error) {
+      err = error;
+      log$1.error(modulePath + ' not found, try npm install -g ' + modulePath);
+      return process.exit(1);
+    }
+  }
+};
+
+var firstAddress = function() {
+  var _, addr, i, iface, len, ref;
+  ref = os.networkInterfaces();
+  for (_ in ref) {
+    iface = ref[_];
+    for (i = 0, len = iface.length; i < len; i++) {
+      addr = iface[i];
+      if (addr.family !== 'IPv4') {
+        continue;
+      }
+      if (addr.internal) {
+        continue;
+      }
+      return addr.address;
+    }
+  }
+};
+
+// src/server.coffee
+var Server;
+
+Server = (function() {
+  function Server(opts) {
+    var app, dir, i, len, ref, ref1, ref2, ref3, serveOpts;
+    if (opts == null) {
+      opts = {};
+    }
+    if (!(this instanceof Server)) {
+      return new Server(opts);
+    }
+    if (opts.host == null) {
+      opts.host = '0.0.0.0';
+    }
+    if (opts.port == null) {
+      opts.port = 1987;
+    }
+    if (opts.buildDir == null) {
+      opts.buildDir = process.cwd();
+    }
+    if (opts.workDir == null) {
+      opts.workDir = process.cwd();
+    }
+    if (opts.hideIcon == null) {
+      opts.hideIcon = false;
+    }
+    this.app = app = connect();
+    app.use(fakeExpress);
+    app.use(stripHtml$1);
+    app.use(stripSlash$1);
+    if (opts.hideIcon == null) {
+      app.use(favicons(__dirname + '/../assets'));
+    }
+    app.use(logger('dev'));
+    if (opts.user && opts.pass) {
+      app.use(basicAuth(opts.user, opts.pass));
+    }
+    app.use(liveReload());
+    app.use(markdown());
+    serveOpts = {
+      etag: false,
+      fallthrough: true,
+      dotfiles: (ref = opts.dotfiles) != null ? ref : 'deny',
+      extensions: (ref1 = opts.extensions) != null ? ref1 : ['html', 'htm'],
+      index: (ref2 = opts.index) != null ? ref2 : ['index.html', 'index.htm']
+    };
+    app.use(serveStatic(opts.buildDir, serveOpts));
+    app.use(serveIndex(opts.buildDir, {
+      hidden: true
+    }));
+    app.use('/node_modules', serveStatic(process.cwd() + '/node_modules', serveOpts));
+    app.use(nodeModulesRedirect$1);
+    ref3 = [opts.assetDir, opts.workDir];
+    for (i = 0, len = ref3.length; i < len; i++) {
+      dir = ref3[i];
+      if ((dir != null) && dir !== '' && dir !== opts.buildDir) {
+        app.use(serveStatic(dir, serveOpts));
+      }
+    }
+    this.server = http.createServer(app);
+    this.server.setMaxListeners(100);
+    this.server.once('listening', function() {
+      var host;
+      if (opts.host === '0.0.0.0') {
+        host = firstAddress();
+        log$1.bebop("serving " + (path.basename(opts.workDir)) + " at");
+        console.log("    http://" + host + ":" + opts.port);
+        return console.log("    http://localhost:" + opts.port);
+      } else {
+        return log$1.bebop("serving " + (path.basename(opts.workDir)) + " at http://" + opts.host + ":" + opts.port);
+      }
+    });
+  }
+
+  Server.prototype.listen = function() {
+    return this.server.listen.apply(this.server, arguments);
+  };
+
+  Server.prototype.run = function(cb) {
+    if (cb == null) {
+      cb = function() {};
+    }
+    process.once('uncaughtException', function(err) {
+      if (err.code === 'EADDRINUSE') {
+        log$1.error('address in use, retrying...');
+        server.close();
+        opts.port++;
+        return setTimeout(server.run, 1000);
+      } else {
+        log$1.error(err);
+        return process.exit(1);
+      }
+    });
+    return this.listen(opts.port, opts.host, cb);
+  };
+
+  return Server;
+
+})();
+
+var Server$1 = Server;
+
+// src/websocket.coffee
+var WebSocketServer;
+
+WebSocketServer = (function() {
+  function WebSocketServer(opts) {
+    var id, server, wss;
+    if (opts == null) {
+      opts = {};
+    }
+    if (!(this instanceof WebSocketServer)) {
+      return new WebSocketServer(opts);
+    }
+    if (typeof opts === 'function') {
+      server = opts;
+      opts = {
+        server: server
+      };
+    }
+    if (opts.server == null) {
+      if (opts.port == null) {
+        opts.port = 3456;
+      }
+    }
+    if (opts.path == null) {
+      opts.path = '/_bebop';
+    }
+    wss = new ws.Server(opts);
+    this.clients = {};
+    id = 0;
+    wss.on('connection', function(ws$$1) {
+      id += 1;
+      ws$$1.id = id;
+      this.clients[ws$$1.id] = ws$$1;
+      return ws$$1.on('close', function() {
+        return delete this.clients[ws$$1.id];
+      });
+    });
+    this.wss = wss;
+  }
+
+  WebSocketServer.prototype.close = function() {
+    var id;
+    for (id in this.clients) {
+      this.clients[id].close();
+      delete this.clients[id];
+    }
+    return this.wss.close();
+  };
+
+  WebSocketServer.prototype.send = function(message) {
+    var err, id, results;
+    results = [];
+    for (id in this.clients) {
+      try {
+        results.push(this.clients[id].send(JSON.stringify(message)));
+      } catch (error) {
+        err = error;
+        results.push(console.error(err.stack));
+      }
+    }
+    return results;
+  };
+
+  WebSocketServer.prototype.modified = function(filename) {
+    return this.send({
+      type: 'modified',
+      filename: filename
+    });
+  };
+
+  return WebSocketServer;
+
+})();
+
+var WebSocketServer$1 = WebSocketServer;
+
+// src/compilers/sass.coffee
+var findNpm;
+var resolveNpm;
+
+findNpm = function(url$$1) {
+  var err;
+  try {
+    return path.relative(process.cwd(), require.resolve(url$$1));
+  } catch (error) {
+    err = error;
+    return path.relative(process.cwd(), require.resolve(url$$1));
+  }
+};
+
+resolveNpm = (function() {
+  var cache;
+  cache = {};
+  return function(url$$1, file, cb) {
+    var e, newPath;
+    if (cache[url$$1] != null) {
+      return cb({
+        file: cache[url$$1]
+      });
+    }
+    try {
+      newPath = findNpm(url$$1);
+      cache[url$$1] = newPath;
+      return cb({
+        file: newPath
+      });
+    } catch (error) {
+      e = error;
+      cache[url$$1] = url$$1;
+      return cb({
+        file: url$$1
+      });
+    }
+  };
+})();
+
+var sass = function(src, dst, cb) {
+  var sass;
+  sass = requireLocal('node-sass');
+  return sass.render({
+    file: src,
+    includePaths: [path.join(process.cwd(), 'node_modules')],
+    outputStyle: 'nested'
+  }, function(err, res) {
+    if (err != null) {
+      throw err;
+    }
+    return fs.writeFile(dst, res.css, function(err) {
+      if (err != null) {
+        throw err;
+      }
+      return cb(null, true);
+    });
+  });
+};
+
+// src/compilers/pug.coffee
+var pug = function(src, dst, cb) {
+  var html, pug;
+  if (cb == null) {
+    cb = function() {};
+  }
+  pug = requireLocal('pug');
+  html = pug.renderFile(src, {
+    pretty: true
+  });
+  return fs.writeFile(dst, html, function(err) {
+    if (err != null) {
+      throw err;
+    }
+    return cb(null, true);
+  });
+};
+
+// src/compilers/index.coffee
+var compilers;
+
+var compilers$1 = compilers = {
+  mappings: {
+    coffee: 'js',
+    hbs: 'html',
+    jade: 'html',
+    pug: 'html',
+    sass: 'css',
+    scss: 'css',
+    styl: 'css'
+  },
+  compile: function(filename, opts, cb) {
+    var c, cmd, cmds, compiler, dst, ext, ref, src;
+    if (opts == null) {
+      opts = {};
+    }
+    if (cb == null) {
+      cb = function() {};
+    }
+    if (typeof opts === 'function') {
+      ref = [{}, opts], opts = ref[0], cb = ref[1];
+    }
+    ext = (path.extname(filename)).substr(1);
+    if ((compiler = this[ext]) == null) {
+      return cb(null, false);
+    }
+    src = filename;
+    dst = filename.replace(new RegExp(ext + '$'), this.mappings[ext]);
+    if (opts.buildDir != null) {
+      dst = dst.replace(opts.assetDir, opts.buildDir);
+    }
+    if (compiler.length === 3) {
+      return compiler(src, dst, cb);
+    }
+    cmd = compiler(src, dst);
+    if (esIs.isFunction(cmd)) {
+      return cmd(cb);
+    }
+    if (esIs.isPromise(cmd)) {
+      return cmd;
+    }
+    if (!esIs.isString(cmd)) {
+      return cb(null, cmd != null ? cmd : false);
+    }
+    cmds = (function() {
+      var i, len, ref1, results;
+      ref1 = cmd.split(';');
+      results = [];
+      for (i = 0, len = ref1.length; i < len; i++) {
+        c = ref1[i];
+        if ((c != null) && c.trim() !== '') {
+          results.push(c.trim());
+        }
+      }
+      return results;
+    })();
+    return exec.quiet(cmds, function(err, stdout, stderr) {
+      if (err != null) {
+        return cb(err);
+      }
+      if ((stderr != null) && stderr.trim() !== '') {
+        return cb(new Error(stderr));
+      }
+      return cb(null, true);
+    });
+  },
+  coffee: function(src, dst) {
+    dst = path.dirname(dst);
+    return "coffee -bmc -o " + dst + " " + src;
+  },
+  hbs: function(src, dst) {
+    var handlebars, template;
+    handlebars = requireLocal('handlebars');
+    template = handlebars.compile(fs.readFileSync(src, 'utf8'));
+    return fs.writeFileSync(dst, template({}), 'utf8');
+  },
+  jade: function(src, dst) {
+    dst = path.dirname(dst);
+    return "jade --pretty " + src + " --out " + dst;
+  },
+  pug: pug,
+  styl: function(src, dst) {
+    dst = path.dirname(dst);
+    return "stylus " + src + " -o " + dst;
+  },
+  sass: sass,
+  scss: sass
+};
+
+// package.json
+
+
+var version = "1.11.6";
+
+// src/cli.coffee
+var args;
+var bits;
+var cmd;
+var compile;
+var compiler;
+var conf;
+var confs;
+var credentials;
+var cwd;
+var err;
+var error$1;
+var ext;
+var i;
+var j;
+var len;
+var len1;
+var mod;
+var opt;
+var opts$1;
+var p;
+var ref;
+var ref1;
+var ref2;
+var ref3;
+var relativeName;
+var requireConfig;
+var usage;
+var version_;
+var vigilOpts;
+
+error$1 = function(message) {
+  log$1.error(message);
+  return process.exit(1);
+};
+
+version_ = function() {
+  console.log(version);
+  return process.exit(0);
+};
+
+usage = function() {
+  console.log("bebop <command> [options] [file]\n\nCommands:\n  compile|c  Compile files and exit\n  help       Display this message\n  version    Display version\n\nOptions:\n  --auto                      Automatically compile even without a local config file\n  --compilers <ext:compiler>  Specify compiler to use for a given extension\n  --config <file>             Specify bebop.coffee to use\n  --exclude, -x <file>        Exclude files from watching, compiling\n  --force-reload              Force reload when file is compiled\n  --host, -h <hostname>       Hostname to bind to\n  --include, -i <file>        Include files for watching, compiling\n  --no-server                 Do not run static file server\n  --no-watch                  Do not watch files for changes\n  --open, -o                  Open browser automatically\n  --port, -p <port>           Port to listen on\n  --pre <cmd>                 Command to execute first\n  --secure, -s <user:pass>    Require authentication\n  --asset-dir <path>          Directory used as root for compiling, watching\n  --build-dir <path>          Directory used as root for static file server\n  --work-dir  <path>          Directory used as root for process\n  --index <file>              Index file to attempt to serve when directory requested\n  --hide-icon                 Hide Bebop's favicon");
+  return process.exit(0);
+};
+
+try {
+  require('coffee-script/register');
+} catch (error1) {
+  err = error1;
+}
+
+cwd = process.cwd();
+
+confs = [process.env.HOME + '/.bebop', cwd + '/.bebop', cwd + '/bebop'];
+
+opts$1 = {
+  compile: false,
+  compileOnly: false,
+  compilers: {},
+  defaultExclude: true,
+  exclude: [],
+  fallback: null,
+  forceReload: false,
+  host: '0.0.0.0',
+  include: [],
+  index: ['index.html', 'index.htm'],
+  initialPath: '',
+  port: null,
+  pre: function(done) {
+    return done();
+  },
+  runServer: true,
+  watch: true,
+  assetDir: cwd,
+  buildDir: cwd,
+  workDir: cwd,
+  hideIcon: false
+};
+
+requireConfig = function(path$$1) {
+  var conf, k, ref, v;
+  try {
+    conf = require.resolve(path$$1);
+  } catch (error1) {
+    err = error1;
+    return;
+  }
+  if (fs.existsSync(conf)) {
+    ref = require(conf);
+    for (k in ref) {
+      v = ref[k];
+      opts$1[k] = v;
+    }
+    return opts$1.compile = true;
+  }
+};
+
+for (i = 0, len = confs.length; i < len; i++) {
+  conf = confs[i];
+  requireConfig(conf);
+}
+
+args = process.argv.slice(2);
+
+while (opt = args.shift()) {
+  switch (opt) {
+    case 'compile':
+    case 'c':
+    case '--compile':
+    case '-c':
+      opts$1.compileOnly = true;
+      break;
+    case 'help':
+    case '--help':
+      usage();
+      break;
+    case 'version':
+    case '--version':
+    case '-v':
+      version_();
+      break;
+    case '--config':
+      requireConfig(args.shift());
+      break;
+    case '--open':
+    case '-o':
+      opts$1.open = true;
+      break;
+    case '--no-server':
+      opts$1.runServer = false;
+      break;
+    case '--no-watch':
+      opts$1.watch = false;
+      break;
+    case '--auto':
+      opts$1.compile = true;
+      break;
+    case '--include':
+    case '-i':
+      opts$1.include.push(args.shift());
+      break;
+    case '--exclude':
+    case '-x':
+      opts$1.exclude.push(args.shift());
+      break;
+    case '--no-default-exclude':
+      opts$1.defaultExclude = false;
+      break;
+    case '--force-reload':
+      opts$1.forceReload = true;
+      break;
+    case '--fallback':
+      opts$1.fallback = args.shift();
+      break;
+    case '--host':
+    case '-h':
+      opts$1.host = args.shift();
+      break;
+    case '--pre':
+      cmd = args.shift();
+      opts$1.pre = function(done) {
+        return exec(cmd, done);
+      };
+      break;
+    case '--port':
+    case '-p':
+      p = args.shift();
+      if (!p) {
+        error$1('missing port');
+      }
+      opts$1.port = parseInt(p, 10);
+      break;
+    case '--secure':
+    case '-s':
+      credentials = args.shift();
+      if (credentials) {
+        ref = credentials.split(':'), opts$1.user = ref[0], opts$1.pass = ref[1];
+      } else {
+        opts$1.user = 'bebop';
+        opts$1.pass = 'beepboop';
+      }
+      break;
+    case '--asset-dir':
+      opts$1.assetDir = args.shift();
+      break;
+    case '--build-dir':
+      opts$1.buildDir = args.shift();
+      break;
+    case '--work-dir':
+      opts$1.workDir = args.shift();
+      break;
+    case '--compilers':
+    case '-c':
+      ref1 = args.shift().split(',');
+      for (j = 0, len1 = ref1.length; j < len1; j++) {
+        compiler = ref1[j];
+        ref2 = compiler.split(':'), ext = ref2[0], mod = ref2[1];
+        opts$1.compilers[ext] = mod;
+      }
+      break;
+    case '--hide-icon':
+      opts$1.hideIcon = true;
+      break;
+    default:
+      if (opt.charAt(0) === '-') {
+        error$1("Unrecognized option: '" + opt + "'");
+      } else {
+        opts$1.initialPath = opt;
+      }
+  }
+}
+
+if (opts$1.defaultExclude) {
+  opts$1.exclude = [vigil.utils.excludeRe, defaultExclude].concat(opts$1.exclude);
+}
+
+vigilOpts = {
+  exclude: opts$1.exclude,
+  include: opts$1.include,
+  patch: false
+};
+
+ref3 = opts$1.compilers;
+for (ext in ref3) {
+  compiler = ref3[ext];
+  if (typeof compiler === 'string') {
+    try {
+      bits = compiler.split('.');
+      compiler = require(bits.shift());
+      while (bits.length) {
+        compiler = compiler[bits.shift()];
+      }
+      compilers$1[ext] = compiler;
+    } catch (error1) {
+      err = error1;
+      console.log(err);
+    }
+  } else {
+    compilers$1[ext] = compiler;
+  }
+}
+
+relativeName = function(filename) {
+  return filename.replace(opts$1.workDir + '/', '');
+};
+
+compile = function(filename, cb) {
+  if (cb == null) {
+    cb = function() {};
+  }
+  return compilers$1.compile(filename, opts$1, function(err, compiled) {
+    filename = relativeName(filename);
+    if (err != null) {
+      log$1.error("failed to compile " + filename, err);
+      return;
+    }
+    if (compiled) {
+      log$1.compiled(filename);
+    }
+    return cb(null, compiled);
+  });
+};
+
+opts$1.pre(function(err) {
+  var app, websocket;
+  if (err != null) {
+    return console.error(err);
+  }
+  if (opts$1.compile) {
+    vigil.walk(opts$1.workDir, vigilOpts, function(filename) {
+      if (opts$1.compile) {
+        return compile(filename);
+      }
+    });
+  }
+  if (opts$1.compileOnly) {
+    return;
+  }
+  if (opts$1.runServer) {
+    app = new Server$1(opts$1);
+    websocket = new WebSocketServer$1({
+      server: app
+    });
+  } else {
+    app = {
+      run: function() {}
+    };
+    websocket = {
+      modified: function() {}
+    };
+  }
+  if (opts$1.watch) {
+    vigil.watch(opts$1.assetDir, vigilOpts, function(filename) {
+      if (!opts$1.compile) {
+        log$1.modified(filename);
+        return websocket.modified(filename);
+      }
+      return compile(filename, function(err, compiled) {
+        if (!compiled) {
+          log$1.modified(filename);
+          return websocket.modified(filename);
+        } else {
+          if (opts$1.forceReload) {
+            return websocket.modified(filename);
+          }
+        }
+      });
+    });
+    if (opts$1.buildDir !== opts$1.assetDir) {
+      vigil.watch(opts$1.buildDir, vigilOpts, function(filename) {
+        log$1.modified(filename);
+        return websocket.modified(filename);
+      });
+    }
+  }
+  return app.run(function() {
+    if (opts$1.open || opts$1.initialPath !== '') {
+      switch (os.platform()) {
+        case 'darwin':
+          return exec("open http://" + opts$1.host + ":" + opts$1.port + "/" + opts$1.initialPath);
+        case 'linux':
+          return exec("xdg-open http://" + opts$1.host + ":" + opts$1.port + "/" + opts$1.initialPath);
+      }
+    }
+  });
+});
+//# sourceMappingURL=bebop.map
