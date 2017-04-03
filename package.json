@@ -40,14 +40,14 @@
     "connect": "3.6.0",
     "connect-favicons": "0.1.5",
     "es-is": "3.2.2",
-    "executive": "1.2.6",
+    "executive": "1.2.7",
     "http-errors": "1.6.1",
     "marked": "^0.3.6",
     "morgan": "1.8.1",
     "serve-index": "1.8.0",
     "serve-static": "1.12.1",
     "vigil": "0.7.3",
-    "ws": "2.2.2"
+    "ws": "2.2.3"
   },
   "devDependencies": {
     "cake-bundle": "0.2.21",
