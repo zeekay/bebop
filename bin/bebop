@@ -15,7 +15,8 @@ var logger = _interopDefault(require('morgan'));
 var path = _interopDefault(require('path'));
 var serveIndex = _interopDefault(require('serve-index'));
 var serveStatic = _interopDefault(require('serve-static'));
-var url = _interopDefault(require('url'));
+var url = require('url');
+var url__default = _interopDefault(url);
 var colors = _interopDefault(require('colors/safe'));
 var marked = _interopDefault(require('marked'));
 var ws = _interopDefault(require('ws'));
@@ -130,7 +131,7 @@ var fakeExpress = function(req, res, next) {
   res.send = function(body) {
     return res.end(body);
   };
-  url$$1 = url$$1.parse(req.url);
+  url$$1 = url.parse(req.url);
   req.path = url$$1.pathname;
   req.search = url$$1.search;
   return next();
@@ -208,12 +209,12 @@ LiveReload = (function() {
 })();
 
 var liveReload = livereload = function(opts) {
-  var liveReload;
+  var r;
   if (opts == null) {
     opts = {};
   }
-  liveReload = new LiveReload(opts);
-  return function liveReload(req, res, next) { return liveReload.middleware(req, res, next); };
+  r = new LiveReload(opts);
+  return function liveReload(req, res, next) { return r.middleware(req, res, next); };
 };
 
 // src/middleware/node-modules-redirect.coffee
@@ -286,7 +287,7 @@ var markdown = function(opts) {
   maxAge = opts.maxAge || 0;
   return function(req, res, next) {
     var path$$1, pathname;
-    pathname = (url.parse(req.url, true, true)).pathname;
+    pathname = (url__default.parse(req.url, true, true)).pathname;
     if (!/\.md$/.test(pathname)) {
       return next();
     }
@@ -367,89 +368,80 @@ var firstAddress = function() {
 
 // src/server.coffee
 var Server;
+var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp = {}.hasOwnProperty;
 
-Server = (function() {
+Server = (function(superClass) {
+  extend(Server, superClass);
+
   function Server(opts) {
-    var app, dir, i, k, len, ref, ref1, ref2, ref3, ref4, serveOpts, v;
-    if (opts == null) {
-      opts = {};
-    }
+    var app, base, base1, base2, base3, base4, dir, i, len, ref, ref1, ref2, ref3, serverOpts;
+    this.opts = opts != null ? opts : {};
     if (!(this instanceof Server)) {
-      return new Server(opts);
+      return new Server(this.opts);
     }
-    if (opts.host == null) {
-      opts.host = '0.0.0.0';
+    if ((base = this.opts).host == null) {
+      base.host = '0.0.0.0';
     }
-    if (opts.port == null) {
-      opts.port = 1987;
+    if ((base1 = this.opts).port == null) {
+      base1.port = 1987;
     }
-    if (opts.buildDir == null) {
-      opts.buildDir = process.cwd();
+    if ((base2 = this.opts).buildDir == null) {
+      base2.buildDir = process.cwd();
     }
-    if (opts.workDir == null) {
-      opts.workDir = process.cwd();
+    if ((base3 = this.opts).workDir == null) {
+      base3.workDir = process.cwd();
     }
-    if (opts.hideIcon == null) {
-      opts.hideIcon = false;
+    if ((base4 = this.opts).hideIcon == null) {
+      base4.hideIcon = false;
     }
     this.app = app = connect();
-    ref = this.app;
-    for (k in ref) {
-      v = ref[k];
-      this[k] = function() {
-        return v.apply(this.app, arguments);
-      };
-    }
     app.use(fakeExpress);
     app.use(stripHtml$1);
     app.use(stripSlash$1);
-    if (opts.hideIcon == null) {
+    if (this.opts.hideIcon == null) {
       app.use(favicons(__dirname + '/../assets'));
     }
     app.use(logger('dev'));
-    if (opts.user && opts.pass) {
-      app.use(basicAuth(opts.user, opts.pass));
+    if (this.opts.user && this.opts.pass) {
+      app.use(basicAuth(this.opts.user, this.opts.pass));
     }
     app.use(liveReload());
     app.use(markdown());
-    serveOpts = {
+    serverOpts = {
       etag: false,
       fallthrough: true,
-      dotfiles: (ref1 = opts.dotfiles) != null ? ref1 : 'deny',
-      extensions: (ref2 = opts.extensions) != null ? ref2 : ['html', 'htm'],
-      index: (ref3 = opts.index) != null ? ref3 : ['index.html', 'index.htm']
+      dotfiles: (ref = this.opts.dotfiles) != null ? ref : 'deny',
+      extensions: (ref1 = this.opts.extensions) != null ? ref1 : ['html', 'htm'],
+      index: (ref2 = this.opts.index) != null ? ref2 : ['index.html', 'index.htm']
     };
-    app.use(serveStatic(opts.buildDir, serveOpts));
-    app.use(serveIndex(opts.buildDir, {
+    app.use(serveStatic(this.opts.buildDir, serverOpts));
+    app.use(serveIndex(this.opts.buildDir, {
       hidden: true
     }));
-    app.use('/node_modules', serveStatic(process.cwd() + '/node_modules', serveOpts));
+    app.use('/node_modules', serveStatic(process.cwd() + '/node_modules', serverOpts));
     app.use(nodeModulesRedirect$1);
-    ref4 = [opts.assetDir, opts.workDir];
-    for (i = 0, len = ref4.length; i < len; i++) {
-      dir = ref4[i];
-      if ((dir != null) && dir !== '' && dir !== opts.buildDir) {
-        app.use(serveStatic(dir, serveOpts));
+    ref3 = [this.opts.assetDir, this.opts.workDir];
+    for (i = 0, len = ref3.length; i < len; i++) {
+      dir = ref3[i];
+      if ((dir != null) && dir !== '' && dir !== this.opts.buildDir) {
+        app.use(serveStatic(dir, serverOpts));
       }
     }
-    this.server = http.createServer(app);
-    this.server.setMaxListeners(100);
-    this.server.once('listening', function() {
+    Server.__super__.constructor.call(this, app);
+    this.setMaxListeners(100);
+    this.once('listening', function() {
       var host;
-      if (opts.host === '0.0.0.0') {
+      if (this.opts.host === '0.0.0.0') {
         host = firstAddress();
-        log$1.bebop("serving " + (path.basename(opts.workDir)) + " at");
-        console.log("    http://" + host + ":" + opts.port);
-        return console.log("    http://localhost:" + opts.port);
+        log$1.bebop("serving " + (path.basename(this.opts.workDir)) + " at");
+        console.log("    http://" + host + ":" + this.opts.port);
+        return console.log("    http://localhost:" + this.opts.port);
       } else {
-        return log$1.bebop("serving " + (path.basename(opts.workDir)) + " at http://" + opts.host + ":" + opts.port);
+        return log$1.bebop("serving " + (path.basename(this.opts.workDir)) + " at http://" + this.opts.host + ":" + this.opts.port);
       }
     });
   }
-
-  Server.prototype.listen = function() {
-    return this.server.listen.apply(this.server, arguments);
-  };
 
   Server.prototype.run = function(cb) {
     if (cb == null) {
@@ -459,19 +451,19 @@ Server = (function() {
       if (err.code === 'EADDRINUSE') {
         log$1.error('address in use, retrying...');
         server.close();
-        opts.port++;
+        this.opts.port++;
         return setTimeout(server.run, 1000);
       } else {
         log$1.error(err);
         return process.exit(1);
       }
     });
-    return this.listen(opts.port, opts.host, cb);
+    return this.listen(this.opts.port, this.opts.host, cb);
   };
 
   return Server;
 
-})();
+})(http.Server);
 
 var Server$1 = Server;
 
@@ -728,7 +720,6 @@ var version = "1.11.6";
 // src/cli.coffee
 var args;
 var bits;
-var cmd;
 var compile;
 var compiler;
 var conf;
@@ -744,7 +735,7 @@ var len;
 var len1;
 var mod;
 var opt;
-var opts$1;
+var opts;
 var p;
 var ref;
 var ref1;
@@ -752,9 +743,11 @@ var ref2;
 var ref3;
 var relativeName;
 var requireConfig;
+var server$1;
 var usage;
 var version_;
 var vigilOpts;
+var websocket;
 
 error$1 = function(message) {
   log$1.error(message);
@@ -767,7 +760,7 @@ version_ = function() {
 };
 
 usage = function() {
-  console.log("bebop <command> [options] [file]\n\nCommands:\n  compile|c  Compile files and exit\n  help       Display this message\n  version    Display version\n\nOptions:\n  --auto                      Automatically compile even without a local config file\n  --compilers <ext:compiler>  Specify compiler to use for a given extension\n  --config <file>             Specify bebop.coffee to use\n  --exclude, -x <file>        Exclude files from watching, compiling\n  --force-reload              Force reload when file is compiled\n  --host, -h <hostname>       Hostname to bind to\n  --include, -i <file>        Include files for watching, compiling\n  --no-server                 Do not run static file server\n  --no-watch                  Do not watch files for changes\n  --open, -o                  Open browser automatically\n  --port, -p <port>           Port to listen on\n  --pre <cmd>                 Command to execute first\n  --secure, -s <user:pass>    Require authentication\n  --asset-dir <path>          Directory used as root for compiling, watching\n  --build-dir <path>          Directory used as root for static file server\n  --work-dir  <path>          Directory used as root for process\n  --index <file>              Index file to attempt to serve when directory requested\n  --hide-icon                 Hide Bebop's favicon");
+  console.log("bebop <command> [options] [file]\n\nCommands:\n  compile|c  Compile files and exit\n  help       Display this message\n  version    Display version\n\nOptions:\n  --auto                      Automatically compile even without a local config file\n  --compilers <ext:compiler>  Specify compiler to use for a given extension\n  --config <file>             Specify bebop.coffee to use\n  --exclude, -x <file>        Exclude files from watching, compiling\n  --force-reload              Force reload when file is compiled\n  --host, -h <hostname>       Hostname to bind to\n  --include, -i <file>        Include files for watching, compiling\n  --no-server                 Do not run static file server\n  --no-watch                  Do not watch files for changes\n  --open, -o                  Open browser automatically\n  --port, -p <port>           Port to listen on\n  --secure, -s <user:pass>    Require authentication\n  --asset-dir <path>          Directory used as root for compiling, watching\n  --build-dir <path>          Directory used as root for static file server\n  --work-dir  <path>          Directory used as root for process\n  --index <file>              Index file to attempt to serve when directory requested\n  --hide-icon                 Hide Bebop's favicon");
   return process.exit(0);
 };
 
@@ -781,7 +774,7 @@ cwd = process.cwd();
 
 confs = [process.env.HOME + '/.bebop', cwd + '/.bebop', cwd + '/bebop'];
 
-opts$1 = {
+opts = {
   compile: false,
   compileOnly: false,
   compilers: {},
@@ -794,9 +787,6 @@ opts$1 = {
   index: ['index.html', 'index.htm'],
   initialPath: '',
   port: null,
-  pre: function(done) {
-    return done();
-  },
   runServer: true,
   watch: true,
   assetDir: cwd,
@@ -817,9 +807,9 @@ requireConfig = function(path$$1) {
     ref = require(conf);
     for (k in ref) {
       v = ref[k];
-      opts$1[k] = v;
+      opts[k] = v;
     }
-    return opts$1.compile = true;
+    return opts.compile = true;
   }
 };
 
@@ -836,7 +826,7 @@ while (opt = args.shift()) {
     case 'c':
     case '--compile':
     case '-c':
-      opts$1.compileOnly = true;
+      opts.compileOnly = true;
       break;
     case 'help':
     case '--help':
@@ -852,43 +842,37 @@ while (opt = args.shift()) {
       break;
     case '--open':
     case '-o':
-      opts$1.open = true;
+      opts.open = true;
       break;
     case '--no-server':
-      opts$1.runServer = false;
+      opts.runServer = false;
       break;
     case '--no-watch':
-      opts$1.watch = false;
+      opts.watch = false;
       break;
     case '--auto':
-      opts$1.compile = true;
+      opts.compile = true;
       break;
     case '--include':
     case '-i':
-      opts$1.include.push(args.shift());
+      opts.include.push(args.shift());
       break;
     case '--exclude':
     case '-x':
-      opts$1.exclude.push(args.shift());
+      opts.exclude.push(args.shift());
       break;
     case '--no-default-exclude':
-      opts$1.defaultExclude = false;
+      opts.defaultExclude = false;
       break;
     case '--force-reload':
-      opts$1.forceReload = true;
+      opts.forceReload = true;
       break;
     case '--fallback':
-      opts$1.fallback = args.shift();
+      opts.fallback = args.shift();
       break;
     case '--host':
     case '-h':
-      opts$1.host = args.shift();
-      break;
-    case '--pre':
-      cmd = args.shift();
-      opts$1.pre = function(done) {
-        return exec(cmd, done);
-      };
+      opts.host = args.shift();
       break;
     case '--port':
     case '-p':
@@ -896,26 +880,26 @@ while (opt = args.shift()) {
       if (!p) {
         error$1('missing port');
       }
-      opts$1.port = parseInt(p, 10);
+      opts.port = parseInt(p, 10);
       break;
     case '--secure':
     case '-s':
       credentials = args.shift();
       if (credentials) {
-        ref = credentials.split(':'), opts$1.user = ref[0], opts$1.pass = ref[1];
+        ref = credentials.split(':'), opts.user = ref[0], opts.pass = ref[1];
       } else {
-        opts$1.user = 'bebop';
-        opts$1.pass = 'beepboop';
+        opts.user = 'bebop';
+        opts.pass = 'beepboop';
       }
       break;
     case '--asset-dir':
-      opts$1.assetDir = args.shift();
+      opts.assetDir = args.shift();
       break;
     case '--build-dir':
-      opts$1.buildDir = args.shift();
+      opts.buildDir = args.shift();
       break;
     case '--work-dir':
-      opts$1.workDir = args.shift();
+      opts.workDir = args.shift();
       break;
     case '--compilers':
     case '-c':
@@ -923,32 +907,32 @@ while (opt = args.shift()) {
       for (j = 0, len1 = ref1.length; j < len1; j++) {
         compiler = ref1[j];
         ref2 = compiler.split(':'), ext = ref2[0], mod = ref2[1];
-        opts$1.compilers[ext] = mod;
+        opts.compilers[ext] = mod;
       }
       break;
     case '--hide-icon':
-      opts$1.hideIcon = true;
+      opts.hideIcon = true;
       break;
     default:
       if (opt.charAt(0) === '-') {
         error$1("Unrecognized option: '" + opt + "'");
       } else {
-        opts$1.initialPath = opt;
+        opts.initialPath = opt;
       }
   }
 }
 
-if (opts$1.defaultExclude) {
-  opts$1.exclude = [vigil.utils.excludeRe, defaultExclude].concat(opts$1.exclude);
+if (opts.defaultExclude) {
+  opts.exclude = [vigil.utils.excludeRe, defaultExclude].concat(opts.exclude);
 }
 
 vigilOpts = {
-  exclude: opts$1.exclude,
-  include: opts$1.include,
+  exclude: opts.exclude,
+  include: opts.include,
   patch: false
 };
 
-ref3 = opts$1.compilers;
+ref3 = opts.compilers;
 for (ext in ref3) {
   compiler = ref3[ext];
   if (typeof compiler === 'string') {
@@ -969,14 +953,14 @@ for (ext in ref3) {
 }
 
 relativeName = function(filename) {
-  return filename.replace(opts$1.workDir + '/', '');
+  return filename.replace(opts.workDir + '/', '');
 };
 
 compile = function(filename, cb) {
   if (cb == null) {
     cb = function() {};
   }
-  return compilers$1.compile(filename, opts$1, function(err, compiled) {
+  return compilers$1.compile(filename, opts, function(err, compiled) {
     filename = relativeName(filename);
     if (err != null) {
       log$1.error("failed to compile " + filename, err);
@@ -989,65 +973,63 @@ compile = function(filename, cb) {
   });
 };
 
-opts$1.pre(function(err) {
-  var server, websocket;
-  if (err != null) {
-    return console.error(err);
-  }
-  if (opts$1.compile) {
-    vigil.walk(opts$1.workDir, vigilOpts, function(filename) {
-      if (opts$1.compile) {
-        return compile(filename);
-      }
-    });
-  }
-  if (opts$1.compileOnly) {
-    return;
-  }
-  if (opts$1.runServer) {
-    server = new Server$1(opts$1);
-    websocket = new WebSocketServer$1(server);
-  } else {
-    server = {
-      run: function() {}
-    };
-    websocket = {
-      modified: function() {}
-    };
-  }
-  if (opts$1.watch) {
-    vigil.watch(opts$1.assetDir, vigilOpts, function(filename) {
-      if (!opts$1.compile) {
-        log$1.modified(filename);
-        return websocket.modified(filename);
-      }
-      return compile(filename, function(err, compiled) {
-        if (!compiled) {
-          log$1.modified(filename);
-          return websocket.modified(filename);
-        } else {
-          if (opts$1.forceReload) {
-            return websocket.modified(filename);
-          }
-        }
-      });
-    });
-    if (opts$1.buildDir !== opts$1.assetDir) {
-      vigil.watch(opts$1.buildDir, vigilOpts, function(filename) {
-        log$1.modified(filename);
-        return websocket.modified(filename);
-      });
-    }
-  }
-  return server.run(function() {
-    if (opts$1.open || opts$1.initialPath !== '') {
-      switch (os.platform()) {
-        case 'darwin':
-          return exec("open http://" + opts$1.host + ":" + opts$1.port + "/" + opts$1.initialPath);
-        case 'linux':
-          return exec("xdg-open http://" + opts$1.host + ":" + opts$1.port + "/" + opts$1.initialPath);
-      }
+if (opts.compile) {
+  vigil.walk(opts.workDir, vigilOpts, function(filename) {
+    if (opts.compile) {
+      return compile(filename);
     }
   });
+}
+
+if (opts.compileOnly) {
+  process.exit(0);
+}
+
+if (opts.runServer) {
+  server$1 = new Server$1(opts);
+  websocket = new WebSocketServer$1(server$1);
+} else {
+  server$1 = {
+    run: function() {}
+  };
+  websocket = {
+    modified: function() {}
+  };
+}
+
+if (opts.watch) {
+  vigil.watch(opts.assetDir, vigilOpts, function(filename) {
+    if (!opts.compile) {
+      log$1.modified(filename);
+      return websocket.modified(filename);
+    }
+    return compile(filename, function(err, compiled) {
+      if (!compiled) {
+        log$1.modified(filename);
+        return websocket.modified(filename);
+      } else {
+        if (opts.forceReload) {
+          return websocket.modified(filename);
+        }
+      }
+    });
+  });
+  if (opts.buildDir !== opts.assetDir) {
+    vigil.watch(opts.buildDir, vigilOpts, function(filename) {
+      log$1.modified(filename);
+      return websocket.modified(filename);
+    });
+  }
+}
+
+server$1.run(function() {
+  if (opts.open || opts.initialPath !== '') {
+    switch (os.platform()) {
+      case 'darwin':
+        return exec("open http://" + opts.host + ":" + opts.port + "/" + opts.initialPath);
+      case 'linux':
+        return exec("xdg-open http://" + opts.host + ":" + opts.port + "/" + opts.initialPath);
+    }
+  }
 });
 //# sourceMappingURL=bebop.map

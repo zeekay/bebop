@@ -69,7 +69,7 @@ class LiveReload
 
 # Generic connect compatible middleware to server client code.
 export default livereload = (opts = {}) ->
-  liveReload = new LiveReload opts
+  r = new LiveReload opts
 
   # Wrap with a named function for easier debugging.
-  `function liveReload(req, res, next) { return liveReload.middleware(req, res, next); };`
+  `function liveReload(req, res, next) { return r.middleware(req, res, next); };`
