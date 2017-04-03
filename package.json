@@ -39,7 +39,6 @@
     "colors": "^1.1.2",
     "connect": "3.6.0",
     "connect-favicons": "0.1.5",
-    "es-is": "3.2.2",
     "executive": "1.2.7",
     "http-errors": "1.6.1",
     "marked": "^0.3.6",
