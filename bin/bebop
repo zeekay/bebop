@@ -180,20 +180,24 @@ LiveReload = (function() {
     appendScript = false;
     end = res.end;
     setHeader = res.setHeader;
-    res.setHeader = function(name, value) {
-      if (/text\/html/i.test(value)) {
-        appendScript = true;
-      } else if (name === 'Content-Length' && appendScript) {
-        value = parseInt(value, 10) + this.js.length;
-      }
-      return setHeader.call(res, name, value);
-    };
-    return res.end = function(chunk, encoding) {
-      if (appendScript) {
-        res.write(this.js, encoding);
-      }
-      return end.call(res, chunk, encoding);
-    };
+    res.setHeader = (function(_this) {
+      return function(name, value) {
+        if (/text\/html/i.test(value)) {
+          appendScript = true;
+        } else if (name === 'Content-Length' && appendScript) {
+          value = parseInt(value, 10) + _this.js.length;
+        }
+        return setHeader.call(res, name, value);
+      };
+    })(this);
+    return res.end = (function(_this) {
+      return function(chunk, encoding) {
+        if (appendScript) {
+          res.write(_this.js, encoding);
+        }
+        return end.call(res, chunk, encoding);
+      };
+    })(this);
   };
 
   LiveReload.prototype.middleware = function(req, res, next) {

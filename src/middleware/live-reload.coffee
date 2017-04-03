@@ -44,7 +44,7 @@ class LiveReload
     setHeader    = res.setHeader
 
     # Check content-type and increase content-length if we will append
-    res.setHeader = (name, value) ->
+    res.setHeader = (name, value) =>
       if /text\/html/i.test(value)
         appendScript = true
       else if name is 'Content-Length' and appendScript
@@ -52,7 +52,7 @@ class LiveReload
       setHeader.call res, name, value
 
     # Append script if text/html content-type
-    res.end = (chunk, encoding) ->
+    res.end = (chunk, encoding) =>
       if appendScript
         res.write @js, encoding
       end.call res, chunk, encoding
