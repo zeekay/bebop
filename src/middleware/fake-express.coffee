@@ -1,3 +1,5 @@
+import {parse} from 'url'
+
 # Connect is fairly minimal, flesh out req, res with a few helper
 # methods/properties. Required for compatibility with non-standard connect
 # middleware which expects various express conventions.
@@ -15,7 +17,7 @@ export default (req, res, next) ->
     res.end body
 
   # Convenient for our middleware later
-  url = url.parse req.url
+  url = parse req.url
   req.path   = url.pathname
   req.search = url.search
   next()

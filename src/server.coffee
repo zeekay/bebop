@@ -13,19 +13,17 @@ import * as middleware from './middleware'
 
 import {firstAddress} from './utils'
 
-class Server
-  constructor: (opts = {}) ->
-    return new Server opts unless @ instanceof Server
+class Server extends http.Server
+  constructor: (@opts = {}) ->
+    return new Server @opts unless @ instanceof Server
 
-    opts.host     ?= '0.0.0.0'
-    opts.port     ?= 1987
-    opts.buildDir ?= process.cwd()
-    opts.workDir  ?= process.cwd()
-    opts.hideIcon ?= false
+    @opts.host     ?= '0.0.0.0'
+    @opts.port     ?= 1987
+    @opts.buildDir ?= process.cwd()
+    @opts.workDir  ?= process.cwd()
+    @opts.hideIcon ?= false
 
-    @app = app = connect()
-    for k,v of @app
-      @[k] = -> v.apply @app, arguments
+    @app  = app = connect()
 
     # Use some helper middleware
     app.use middleware.fakeExpress
@@ -33,15 +31,15 @@ class Server
     app.use middleware.stripSlash
 
     # Fallback to our favicons
-    unless opts.hideIcon?
+    unless @opts.hideIcon?
       app.use favicons __dirname + '/../assets'
 
     # Log requests
     app.use logger 'dev'
 
     # Support Basic Auth
-    if opts.user and opts.pass
-      app.use basicAuth opts.user, opts.pass
+    if @opts.user and @opts.pass
+      app.use basicAuth @opts.user, @opts.pass
 
     # Install Bebop livereload middleware
     app.use middleware.liveReload()
@@ -49,7 +47,7 @@ class Server
     # Markdown helper
     app.use middleware.markdown()
 
-    serveOpts =
+    serverOpts =
       # Never want to cache for local development purposes
       etag:        false
 
@@ -57,50 +55,49 @@ class Server
       fallthrough: true
 
       # Allow a few options to be customized
-      dotfiles:    opts.dotfiles   ? 'deny'
-      extensions:  opts.extensions ? ['html', 'htm']
-      index:       opts.index      ? ['index.html', 'index.htm']
+      dotfiles:    @opts.dotfiles   ? 'deny'
+      extensions:  @opts.extensions ? ['html', 'htm']
+      index:       @opts.index      ? ['index.html', 'index.htm']
 
     # Serve files and indexes from build directory
-    app.use serveStatic opts.buildDir, serveOpts
-    app.use serveIndex  opts.buildDir, hidden: true
+    app.use serveStatic @opts.buildDir, serverOpts
+    app.use serveIndex  @opts.buildDir, hidden: true
 
     # Automatically server files from node_modules for easier debugging
-    app.use '/node_modules', (serveStatic process.cwd() + '/node_modules', serveOpts)
+    app.use '/node_modules', (serveStatic process.cwd() + '/node_modules', serverOpts)
     app.use middleware.nodeModulesRedirect
 
     # Also serve content from assets and current working directories. This is
     # useful for serving files referenced by sourcemaps.
-    for dir in [opts.assetDir, opts.workDir]
-      if dir? and dir != '' and dir != opts.buildDir
-        app.use serveStatic dir, serveOpts
+    for dir in [@opts.assetDir, @opts.workDir]
+      if dir? and dir != '' and dir != @opts.buildDir
+        app.use serveStatic dir, serverOpts
 
-    @server = http.createServer app
-    @server.setMaxListeners(100)
+    # Pass connect app to http.Server
+    super app
 
-    @server.once 'listening', ->
-      if opts.host == '0.0.0.0'
+    @setMaxListeners(100)
+
+    @once 'listening', ->
+      if @opts.host == '0.0.0.0'
         host = firstAddress()
-        log.bebop "serving #{path.basename opts.workDir} at"
-        console.log  "    http://#{host}:#{opts.port}"
-        console.log  "    http://localhost:#{opts.port}"
+        log.bebop "serving #{path.basename @opts.workDir} at"
+        console.log  "    http://#{host}:#{@opts.port}"
+        console.log  "    http://localhost:#{@opts.port}"
       else
-        log.bebop "serving #{path.basename opts.workDir} at http://#{opts.host}:#{opts.port}"
-
-  listen: ->
-    @server.listen.apply @server, arguments
+        log.bebop "serving #{path.basename @opts.workDir} at http://#{@opts.host}:#{@opts.port}"
 
   run: (cb = ->) ->
     process.once 'uncaughtException', (err) ->
       if err.code == 'EADDRINUSE'
         log.error 'address in use, retrying...'
         server.close()
-        opts.port++
+        @opts.port++
         setTimeout server.run, 1000
       else
         log.error err
         process.exit 1
 
-    @listen opts.port, opts.host, cb
+    @listen @opts.port, @opts.host, cb
 
 export default Server
