@@ -62,7 +62,7 @@
     "es-is": "3.2.2",
     "istanbul": "0.4.5",
     "mocha": "3.2.0",
-    "postmortem": "0.2.4",
+    "postmortem": "0.2.6",
     "shortcake": "1.2.8"
   }
 }
