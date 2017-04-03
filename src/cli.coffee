@@ -39,7 +39,6 @@ usage = ->
     --no-watch                  Do not watch files for changes
     --open, -o                  Open browser automatically
     --port, -p <port>           Port to listen on
-    --pre <cmd>                 Command to execute first
     --secure, -s <user:pass>    Require authentication
     --asset-dir <path>          Directory used as root for compiling, watching
     --build-dir <path>          Directory used as root for static file server
@@ -74,7 +73,6 @@ opts =
   index:          ['index.html', 'index.htm']
   initialPath:    ''
   port:           null
-  pre:            (done) -> done()
   runServer:      true
   watch:          true
   assetDir:       cwd
@@ -133,9 +131,6 @@ while opt = args.shift()
       opts.fallback = args.shift()
     when '--host', '-h'
       opts.host = args.shift()
-    when '--pre'
-      cmd = args.shift()
-      opts.pre = (done) -> exec cmd, done
     when '--port', '-p'
       p = args.shift()
       error 'missing port' unless p
@@ -209,51 +204,48 @@ compile = (filename, cb = ->) ->
 
     cb null, compiled
 
-# Let's bop!
-opts.pre (err) ->
-  return console.error err if err?
+# Do initial compile
+if opts.compile
+  vigil.walk opts.workDir, vigilOpts, (filename) ->
+    compile filename if opts.compile
 
-  # Do initial compile
-  if opts.compile
-    vigil.walk opts.workDir, vigilOpts, (filename) ->
-      compile filename if opts.compile
+process.exit 0 if opts.compileOnly
 
-  if opts.compileOnly
-    return
+# Create server
+if opts.runServer
+  server    = new Server opts
+  websocket = new WebSocketServer server
+else
+  server    = run: ->
+  websocket = modified: ->
 
-  if opts.runServer
-    app       = new Server opts
-    websocket = new WebSocketServer server: app
-  else
-    app       = run: ->
-    websocket = modified: ->
+# Create watcher
+if opts.watch
+  # Watch asset dir and recompile on changes
+  vigil.watch opts.assetDir, vigilOpts, (filename) ->
+    unless opts.compile
+      log.modified filename
+      return websocket.modified filename
 
-  if opts.watch
-    # Watch asset dir and recompile on changes
-    vigil.watch opts.assetDir, vigilOpts, (filename) ->
-      unless opts.compile
+    compile filename, (err, compiled) ->
+      unless compiled
         log.modified filename
-        return websocket.modified filename
-
-      compile filename, (err, compiled) ->
-        unless compiled
-          log.modified filename
+        websocket.modified filename
+      else
+        if opts.forceReload
           websocket.modified filename
-        else
-          if opts.forceReload
-            websocket.modified filename
 
-    # Watch build dir and reload on changes
-    if opts.buildDir != opts.assetDir
-      vigil.watch opts.buildDir, vigilOpts, (filename) ->
-        log.modified filename
-        return websocket.modified filename
+  # Watch build dir and reload on changes
+  if opts.buildDir != opts.assetDir
+    vigil.watch opts.buildDir, vigilOpts, (filename) ->
+      log.modified filename
+      return websocket.modified filename
 
-  # Start server
-  app.run ->
-    if opts.open or opts.initialPath != ''
-      switch os.platform()
-        when 'darwin'
-          exec "open http://#{opts.host}:#{opts.port}/#{opts.initialPath}"
-        when 'linux'
-          exec "xdg-open http://#{opts.host}:#{opts.port}/#{opts.initialPath}"
+# Start server
+server.run ->
+  if opts.open or opts.initialPath != ''
+    switch os.platform()
+      when 'darwin'
+        exec "open http://#{opts.host}:#{opts.port}/#{opts.initialPath}"
+      when 'linux'
+        exec "xdg-open http://#{opts.host}:#{opts.port}/#{opts.initialPath}"
