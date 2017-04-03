@@ -1,32 +1,32 @@
 import ws from 'ws'
+import {isFunction} from 'es-is'
 
 
 class WebSocketServer
-  constructor: (opts = {}) ->
+  constructor: (@server, opts = {}) ->
     return new WebSocketServer opts unless @ instanceof WebSocketServer
 
-    if typeof opts is 'function'
-      server = opts
-      opts   = {server: server}
-
-    unless opts.server?
-      opts.port ?= 3456
-
-    opts.path ?= '/_bebop'
-
-    wss = new ws.Server opts
+    opts.path              ?= '/_bebop'
+    opts.perMessageDeflate ?= false
+    opts.server             = @server
 
     @clients = {}
-    id = 0
+    @id      = 0
+    @opts    = opts
 
-    wss.on 'connection', (ws) ->
-      id += 1
+    @server.on 'listening', => @attach()
+
+  attach: ->
+    @wss = new ws.Server @opts
+
+    @server.once 'close', => @close()
+
+    @wss.on 'connection', (ws) =>
+      @id += 1
       ws.id = id
       @clients[ws.id] = ws
-      ws.on 'close', ->
+      ws.on 'close', =>
         delete @clients[ws.id]
-
-    @wss = wss
 
   # Close connections
   close: ->

@@ -14,16 +14,14 @@ import * as middleware from './middleware'
 import {firstAddress} from './utils'
 
 class Server extends http.Server
-  constructor: (@opts = {}) ->
-    return new Server @opts unless @ instanceof Server
+  constructor: (opts = {}) ->
+    opts.host     ?= '0.0.0.0'
+    opts.port     ?= 1987
+    opts.buildDir ?= process.cwd()
+    opts.workDir  ?= process.cwd()
+    opts.hideIcon ?= false
 
-    @opts.host     ?= '0.0.0.0'
-    @opts.port     ?= 1987
-    @opts.buildDir ?= process.cwd()
-    @opts.workDir  ?= process.cwd()
-    @opts.hideIcon ?= false
-
-    @app  = app = connect()
+    app = connect()
 
     # Use some helper middleware
     app.use middleware.fakeExpress
@@ -31,15 +29,15 @@ class Server extends http.Server
     app.use middleware.stripSlash
 
     # Fallback to our favicons
-    unless @opts.hideIcon?
+    unless opts.hideIcon?
       app.use favicons __dirname + '/../assets'
 
     # Log requests
     app.use logger 'dev'
 
     # Support Basic Auth
-    if @opts.user and @opts.pass
-      app.use basicAuth @opts.user, @opts.pass
+    if opts.user and opts.pass
+      app.use basicAuth opts.user, opts.pass
 
     # Install Bebop livereload middleware
     app.use middleware.liveReload()
@@ -47,7 +45,7 @@ class Server extends http.Server
     # Markdown helper
     app.use middleware.markdown()
 
-    serverOpts =
+    serveOpts =
       # Never want to cache for local development purposes
       etag:        false
 
@@ -55,49 +53,53 @@ class Server extends http.Server
       fallthrough: true
 
       # Allow a few options to be customized
-      dotfiles:    @opts.dotfiles   ? 'deny'
-      extensions:  @opts.extensions ? ['html', 'htm']
-      index:       @opts.index      ? ['index.html', 'index.htm']
+      dotfiles:    opts.dotfiles   ? 'deny'
+      extensions:  opts.extensions ? ['html', 'htm']
+      index:       opts.index      ? ['index.html', 'index.htm']
 
     # Serve files and indexes from build directory
-    app.use serveStatic @opts.buildDir, serverOpts
-    app.use serveIndex  @opts.buildDir, hidden: true
+    app.use serveStatic opts.buildDir, serveOpts
+    app.use serveIndex  opts.buildDir, hidden: true
 
     # Automatically server files from node_modules for easier debugging
-    app.use '/node_modules', (serveStatic process.cwd() + '/node_modules', serverOpts)
+    app.use '/node_modules', (serveStatic process.cwd() + '/node_modules', serveOpts)
     app.use middleware.nodeModulesRedirect
 
     # Also serve content from assets and current working directories. This is
     # useful for serving files referenced by sourcemaps.
-    for dir in [@opts.assetDir, @opts.workDir]
-      if dir? and dir != '' and dir != @opts.buildDir
-        app.use serveStatic dir, serverOpts
+    for dir in [opts.assetDir, opts.workDir]
+      if dir? and dir != '' and dir != opts.buildDir
+        app.use serveStatic dir, serveOpts
 
     # Pass connect app to http.Server
-    super app
+    super @app = app
 
-    @setMaxListeners(100)
-
-    @once 'listening', ->
-      if @opts.host == '0.0.0.0'
-        host = firstAddress()
-        log.bebop "serving #{path.basename @opts.workDir} at"
-        console.log  "    http://#{host}:#{@opts.port}"
-        console.log  "    http://localhost:#{@opts.port}"
-      else
-        log.bebop "serving #{path.basename @opts.workDir} at http://#{@opts.host}:#{@opts.port}"
+    # Save reference to opts
+    @opts = opts
 
   run: (cb = ->) ->
-    process.once 'uncaughtException', (err) ->
+    {workDir, host, port} = @opts
+
+    @once 'listening', ->
+      dir = path.basename workDir
+      if host == '0.0.0.0'
+        host = firstAddress()
+        log.bebop "serving #{dir} at"
+        console.log  "    http://#{host}:#{port}"
+        console.log  "    http://localhost:#{port}"
+      else
+        log.bebop "serving #{dir} at http://#{host}:#{port}"
+
+    process.once 'uncaughtException', (err) =>
       if err.code == 'EADDRINUSE'
         log.error 'address in use, retrying...'
-        server.close()
+        @close()
         @opts.port++
-        setTimeout server.run, 1000
+        setTimeout (=> @run()), 1000
       else
         log.error err
-        process.exit 1
 
-    @listen @opts.port, @opts.host, cb
+    @listen port, host, cb
+
 
 export default Server
