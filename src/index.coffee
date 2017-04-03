@@ -1,15 +1,15 @@
 import Bebop           from './bebop'
 import compilers       from './compilers'
 import * as middleware from './middleware'
-import server          from './server'
-import websocket       from './websocket'
+import Server          from './server'
+import WebSocketServer from './websocket'
 
-bebop = new Bebop
+export {
+  Bebop
+  Server
+  WebSocketServer
+  compilers
+  middleware
+}
 
-bebop.Bebop      = Bebop
-bebop.compilers  = compilers
-bebop.middleware = middleware
-bebop.server     = server
-bebop.websocket  = websocket
-
-export default bebop
+export default new Bebop

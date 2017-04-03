@@ -20,6 +20,11 @@ task 'build', 'build project', (options) ->
     formats: ['cjs', 'es']
 
   yield b.write
+    entry:  'src/cli.coffee'
+    format: 'cli'
+    executable: true
+
+  yield b.write
     entry:     'src/client/index.coffee'
     dest:      'bebop.min.js'
     format:    'web'

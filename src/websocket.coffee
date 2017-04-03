@@ -1,8 +1,10 @@
 import ws from 'ws'
 
 
-class WebsocketServer
+class WebSocketServer
   constructor: (opts = {}) ->
+    return new WebSocketServer opts unless @ instanceof WebSocketServer
+
     if typeof opts is 'function'
       server = opts
       opts   = {server: server}
@@ -46,5 +48,4 @@ class WebsocketServer
       type: 'modified'
       filename: filename
 
-export default WebsocketServer
-
+export default WebSocketServer

@@ -3,6 +3,7 @@ export injectConnectApp = (app) ->
   app.stack.splice 2, 0,
     route: ''
     handle: _middleware
+
   app
 
 # inject middleware into http server
@@ -17,6 +18,8 @@ export injectHttpServer = (server) ->
   server.on 'request', (req, res) ->
     _middleware req, res, ->
       app req, res
+
+  server
 
 # Automatically select the correct middleware to inject
 export inject = (app) ->

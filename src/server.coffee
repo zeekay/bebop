@@ -13,76 +13,82 @@ import * as middleware from './middleware'
 
 import {firstAddress} from './utils'
 
-export default createServer: (opts = {}) ->
-  opts.host     ?= '0.0.0.0'
-  opts.port     ?= 1987
-  opts.buildDir ?= process.cwd()
-  opts.workDir  ?= process.cwd()
-  opts.hideIcon ?= false
+class Server
+  constructor: (opts = {}) ->
+    return new Server opts unless @ instanceof Server
 
-  app = connect()
+    opts.host     ?= '0.0.0.0'
+    opts.port     ?= 1987
+    opts.buildDir ?= process.cwd()
+    opts.workDir  ?= process.cwd()
+    opts.hideIcon ?= false
 
-  # Use some helper middleware
-  app.use middleware.fakeExpress
-  app.use middleware.stripHtml
-  app.use middleware.stripSlash
+    @app = app = connect()
 
-  # Fallback to our favicons
-  unless opts.hideIcon?
-    app.use favicons __dirname + '/../assets'
+    # Use some helper middleware
+    app.use middleware.fakeExpress
+    app.use middleware.stripHtml
+    app.use middleware.stripSlash
 
-  # Log requests
-  app.use logger 'dev'
+    # Fallback to our favicons
+    unless opts.hideIcon?
+      app.use favicons __dirname + '/../assets'
 
-  # Support Basic Auth
-  if opts.user and opts.pass
-    app.use basicAuth opts.user, opts.pass
+    # Log requests
+    app.use logger 'dev'
 
-  # Install Bebop livereload middleware
-  app.use middleware.liveReload()
+    # Support Basic Auth
+    if opts.user and opts.pass
+      app.use basicAuth opts.user, opts.pass
 
-  # Markdown helper
-  app.use middleware.markdown()
+    # Install Bebop livereload middleware
+    app.use middleware.liveReload()
 
-  serveOpts =
-    # Never want to cache for local development purposes
-    etag:        false
+    # Markdown helper
+    app.use middleware.markdown()
 
-    # Fallthrough and serve directory listings
-    fallthrough: true
+    serveOpts =
+      # Never want to cache for local development purposes
+      etag:        false
 
-    # Allow a few options to be customized
-    dotfiles:    opts.dotfiles   ? 'deny'
-    extensions:  opts.extensions ? ['html', 'htm']
-    index:       opts.index      ? ['index.html', 'index.htm']
+      # Fallthrough and serve directory listings
+      fallthrough: true
 
-  # Serve files and indexes from build directory
-  app.use serveStatic opts.buildDir, serveOpts
-  app.use serveIndex  opts.buildDir, hidden: true
+      # Allow a few options to be customized
+      dotfiles:    opts.dotfiles   ? 'deny'
+      extensions:  opts.extensions ? ['html', 'htm']
+      index:       opts.index      ? ['index.html', 'index.htm']
 
-  # Automatically server files from node_modules for easier debugging
-  app.use '/node_modules', (serveStatic process.cwd() + '/node_modules', serveOpts)
-  app.use middleware.nodeModulesRedirect
+    # Serve files and indexes from build directory
+    app.use serveStatic opts.buildDir, serveOpts
+    app.use serveIndex  opts.buildDir, hidden: true
 
-  # Also serve content from assets and current working directories. This is
-  # useful for serving files referenced by sourcemaps.
-  for dir in [opts.assetDir, opts.workDir]
-    if dir? and dir != '' and dir != opts.buildDir
-      app.use serveStatic dir, serveOpts
+    # Automatically server files from node_modules for easier debugging
+    app.use '/node_modules', (serveStatic process.cwd() + '/node_modules', serveOpts)
+    app.use middleware.nodeModulesRedirect
 
-  server = http.createServer app
-  server.setMaxListeners(100)
+    # Also serve content from assets and current working directories. This is
+    # useful for serving files referenced by sourcemaps.
+    for dir in [opts.assetDir, opts.workDir]
+      if dir? and dir != '' and dir != opts.buildDir
+        app.use serveStatic dir, serveOpts
 
-  server.once 'listening', ->
-    if opts.host == '0.0.0.0'
-      host = firstAddress()
-      log.bebop "serving #{path.basename opts.workDir} at"
-      console.log  "    http://#{host}:#{opts.port}"
-      console.log  "    http://localhost:#{opts.port}"
-    else
-      log.bebop "serving #{path.basename opts.workDir} at http://#{opts.host}:#{opts.port}"
+    @server = http.createServer app
+    @server.setMaxListeners(100)
 
-  server.run = (cb = ->) ->
+    @server.once 'listening', ->
+      if opts.host == '0.0.0.0'
+        host = firstAddress()
+        log.bebop "serving #{path.basename opts.workDir} at"
+        console.log  "    http://#{host}:#{opts.port}"
+        console.log  "    http://localhost:#{opts.port}"
+      else
+        log.bebop "serving #{path.basename opts.workDir} at http://#{opts.host}:#{opts.port}"
+
+  listen: ->
+    @server.listen.apply @server, arguments
+
+  run: (cb = ->) ->
     process.once 'uncaughtException', (err) ->
       if err.code == 'EADDRINUSE'
         log.error 'address in use, retrying...'
@@ -93,6 +99,6 @@ export default createServer: (opts = {}) ->
         log.error err
         process.exit 1
 
-    server.listen opts.port, opts.host, cb
+    @listen opts.port, opts.host, cb
 
-  server
+export default Server
