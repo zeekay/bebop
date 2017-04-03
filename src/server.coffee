@@ -24,6 +24,8 @@ class Server
     opts.hideIcon ?= false
 
     @app = app = connect()
+    for k,v of @app
+      @[k] = -> v.apply @app, arguments
 
     # Use some helper middleware
     app.use middleware.fakeExpress

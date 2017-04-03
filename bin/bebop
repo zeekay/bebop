@@ -370,7 +370,7 @@ var Server;
 
 Server = (function() {
   function Server(opts) {
-    var app, dir, i, len, ref, ref1, ref2, ref3, serveOpts;
+    var app, dir, i, k, len, ref, ref1, ref2, ref3, ref4, serveOpts, v;
     if (opts == null) {
       opts = {};
     }
@@ -393,6 +393,13 @@ Server = (function() {
       opts.hideIcon = false;
     }
     this.app = app = connect();
+    ref = this.app;
+    for (k in ref) {
+      v = ref[k];
+      this[k] = function() {
+        return v.apply(this.app, arguments);
+      };
+    }
     app.use(fakeExpress);
     app.use(stripHtml$1);
     app.use(stripSlash$1);
@@ -408,9 +415,9 @@ Server = (function() {
     serveOpts = {
       etag: false,
       fallthrough: true,
-      dotfiles: (ref = opts.dotfiles) != null ? ref : 'deny',
-      extensions: (ref1 = opts.extensions) != null ? ref1 : ['html', 'htm'],
-      index: (ref2 = opts.index) != null ? ref2 : ['index.html', 'index.htm']
+      dotfiles: (ref1 = opts.dotfiles) != null ? ref1 : 'deny',
+      extensions: (ref2 = opts.extensions) != null ? ref2 : ['html', 'htm'],
+      index: (ref3 = opts.index) != null ? ref3 : ['index.html', 'index.htm']
     };
     app.use(serveStatic(opts.buildDir, serveOpts));
     app.use(serveIndex(opts.buildDir, {
@@ -418,9 +425,9 @@ Server = (function() {
     }));
     app.use('/node_modules', serveStatic(process.cwd() + '/node_modules', serveOpts));
     app.use(nodeModulesRedirect$1);
-    ref3 = [opts.assetDir, opts.workDir];
-    for (i = 0, len = ref3.length; i < len; i++) {
-      dir = ref3[i];
+    ref4 = [opts.assetDir, opts.workDir];
+    for (i = 0, len = ref4.length; i < len; i++) {
+      dir = ref4[i];
       if ((dir != null) && dir !== '' && dir !== opts.buildDir) {
         app.use(serveStatic(dir, serveOpts));
       }
@@ -983,7 +990,7 @@ compile = function(filename, cb) {
 };
 
 opts$1.pre(function(err) {
-  var app, websocket;
+  var server, websocket;
   if (err != null) {
     return console.error(err);
   }
@@ -998,12 +1005,10 @@ opts$1.pre(function(err) {
     return;
   }
   if (opts$1.runServer) {
-    app = new Server$1(opts$1);
-    websocket = new WebSocketServer$1({
-      server: app
-    });
+    server = new Server$1(opts$1);
+    websocket = new WebSocketServer$1(server);
   } else {
-    app = {
+    server = {
       run: function() {}
     };
     websocket = {
@@ -1034,7 +1039,7 @@ opts$1.pre(function(err) {
       });
     }
   }
-  return app.run(function() {
+  return server.run(function() {
     if (opts$1.open || opts$1.initialPath !== '') {
       switch (os.platform()) {
         case 'darwin':
