@@ -60,7 +60,7 @@ class LiveReload
   middleware: (req, res, next) ->
     # Serve static files
     if /^\/bebop|src\/client\/bebop/.test req.url
-      return @serveStatic req, res, next
+      return serveStatic req, res, next
 
     # Inject script into html pages
     @injectJs res
