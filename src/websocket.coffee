@@ -4,8 +4,6 @@ import {isFunction} from 'es-is'
 
 class WebSocketServer
   constructor: (@server, opts = {}) ->
-    return new WebSocketServer opts unless @ instanceof WebSocketServer
-
     opts.path              ?= '/_bebop'
     opts.perMessageDeflate ?= false
     opts.server             = @server
