@@ -1,6 +1,7 @@
 bebop.min.js
 node_modules/
 lib/
+bin/
 .test/
 npm-debug.log
 src/*.js
