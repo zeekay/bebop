@@ -103,6 +103,8 @@ while opt = args.shift()
     # commands
     when 'compile', 'c', '--compile', '-c'
       opts.compileOnly = true
+      opts.runServer   = false
+      opts.watch       = false
     when 'help', '--help'
       usage()
     when 'version', '--version', '-v'
@@ -207,9 +209,7 @@ compile = (filename, cb = ->) ->
 # Do initial compile
 if opts.compile
   vigil.walk opts.workDir, vigilOpts, (filename) ->
-    compile filename if opts.compile
-
-process.exit 0 if opts.compileOnly
+    compile filename
 
 # Create server
 if opts.runServer
