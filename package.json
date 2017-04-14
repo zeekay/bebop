@@ -17,7 +17,6 @@
   "license": "MIT",
   "main": "lib/bebop.js",
   "module": "lib/bebop.mjs",
-  "js:next": "lib/bebop.mjs",
   "files": [
     "assets/",
     "bebop.min.js",
@@ -27,8 +26,10 @@
   ],
   "bin": "bin/bebop",
   "scripts": {
-    "prepublishOnly": "cake build",
-    "test": "cake test"
+    "build": "sake build",
+    "prepublishOnly": "sake build",
+    "pretest": "sake build",
+    "test": "sake test"
   },
   "repository": {
     "type": "git",
@@ -53,14 +54,8 @@
     "ws": "2.2.3"
   },
   "devDependencies": {
-    "chai": "3.5.0",
-    "co-mocha": "1.2.0",
-    "codecov.io": "0.1.6",
     "coffee-script": "1.12.5",
-    "coveralls": "2.13.0",
     "es-is": "3.3.0",
-    "istanbul": "0.4.5",
-    "mocha": "3.2.0",
     "sake-bundle": "0.4.15",
     "sake-cli": "0.4.4",
     "sake-outdated": "0.1.20",
