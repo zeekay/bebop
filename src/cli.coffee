@@ -102,6 +102,7 @@ while opt = args.shift()
   switch opt
     # commands
     when 'compile', 'c', '--compile', '-c'
+      opts.compile     = true
       opts.compileOnly = true
       opts.runServer   = false
       opts.watch       = false
