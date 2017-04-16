@@ -54,6 +54,7 @@ class Server extends http.Server
       # Never want to cache for local development purposes
       maxAge:     '1d'
       setHeaders: cacheControl
+      etag:       false
 
       # Fallthrough and serve directory listings
       fallthrough: true
