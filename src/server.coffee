@@ -13,6 +13,11 @@ import * as middleware from './middleware'
 
 import {firstAddress} from './utils'
 
+cacheControl = (res, path) ->
+  if (serveStatic.mime.lookup path) == 'text/html'
+    res.setHeader 'Cache-Control', 'no-cache, no-store, must-revalidate'
+    res.setHeader 'Pragma',        'no-cache'
+
 class Server extends http.Server
   constructor: (opts = {}) ->
     opts.host     ?= '0.0.0.0'
@@ -47,7 +52,8 @@ class Server extends http.Server
 
     serveOpts =
       # Never want to cache for local development purposes
-      etag:        false
+      maxAge:     '1d'
+      setHeaders: cacheControl
 
       # Fallthrough and serve directory listings
       fallthrough: true
