@@ -51,7 +51,7 @@
     "source-map-support": "0.4.14",
     "utf-8-validate": "3.0.1",
     "vigil": "0.7.3",
-    "ws": "2.2.3"
+    "ws": "2.3.0"
   },
   "devDependencies": {
     "coffee-script": "1.12.5",
