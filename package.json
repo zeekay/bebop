@@ -41,7 +41,7 @@
     "colors": "^1.1.2",
     "connect": "3.6.0",
     "connect-favicons": "0.1.5",
-    "executive": "1.4.0",
+    "executive": "1.5.0",
     "http-errors": "1.6.1",
     "marked": "^0.3.6",
     "morgan": "1.8.1",
