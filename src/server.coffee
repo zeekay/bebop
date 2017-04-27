@@ -92,7 +92,7 @@ class Server extends http.Server
       if host == '0.0.0.0'
         host = firstAddress()
         log.bebop "serving #{dir} at"
-        console.log  "    http://#{host}:#{port}"
+        console.log  "    http://#{host}:#{port}" if host?
         console.log  "    http://localhost:#{port}"
       else
         log.bebop "serving #{dir} at http://#{host}:#{port}"
