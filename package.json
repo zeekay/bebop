@@ -48,7 +48,7 @@
     "postmortem": "0.2.6",
     "serve-index": "1.8.0",
     "serve-static": "1.12.1",
-    "source-map-support": "0.4.14",
+    "source-map-support": "0.4.15",
     "utf-8-validate": "3.0.1",
     "vigil": "0.7.3",
     "ws": "2.2.3"
