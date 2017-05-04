@@ -39,28 +39,28 @@
     "basic-auth-connect": "^1.0.0",
     "bufferutil": "3.0.0",
     "colors": "^1.1.2",
-    "connect": "3.6.0",
+    "connect": "3.6.1",
     "connect-favicons": "0.1.5",
-    "executive": "1.4.0",
+    "executive": "1.5.4",
     "http-errors": "1.6.1",
     "marked": "^0.3.6",
     "morgan": "1.8.1",
     "postmortem": "0.2.6",
     "serve-index": "1.8.0",
-    "serve-static": "1.12.1",
-    "source-map-support": "0.4.14",
+    "serve-static": "1.12.2",
+    "source-map-support": "0.4.15",
     "utf-8-validate": "3.0.1",
     "vigil": "0.7.3",
-    "ws": "2.2.3"
+    "ws": "2.3.1"
   },
   "devDependencies": {
     "coffee-script": "1.12.5",
     "es-is": "3.3.10",
-    "sake-bundle": "0.4.17",
-    "sake-cli": "0.4.11",
-    "sake-outdated": "0.1.21",
+    "sake-bundle": "0.4.21",
+    "sake-cli": "0.5.5",
+    "sake-outdated": "0.1.22",
     "sake-publish": "0.1.12",
     "sake-test": "0.1.5",
-    "sake-version": "0.1.18"
+    "sake-version": "0.1.19"
   }
 }
