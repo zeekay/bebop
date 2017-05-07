@@ -5,7 +5,6 @@ import vigil from 'vigil'
 
 import Server           from './server'
 import WebSocketServer  from './websocket'
-import compilers        from './compilers'
 import log              from './log'
 import {defaultExclude} from './utils'
 import {version}        from '../package.json'
@@ -48,17 +47,7 @@ usage = ->
   """
   process.exit 0
 
-try
-  require 'coffee-script/register'
-catch err
-
 cwd = process.cwd()
-
-confs = [
-  process.env.HOME + '/.bebop'
-  cwd + '/.bebop'
-  cwd + '/bebop'
-]
 
 opts =
   compile:        false
@@ -79,22 +68,6 @@ opts =
   buildDir:       cwd
   workDir:        cwd
   hideIcon:       false
-
-# require config file and override opts
-requireConfig = (path) ->
-  try
-    conf = require.resolve path
-  catch err
-    return
-
-  if fs.existsSync conf
-    for k,v of require conf
-      opts[k] = v
-    opts.compile = true # Compile if config file is found
-
-# allow user to override defaults
-for conf in confs
-  requireConfig conf
 
 args = process.argv.slice 2
 
@@ -162,55 +135,6 @@ while opt = args.shift()
         error "Unrecognized option: '#{opt}'"
       else
         opts.initialPath = opt
-
-# Setup include/expludes
-if opts.defaultExclude
-  opts.exclude = [vigil.utils.excludeRe, defaultExclude].concat opts.exclude
-
-# Options for vigil watch/walk
-vigilOpts =
-  exclude: opts.exclude
-  include: opts.include
-  patch:   false
-
-# Setup any custom preprocessors
-for ext, compiler of opts.compilers
-  if typeof compiler is 'string'
-    try
-      bits = compiler.split '.'
-      compiler = require bits.shift()
-
-      while bits.length
-        compiler = compiler[bits.shift()]
-
-      compilers[ext] = compiler
-    catch err
-      console.log err
-  else
-    # expected to be a function
-    compilers[ext] = compiler
-
-# Filename path relative to current working dir
-relativeName = (filename) ->
-  filename.replace opts.workDir + '/', ''
-
-# Compile modified file
-compile = (filename, cb = ->) ->
-  compilers.compile filename, opts, (err, compiled) ->
-    filename = relativeName filename
-
-    if err?
-      log.error "failed to compile #{filename}", err
-      return
-
-    log.compiled filename if compiled
-
-    cb null, compiled
-
-# Do initial compile
-if opts.compile
-  vigil.walk opts.workDir, vigilOpts, (filename) ->
-    compile filename
 
 # Create server
 if opts.runServer
