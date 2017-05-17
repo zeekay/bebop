@@ -39,7 +39,7 @@
     "basic-auth-connect": "^1.0.0",
     "bufferutil": "3.0.0",
     "colors": "^1.1.2",
-    "connect": "3.6.1",
+    "connect": "3.6.2",
     "connect-favicons": "0.1.5",
     "executive": "1.5.4",
     "http-errors": "1.6.1",
