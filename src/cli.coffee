@@ -3,11 +3,9 @@ import fs    from 'fs'
 import os    from 'os'
 import vigil from 'vigil'
 
-import Server           from './server'
-import WebSocketServer  from './websocket'
-import log              from './log'
-import {defaultExclude} from './utils'
-import {version}        from '../package.json'
+import Bebop     from './bebop'
+import log       from './log'
+import {version} from '../package.json'
 
 error = (message) ->
   log.error message
@@ -136,42 +134,10 @@ while opt = args.shift()
       else
         opts.initialPath = opt
 
-# Create server
-if opts.runServer
-  server    = new Server opts
-  # websocket = new WebSocketServer server, opts
-  websocket = modified: ->
-else
-  server    = run: ->
-  websocket = modified: ->
+bebop = new Bebop opts
 
-# Create watcher
-if opts.watch
-  # Watch asset dir and recompile on changes
-  vigil.watch opts.assetDir, vigilOpts, (filename) ->
-    unless opts.compile
-      log.modified filename
-      return websocket.modified filename
+bebop.compile() if opts.compile
 
-    compile filename, (err, compiled) ->
-      unless compiled
-        log.modified filename
-        websocket.modified filename
-      else
-        if opts.forceReload
-          websocket.modified filename
-
-  # Watch build dir and reload on changes
-  if opts.buildDir != opts.assetDir
-    vigil.watch opts.buildDir, vigilOpts, (filename) ->
-      log.modified filename
-      return websocket.modified filename
-
-# Start server
-server.run ->
-  if opts.open or opts.initialPath != ''
-    switch os.platform()
-      when 'darwin'
-        exec "open http://#{opts.host}:#{opts.port}/#{opts.initialPath}"
-      when 'linux'
-        exec "xdg-open http://#{opts.host}:#{opts.port}/#{opts.initialPath}"
+unless opts.compileOnly
+  bebop.run()   if opts.runServer
+  bebop.watch() if opts.watch
