@@ -49,7 +49,7 @@
     "serve-index": "1.8.0",
     "serve-static": "1.12.3",
     "source-map-support": "0.4.15",
-    "utf-8-validate": "3.0.1",
+    "utf-8-validate": "3.0.2",
     "vigil": "^0.7.3",
     "ws": "3.0.0"
   },
