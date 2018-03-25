@@ -3,7 +3,6 @@ node_modules/
 lib/
 bin/
 .test/
-.sake
 npm-debug.log
 src/*.js
 *.map
