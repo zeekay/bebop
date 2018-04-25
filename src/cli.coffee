@@ -1,7 +1,11 @@
-import exec  from 'executive'
-import fs    from 'fs'
-import os    from 'os'
-import vigil from 'vigil'
+import fs   from 'fs'
+import os   from 'os'
+import path from 'path'
+
+import exec        from 'executive'
+import findCoffee  from 'find-coffee'
+import resolveFrom from 'resolve-from'
+import vigil       from 'vigil'
 
 import Server           from './server'
 import WebSocketServer  from './websocket'
@@ -48,17 +52,7 @@ usage = ->
   """
   process.exit 0
 
-try
-  require 'coffee-script/register'
-catch err
-
 cwd = process.cwd()
-
-confs = [
-  process.env.HOME + '/.bebop'
-  cwd + '/.bebop'
-  cwd + '/bebop'
-]
 
 opts =
   compile:        false
@@ -80,19 +74,30 @@ opts =
   workDir:        cwd
   hideIcon:       false
 
-# require config file and override opts
+# Default config locations
+confs = [
+  path.join process.env.HOME, '.bebop'
+  './.bebop'
+  './bebop'
+]
+
+# Register coffee in case project uses coffeescript
+coffee.register() if coffee = findCoffee()
+
 requireConfig = (path) ->
   try
-    conf = require.resolve path
+    conf = resolveFrom cwd, path
   catch err
+    console.log 'could not find', path
     return
 
+  console.log 'found', conf
   if fs.existsSync conf
     for k,v of require conf
       opts[k] = v
     opts.compile = true # Compile if config file is found
 
-# allow user to override defaults
+# Allow user to override defaults
 for conf in confs
   requireConfig conf
 
@@ -172,6 +177,8 @@ vigilOpts =
   exclude: opts.exclude
   include: opts.include
   patch:   false
+
+console.log opts
 
 # Setup any custom preprocessors
 for ext, compiler of opts.compilers
