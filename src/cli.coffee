@@ -88,11 +88,10 @@ requireConfig = (path) ->
   try
     conf = resolveFrom cwd, path
   catch err
-    console.log 'could not find', path
     return
 
-  console.log 'found', conf
   if fs.existsSync conf
+    console.log 'Using config:', conf
     for k,v of require conf
       opts[k] = v
     opts.compile = true # Compile if config file is found
@@ -177,8 +176,6 @@ vigilOpts =
   exclude: opts.exclude
   include: opts.include
   patch:   false
-
-console.log opts
 
 # Setup any custom preprocessors
 for ext, compiler of opts.compilers
