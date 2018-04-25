@@ -219,8 +219,7 @@ if opts.compile
 # Create server
 if opts.runServer
   server    = new Server opts
-  # websocket = new WebSocketServer server, opts
-  websocket = modified: ->
+  websocket = new WebSocketServer server, opts
 else
   server    = run: ->
   websocket = modified: ->
