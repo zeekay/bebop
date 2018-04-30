@@ -82,9 +82,10 @@ class Server extends http.Server
     app.use middleware.render404 opts
 
     # Pass connect app to http.Server
-    super @app = app
+    super app
 
-    # Save reference to opts
+    # Helpful to save reference
+    @app  = app
     @opts = opts
 
   run: (cb = ->) ->
