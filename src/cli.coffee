@@ -91,7 +91,7 @@ requireConfig = (path) ->
     return
 
   if fs.existsSync conf
-    console.log 'Using config:', conf
+    console.log 'using config:', conf
     for k,v of require conf
       opts[k] = v
     opts.compile = true # Compile if config file is found
