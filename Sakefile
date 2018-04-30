@@ -8,10 +8,7 @@ task 'clean', 'clean project', (options) ->
   exec 'rm -rf lib/'
 
 task 'build', 'build project', (options) ->
-  b = new Bundle
-    compilers:
-      coffee:
-        version: 1
+  b = new Bundle()
 
   yield b.write
     entry:   'src/index.coffee'
