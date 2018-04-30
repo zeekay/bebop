@@ -78,6 +78,9 @@ class Server extends http.Server
       if dir? and dir != '' and dir != opts.buildDir
         app.use serveStatic dir, serveOpts
 
+    # Redirect 404 pages
+    app.use middleware.render404 opts
+
     # Pass connect app to http.Server
     super @app = app
 
