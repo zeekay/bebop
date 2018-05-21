@@ -44,7 +44,7 @@
     "executive": "^1.5.13",
     "find-coffee": "^0.2.0",
     "http-errors": "^1.6.3",
-    "marked": "^0.3.19",
+    "marked": "^0.4.0",
     "morgan": "^1.9.0",
     "postmortem": "^0.2.6",
     "resolve-from": "^4.0.0",
