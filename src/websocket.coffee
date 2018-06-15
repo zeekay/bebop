@@ -42,8 +42,6 @@ class WebSocketServer
         console.error err.stack
 
   modified: (filename) ->
-    @send
-      type: 'modified'
-      filename: filename
+    @send type: 'modified', filename: filename
 
 export default WebSocketServer

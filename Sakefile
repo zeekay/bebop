@@ -28,6 +28,13 @@ task 'build', 'build project', (options) ->
     sourceMap: false
 
 task 'watch', 'watch for changes and recompile project', ->
+  build = (filename) ->
+    return if (running 'build')
+    console.log filename, 'modified'
+    invoke 'build'
+
+  watch 'src/*',          build
+  watch 'node_modules/*', build
 
 task 'gh-pages', 'Publish docs to gh-pages', ->
   brief = require 'brief'
