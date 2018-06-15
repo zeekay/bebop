@@ -18,12 +18,14 @@ class Bebop extends EventEmitter
     port     = opts.port     ? location.port
     @address = opts.address  ? protocol + hostname + ':' + port + '/_bebop'
     @timeout = opts.timeout  ? 1000
-    @debug   = opts.debug ? false
     @tries   = 0
     @limit   = -1
+    @logger  = log
 
+    @_debug    = opts.debug ? false
     @_failed   = false
     @_retries  = []
+
     @_once =
       error:  false
       closed: false
@@ -51,7 +53,7 @@ class Bebop extends EventEmitter
       @_once.error = true
 
     message: (message) ->
-      log.debug 'message'
+      log.debug 'message', message
       switch message.type
         when 'complete'
           @sendComplete message.name
@@ -88,21 +90,31 @@ class Bebop extends EventEmitter
         else
           @tries = @tries + 1
 
-    @on 'connected', =>
+    @on 'connected', (args...) =>
       @tries = 0
-      handlers.connected.apply @, arguments
+      handlers.connected.apply @, args
 
-    @on 'closed', =>
-      handlers.closed.apply @, arguments
+    @on 'closed', (args...) =>
+      handlers.closed.apply @, args
 
-    @on 'error', =>
-      handlers.error.apply @, arguments
+    @on 'error', (args...) =>
+      handlers.error.apply @, args
 
-    @on 'message', =>
-      handlers.message.apply @, arguments
+    @on 'message', (args...) =>
+      handlers.message.apply @, args
 
     @on 'reconnecting', =>
-      handlers.reconnecting.apply @, arguments
+      handlers.reconnecting.apply @, args
+
+    Object.defineProperty @, 'debug',
+      get: ->
+        @_debug
+      set: (bool = false) ->
+        @_debug = bool
+        log.verbose(bool)
+
+    # Set log level
+    log.verbose @debug
 
   # Create new WebSocket connection and connect to it
   connect: ->
@@ -116,19 +128,16 @@ class Bebop extends EventEmitter
       log.warn 'Failed to create WebSocket', err
       return @reconnect()
 
-    @ws.onopen = =>
+    @ws.onopen = (args...) =>
       @stopRetrying()
-      args = Array::slice.call arguments
       args.unshift 'connected'
       @emit.apply @, args
 
-    @ws.onclose = =>
-      args = Array::slice.call arguments
+    @ws.onclose = (args...) =>
       args.unshift 'closed'
       @emit.apply @, args
 
-    @ws.onerror = =>
-      args = Array::slice.call arguments
+    @ws.onerror = (args...) =>
       args.unshift 'error'
       @emit.apply @, args
 

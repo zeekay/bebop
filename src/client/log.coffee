@@ -1,31 +1,27 @@
-import {root} from './utils'
-
-levels = [
-  'debug'
-  'info'
-  'warn'
-  'error'
-]
-
 class Logger
-  constructor: (options) ->
-    for level in levels
-      do (level) =>
-        @[level] = =>
-          args = Array.prototype.slice.call arguments
-          args.unshift 'bebop:' + level
-          @log.apply @, args
+  constructor: (opts = {}) ->
+    @verbose opts.debug ? false
 
-  log: ->
-    console?.log.apply console, arguments
+  debug: (args...) ->
+    return unless @verbose()
+    @log 'debug', args...
 
-  setLevels: (levels) ->
-    @levels = levels
+  info: (args...) ->
+    return unless @verbose()
+    @log 'info', args...
 
-  debug: (enable) ->
-    if enable
-      @setLevels levels
-    else
-      @setLevels ['info', 'warning', 'error']
+  warn: (args...) ->
+    @log 'warn', args...
+
+  error: (args...) ->
+    @log 'error', args...
+
+  log: (level, args...) ->
+    args.unshift 'bebop:' + level
+    console?.log.apply console, args
+
+  verbose: (bool) ->
+    return @_verbose unless bool?
+    @_verbose = bool
 
 export default new Logger()
