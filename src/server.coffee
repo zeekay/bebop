@@ -52,9 +52,8 @@ class Server extends http.Server
 
     serveOpts =
       # Never want to cache for local development purposes
-      maxAge:     '1d'
-      setHeaders: cacheControl
-      etag:       false
+      cacheControl: false
+      setHeaders:   cacheControl
 
       # Fallthrough and serve directory listings
       fallthrough: true
