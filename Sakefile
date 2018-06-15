@@ -21,7 +21,7 @@ task 'build', 'build project', (options) ->
 
   yield b.write
     entry:     'src/client/index.coffee'
-    dest:      'bebop.min.js'
+    output:    'bebop.min.js'
     format:    'web'
     browser:   true
     minify:    false

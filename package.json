@@ -16,7 +16,7 @@
   "author": "Zach Kelling <z@zeekay.io>",
   "license": "MIT",
   "main": "lib/bebop.js",
-  "module": "lib/bebop.mjs",
+  "module": "lib/bebop.es.js",
   "files": [
     "assets/",
     "bebop.min.js",
