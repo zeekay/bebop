@@ -49,7 +49,7 @@
     "postmortem": "^0.2.6",
     "resolve-from": "^5.0.0",
     "serve-index": "^1.9.1",
-    "serve-static": "^1.13.2",
+    "serve-static": "^1.14.1",
     "source-map-support": "^0.5.12",
     "utf-8-validate": "^5.0.2",
     "vigil": "^0.7.3",
