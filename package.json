@@ -43,7 +43,7 @@
     "connect-favicons": "0.1.5",
     "executive": "^1.5.13",
     "find-coffee": "^0.2.3",
-    "http-errors": "^1.7.2",
+    "http-errors": "^1.7.3",
     "marked": "^0.6.2",
     "morgan": "^1.9.0",
     "postmortem": "^0.2.6",
