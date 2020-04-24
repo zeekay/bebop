@@ -50,7 +50,7 @@
     "resolve-from": "^5.0.0",
     "serve-index": "^1.9.1",
     "serve-static": "^1.13.2",
-    "source-map-support": "^0.5.12",
+    "source-map-support": "^0.5.19",
     "utf-8-validate": "^5.0.2",
     "vigil": "^0.7.3",
     "ws": "^7.0.0"
