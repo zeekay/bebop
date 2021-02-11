@@ -1,4 +1,4 @@
-# bebop [![NPM version][npm-img]][npm-url] [![Build Status][travis-img]][travis-url] [![Coverage Status][coveralls-img]][coveralls-url] [![Dependency Status][dependency-img]][dependency-url] [![Gitter chat][gitter-img]][gitter-url]
+# bebop [![NPM version][npm-img]][npm-url] [![Build Status][travis-img]][travis-url] [![Gitter chat][gitter-img]][gitter-url]
 ##### Jazzy build tool for sophisticated front-end development.
 
 Bebop is a rapid web development tool with a built-in http server, preprocessing
@@ -8,7 +8,7 @@ like an undead techno-zombie Charlie Parker.
 ### Installation
 
 ```sh
-$ npm install -g bebop
+$ npm install -g bebop-cli
 ```
 
 If you use bebop's static file serving feature it will automatically inject the
@@ -93,8 +93,8 @@ stuff like evaluate Javascript, Coffeescript, get completions, etc.
 [coveralls-url]:  https://coveralls.io/github/zeekay/bebop?branch=master
 [dependency-url]: https://david-dm.org/zeekay/bebop
 [dependency-img]: https://david-dm.org/zeekay/bebop.svg
-[npm-img]:        https://img.shields.io/npm/v/bebop.svg
-[npm-url]:        https://www.npmjs.com/package/bebop
+[npm-img]:        https://img.shields.io/npm/v/bebop-cli.svg
+[npm-url]:        https://www.npmjs.com/package/bebop-cli
 [gitter-img]:     https://badges.gitter.im/join-chat.svg
 [gitter-url]:     https://gitter.im/zeekay/hi
 
