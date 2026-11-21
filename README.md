@@ -1,4 +1,7 @@
 # bebop [![NPM version][npm-img]][npm-url] [![Build Status][travis-img]][travis-url] [![Gitter chat][gitter-img]][gitter-url]
+
+[![Open in Hanzo](https://hanzo.app/badges/open-in-hanzo.svg)](https://hanzo.app/dev/open?repo=github.com/zeekay/bebop&ref=master&action=open) [![Edit with Hanzo](https://hanzo.app/badges/edit-with-hanzo.svg)](https://hanzo.app/dev/open?repo=github.com/zeekay/bebop&ref=master&action=edit)
+
 ##### Jazzy build tool for sophisticated front-end development.
 
 Bebop is a rapid web development tool with a built-in http server, preprocessing
